@@ -1,0 +1,5 @@
+*.vo*
+*Makefile*
+*.aux
+*.glob
+testing.v
