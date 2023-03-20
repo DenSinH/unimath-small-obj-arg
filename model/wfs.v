@@ -13,6 +13,9 @@ Local Open Scope subtype.
 
 Variables M : category.
 
+(* todo: figure out how to import the notation and everything *)
+(* todo: rlp/llp arguments *)
+(* todo: morphism class arguments *)
 Notation "S ⊆ T" := (morphism_class_containedIn M S T) (at level 70).
 
 (* in a category, we know that homs are sets, so equality must be a prop *)
@@ -48,12 +51,11 @@ Definition lp_hProp {a b x y : M} (f : a --> b) (g : x --> y) : hProp :=
 *)
 (* Messing with hProps gets a bit annoying at times *)
 Definition llp (R : morphism_class M) : (morphism_class M) :=
-    λ (a x : M) (i : a --> x), ∀ (e b : M) (p : e --> b), ((R _ _) p ⇒ lp_hProp i p)%logic.
+    λ {a x : M} (i : a --> x), ∀ (e b : M) (p : e --> b), ((R _ _) p ⇒ lp_hProp i p)%logic.
 
 Definition rlp (L : morphism_class M) : (morphism_class M) :=
-    λ (e b : M) (p : e --> b), ∀ (a x : M) (i : a --> x), ((L _ _) i ⇒ lp_hProp i p)%logic.
+    λ {e b : M} (p : e --> b), ∀ (a x : M) (i : a --> x), ((L _ _) i ⇒ lp_hProp i p)%logic.
 
-  
 (* There is stuff in 
   https://unimath.github.io/doc/UniMath/4dd5c17/UniMath.MoreFoundations.Subtypes.html
 to do this, but I don't know if we want to use this or not...
@@ -99,22 +101,125 @@ Defined.
 
 (* if f' is a retract of f and f is in L for some WFS, then so is f'  *)
 (* proposition 14.1.13 in More Concise AT *)
+(* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L40 *)
 Lemma is_wfs'retract {L R : morphism_class M} (w : is_wfs L R)
   {a b a' b'} {f : a --> b} {f' : a' --> b'} (r : retract M f f') (hf : (L _ _) f) : (L _ _) f'.
 Proof.
   rewrite w.(wfs_llp).
   intros x y g hg h k s.
-  specialize (is_wfs'lp w hf hg (h ∘ r.(ra _ _ _)) (k ∘ r.(rb _ _ _))) as test.
-  rewrite <- assoc in test.
-  rewrite s in test.
-  rewrite assoc in test.
-  rewrite assoc in test.
-  rewrite (r.(hr _ _ _)) in test.
-  (* At this point, we want to get the conclusion of test
-  destruct it to get an l 
-  and precompose it with the right function from the retract
-  to obtain the function we are looking for *)
-  admit.
-Admitted.
+  (* existence of lift in part of diagram *)
+  specialize (is_wfs'lp w hf hg (h ∘ r.(ra _ _ _)) (k ∘ r.(rb _ _ _))) as ehl.
+  (* rewrite to make hypothesis trivial *)
+  rewrite <- assoc, s, assoc, assoc, (r.(hr _ _ _)) in ehl.
+  (* extract lift and turn proof into normal ∑-type*)
+  unshelve epose proof (ehl _) as ehl; trivial.
+  unshelve eapply (hinhuniv _ ehl).
+  intro hl.
+  apply hinhpr.
+  destruct hl as [l [hlh hlk]].
+  (* composition in diagram *)
+  exists (l ∘ r.(ib _ _ _)).
+  (* diagram chasing *)
+  split.
+  * rewrite assoc, <- (r.(hi _ _ _)), <- assoc, hlh, assoc, r.(ha _ _ _), id_left.
+    reflexivity.
+  * rewrite <- assoc, hlk, assoc, r.(hb _ _ _), id_left.
+    reflexivity.
+Defined.
+
+(* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L52 *)
+(* Lemma 14.1.9 in MCAT *)
+Lemma llp_rlp_self (L : morphism_class M) : L ⊆ llp (rlp L).
+Proof.
+  intros a b f hf x y g hg.
+  apply (hg _ _ _).
+  exact hf.
+Defined.
+
+(* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L55 *)
+(* No counterpart in MCAT, (□(I□), I□) is a WFS *)
+Lemma wfs_of_factorization (I : morphism_class M) 
+  (h : ∀ {x y} (f : x --> y), ∃ z (g : x --> z) (h : z --> y), (llp (rlp I) _ _ g) × (rlp I _ _ h) × (h ∘ g = f)) :
+  is_wfs (llp (rlp I)) (rlp I).
+Proof.
+  constructor.
+  - reflexivity.
+  - apply morphism_class_equal_cond.
+    split; intros x y g hg.
+    * (* basically rlp_llp_self *)
+      intros a b f hf.
+      apply (hf _ _ _).
+      exact hg.
+    * intros a b f hf.
+      apply (hg _ _ _).
+      exact (llp_rlp_self _ _ _ _ hf).
+  - exact h.
+Defined.
+
+(* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L67 *)
+(* same name as Lemma 14.1.12 in MCAT, but a different phrasing 
+In MCAT, the statement is in reference of a single morphism, not a whole class
+*)
+Lemma retract_argument {L R L' : morphism_class M} (w : is_wfs L R)
+  (H : ∀ {x y} (f : x --> y), ∃ z (g : x --> z) (h : z --> y), (L' _ _) g × (R _ _) h × h ∘ g = f) :
+  ∏ {a b} (f : a --> b), (L _ _) f -> ∃ {x' y'} (f' : x' --> y') (r : retract _ f' f), (L' _ _) f'.
+Proof.
+  intros a b f hf.
+
+  (* rcases H f with ⟨z, g, h, hg, hh, hgh⟩, *)
+  (* Get factorization for f from H *)
+  specialize (H _ _ f) as eHf.
+  simpl in eHf.
+  unshelve eapply (hinhuniv _ eHf).
+  intro Hf.
+  destruct Hf as [z [g [h [hg [hh hgh]]]]].
+
+  (* rcases w.lp hf hh g (𝟙 _) (by rw hgh; simp) with ⟨l, hl₁, hl₂⟩, *)
+  (* Use lifting property to get map in diagram *)
+  specialize (is_wfs'lp w hf hh g (identity _)) as ehl.
+  rewrite hgh, id_right in ehl.
+  unshelve epose proof (ehl _) as ehl; trivial.
+  unshelve eapply (hinhuniv _ ehl).
+  intro hl.
+  destruct hl as [l [hl1 hl2]].
+
+  (* convert goal to normal ∑-type *)
+  apply hinhpr.
+
+  (* Show that g is a retract of f *)
+  assert (r : retract _ g f).
+  {
+    split with (identity a) (identity a) l h.
+    - now rewrite id_left.
+    - exact hl2.
+    - rewrite id_left.
+      now symmetry.
+    - rewrite id_left.
+      now symmetry.
+  }
+
+  (* finish proof *)
+  exists a, z, g, r.
+  exact hg.
+Defined.
+
+Lemma lp_isos_univ {a b x y} (f : a --> b) (g : x --> y) : 
+  (morphism_class_isos M _ _) f -> lp f g.
+Proof.
+  intro H.
+  intros h k s.
+  simpl in H.
+  specialize (make_iso _ H) as fiso.
+  specialize (inv_from_iso fiso) as finv.
+  apply hinhpr.
+  exists (h ∘ finv).
+  split.
+  - rewrite assoc.
+    (* rewrite (iso_inv_after_iso fiso). *)
+    Search "iso".
+    admit.
+  - rewrite <- assoc, s, assoc.
+
+Qed.
 
 End wfs.
