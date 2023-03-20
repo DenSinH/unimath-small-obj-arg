@@ -109,10 +109,14 @@ Proof.
   intros x y g hg h k s.
   (* existence of lift in part of diagram *)
   specialize (is_wfs'lp w hf hg (h ∘ r.(ra _ _ _)) (k ∘ r.(rb _ _ _))) as ehl.
-  (* rewrite to make hypothesis trivial *)
-  rewrite <- assoc, s, assoc, assoc, (r.(hr _ _ _)) in ehl.
-  (* extract lift and turn proof into normal ∑-type*)
-  unshelve epose proof (ehl _) as ehl; trivial.
+  
+  unshelve epose proof (ehl _) as ehl.
+  {
+    rewrite <- assoc, s, assoc, assoc, (r.(hr _ _ _)).
+    reflexivity.
+  }
+  
+  (* extract lift and turn proof into normal ∑-type *)
   unshelve eapply (hinhuniv _ ehl).
   intro hl.
   apply hinhpr.
@@ -136,6 +140,14 @@ Proof.
   exact hf.
 Defined.
 
+(* no counterpart *)
+Lemma rlp_llp_self (L : morphism_class M) : L ⊆ rlp (llp L).
+Proof.
+  intros a b f hf x y g hg.
+  apply (hg _ _ _).
+  exact hf.
+Defined.
+
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L55 *)
 (* No counterpart in MCAT, (□(I□), I□) is a WFS *)
 Lemma wfs_of_factorization (I : morphism_class M) 
@@ -146,10 +158,7 @@ Proof.
   - reflexivity.
   - apply morphism_class_equal_cond.
     split; intros x y g hg.
-    * (* basically rlp_llp_self *)
-      intros a b f hf.
-      apply (hf _ _ _).
-      exact hg.
+    * exact (rlp_llp_self _ _ _ _ hg).
     * intros a b f hf.
       apply (hg _ _ _).
       exact (llp_rlp_self _ _ _ _ hf).
@@ -177,8 +186,11 @@ Proof.
   (* rcases w.lp hf hh g (𝟙 _) (by rw hgh; simp) with ⟨l, hl₁, hl₂⟩, *)
   (* Use lifting property to get map in diagram *)
   specialize (is_wfs'lp w hf hh g (identity _)) as ehl.
-  rewrite hgh, id_right in ehl.
-  unshelve epose proof (ehl _) as ehl; trivial.
+  unshelve epose proof (ehl _) as ehl.
+  {
+    rewrite hgh, id_right.
+    reflexivity.
+  }
   unshelve eapply (hinhuniv _ ehl).
   intro hl.
   destruct hl as [l [hl1 hl2]].
@@ -209,17 +221,76 @@ Proof.
   intro H.
   intros h k s.
   simpl in H.
-  specialize (make_iso _ H) as fiso.
-  specialize (inv_from_iso fiso) as finv.
-  apply hinhpr.
-  exists (h ∘ finv).
-  split.
-  - rewrite assoc.
-    (* rewrite (iso_inv_after_iso fiso). *)
-    Search "iso".
-    admit.
-  - rewrite <- assoc, s, assoc.
+  remember (make_iso _ H) as fiso.
+  replace f with (morphism_from_iso fiso) in *.
+  - (* todo: this in happly tactic? *)
+    apply hinhpr.
+    exists (h ∘ (inv_from_iso fiso)).
+    split.
+    * rewrite assoc, iso_inv_after_iso, id_left.
+      reflexivity.
+    * rewrite <- assoc, s, assoc.
+      rewrite iso_after_iso_inv, id_left.
+      reflexivity.
+  - (* todo: by clause in replace? *)
+    rewrite Heqfiso.
+    trivial.
+Defined.
 
-Qed.
+Lemma llp_univ : llp (morphism_class_univ M) = morphism_class_isos M.
+Proof.
+  apply morphism_class_equal_cond.
+  split; intros a b f H.
+  - specialize ((H _ _ f) tt).
+    specialize (H (identity _) (identity _)).
+    unshelve epose proof (H _) as H.
+    {
+      rewrite id_left, id_right.
+      reflexivity.
+    }
+    (* todo: turn this unshelve eapply / destruct into an Ltac *)
+    unshelve eapply (hinhuniv _ H).
+    intro hl.
+    destruct hl as [l [hfl hlf]].
+    unfold morphism_class_isos.
+    
+    assert (is_z_isomorphism f) as f_z_iso.
+    {
+      exists l.
+      split; assumption.
+    }
+    apply is_iso_from_is_z_iso.
+    exact f_z_iso.
+  - intros x y g _.
+    exact (lp_isos_univ f g H).
+Defined.
+
+Lemma rlp_isos : rlp (morphism_class_isos M) = morphism_class_univ M.
+Proof.
+  (* This proof is slightly different *)
+  apply morphism_class_equal_cond.
+  split.
+  - intros x y g H.
+    unfold morphism_class_univ.
+    exact tt.
+  - rewrite <- llp_univ.
+    exact (rlp_llp_self _).
+Defined.
+
+Lemma wfs_isos_univ : is_wfs (morphism_class_isos M) (morphism_class_univ M).
+Proof.
+  constructor; try symmetry.
+  - exact llp_univ.
+  - exact rlp_isos.
+  - intros x y f.
+    apply hinhpr.
+    exists x, (identity x), f.
+    split; repeat try split.  (* todo: somehow, this solves the second subgoal? *)
+    * exact (identity_is_iso M x).
+    * rewrite id_left.
+      reflexivity.
+Defined.
+
+
 
 End wfs.
