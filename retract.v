@@ -1,7 +1,11 @@
 Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.CategoryTheory.Core.Prelude.
 
-Section retract.
+
+Declare Scope retract.
+Delimit Scope morcls with retract.
+
+Local Open Scope retract.
 
 Local Open Scope cat.
 
@@ -84,5 +88,3 @@ Proof.
   - now rewrite (r.(hi)).
   - now rewrite (r.(hr)).
 Defined.
-
-End retract.

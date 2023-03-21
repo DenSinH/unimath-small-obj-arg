@@ -9,6 +9,7 @@ Section wfs.
 
 Local Open Scope cat.
 Local Open Scope morcls.
+Local Open Scope retract.
 (* Local Open Scope set. *)
 
 Variables M : category.
@@ -25,12 +26,7 @@ Definition lp {a b x y : M} (f : a --> b) (g : x --> y) : UU :=
 
 Definition isaprop_lp {a b x y : M} (f : a --> b) (g : x --> y) : isaprop (lp f g).
 Proof.
-  apply impred_isaprop.
-  intro.
-  apply impred_isaprop.
-  intro.
-  apply impred_isaprop.
-  intro.
+  do 3 (apply impred_isaprop; intro).
   apply propproperty.
 Defined.
 
@@ -106,16 +102,16 @@ Defined.
 (* proposition 14.1.13 in More Concise AT *)
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L40 *)
 Lemma is_wfs'retract {L R : morphism_class M} (w : is_wfs L R)
-  {a b a' b'} {f : a --> b} {f' : a' --> b'} (r : retract M f f') (hf : (L _ _) f) : (L _ _) f'.
+  {a b a' b'} {f : a --> b} {f' : a' --> b'} (r : retract f f') (hf : (L _ _) f) : (L _ _) f'.
 Proof.
   rewrite w.(wfs_llp).
   intros x y g hg h k s.
   (* existence of lift in part of diagram *)
-  specialize (is_wfs'lp w hf hg (h ∘ r.(ra _ _ _)) (k ∘ r.(rb _ _ _))) as ehl.
-  
+  specialize (is_wfs'lp w hf hg (h ∘ r.(ra)) (k ∘ r.(rb))) as ehl.
+
   unshelve epose proof (ehl _) as ehl.
   {
-    rewrite <- assoc, s, assoc, assoc, (r.(hr _ _ _)).
+    rewrite <- assoc, s, assoc, assoc, (r.(hr)).
     reflexivity.
   }
   
@@ -125,12 +121,12 @@ Proof.
   apply hinhpr.
   destruct hl as [l [hlh hlk]].
   (* composition in diagram *)
-  exists (l ∘ r.(ib _ _ _)).
+  exists (l ∘ r.(ib)).
   (* diagram chasing *)
   split.
-  * rewrite assoc, <- (r.(hi _ _ _)), <- assoc, hlh, assoc, r.(ha _ _ _), id_left.
+  * rewrite assoc, <- (r.(hi)), <- assoc, hlh, assoc, r.(ha), id_left.
     reflexivity.
-  * rewrite <- assoc, hlk, assoc, r.(hb _ _ _), id_left.
+  * rewrite <- assoc, hlk, assoc, r.(hb), id_left.
     reflexivity.
 Defined.
 
@@ -174,7 +170,7 @@ In MCAT, the statement is in reference of a single morphism, not a whole class
 *)
 Lemma retract_argument {L R L' : morphism_class M} (w : is_wfs L R)
   (H : ∀ {x y} (f : x --> y), ∃ z (g : x --> z) (h : z --> y), (L' _ _) g × (R _ _) h × h ∘ g = f) :
-  ∏ {a b} (f : a --> b), (L _ _) f -> ∃ {x' y'} (f' : x' --> y') (r : retract _ f' f), (L' _ _) f'.
+  ∏ {a b} (f : a --> b), (L _ _) f -> ∃ {x' y'} (f' : x' --> y') (r : retract f' f), (L' _ _) f'.
 Proof.
   intros a b f hf.
 
@@ -202,7 +198,7 @@ Proof.
   apply hinhpr.
 
   (* Show that g is a retract of f *)
-  assert (r : retract _ g f).
+  assert (r : retract g f).
   {
     split with (identity a) (identity a) l h.
     - now rewrite id_left.
@@ -315,5 +311,6 @@ Proof.
     * rewrite id_left.
       reflexivity.
 Defined.
+
 
 End wfs.
