@@ -308,15 +308,12 @@ Proof.
     intros x y f.
     apply hinhpr.
     exists x, (identity x), f.
-    
+
     (* this solves the second subgoal, stating that f is a morphism *)
     split; repeat try split.
     * exact (identity_is_iso M x).
     * rewrite id_left.
       reflexivity.
 Defined.
-
-
-
 
 End wfs.
