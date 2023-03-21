@@ -8,15 +8,13 @@ From Model Require Import morphism_class retract.
 Section wfs.
 
 Local Open Scope cat.
-Local Open Scope subtype.
+Local Open Scope morcls.
 (* Local Open Scope set. *)
 
 Variables M : category.
 
-(* todo: figure out how to import the notation and everything *)
 (* todo: rlp/llp arguments *)
 (* todo: morphism class arguments *)
-Notation "S ⊆ T" := (morphism_class_containedIn M S T) (at level 70).
 
 (* in a category, we know that homs are sets, so equality must be a prop *)
 (* Lean: lp @ https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L14 *)
@@ -76,8 +74,7 @@ Proof.
 Defined.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L27 *)
-(* todo: in lean this is also a Prop? *)
-Record is_wfs (L R : morphism_class M) (* : Prop *) := {
+Record is_wfs (L R : morphism_class M) := {
   wfs_llp  : L = llp R;
   wfs_rlp  : R = rlp L;
   (* Any map can be factored through maps in L and R *)
@@ -88,6 +85,12 @@ Record is_wfs (L R : morphism_class M) (* : Prop *) := {
 Arguments wfs_llp {_ _}.
 Arguments wfs_rlp {_ _}.
 Arguments wfs_fact {_ _}.
+
+(* todo: in lean this is also a Prop? *)
+Lemma isaprop_is_wfs (L R : morphism_class M) : isaprop (is_wfs L R).
+Proof.
+  admit.
+Admitted.
 
 (* Can't do dot notation like in lean (is_wfs.lp)*)
 (* any two maps in a wfs have the lifting property with respect to each other *)
@@ -140,7 +143,7 @@ Proof.
   exact hf.
 Defined.
 
-(* no counterpart *)
+(* no counterpart in lean *)
 Lemma rlp_llp_self (L : morphism_class M) : L ⊆ rlp (llp L).
 Proof.
   intros a b f hf x y g hg.
@@ -184,7 +187,7 @@ Proof.
   destruct Hf as [z [g [h [hg [hh hgh]]]]].
 
   (* rcases w.lp hf hh g (𝟙 _) (by rw hgh; simp) with ⟨l, hl₁, hl₂⟩, *)
-  (* Use lifting property to get map in diagram *)
+  (* Use lifting property to get map l in diagram *)
   specialize (is_wfs'lp w hf hh g (identity _)) as ehl.
   unshelve epose proof (ehl _) as ehl.
   {
@@ -215,17 +218,22 @@ Proof.
   exact hg.
 Defined.
 
+(* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L82 *)
 Lemma lp_isos_univ {a b x y} (f : a --> b) (g : x --> y) : 
   (morphism_class_isos M _ _) f -> lp f g.
 Proof.
   intro H.
   intros h k s.
+
+  (* Turn f into the corresponding coerced isomorphism type *)
   simpl in H.
   remember (make_iso _ H) as fiso.
   replace f with (morphism_from_iso fiso) in *.
-  - (* todo: this in happly tactic? *)
+  - (* todo: this in hexists tactic? *)
+    (* lift we are looking for is h ∘ f^{-1} *)
     apply hinhpr.
     exists (h ∘ (inv_from_iso fiso)).
+    (* diagram chasing *)
     split.
     * rewrite assoc, iso_inv_after_iso, id_left.
       reflexivity.
@@ -233,63 +241,81 @@ Proof.
       rewrite iso_after_iso_inv, id_left.
       reflexivity.
   - (* todo: by clause in replace? *)
+    (* prove that f is indeed fiso *)
     rewrite Heqfiso.
     trivial.
 Defined.
 
+(* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L91 *)
 Lemma llp_univ : llp (morphism_class_univ M) = morphism_class_isos M.
 Proof.
   apply morphism_class_equal_cond.
   split; intros a b f H.
-  - specialize ((H _ _ f) tt).
+  - (* apply llp of f with itself *)
+    specialize ((H _ _ f) tt).
+    (* choose horizontal maps to be identity *)
     specialize (H (identity _) (identity _)).
+    (* commutativity of diagram *)
     unshelve epose proof (H _) as H.
     {
       rewrite id_left, id_right.
       reflexivity.
     }
     (* todo: turn this unshelve eapply / destruct into an Ltac *)
+    (* extract lift l from diagram *)
     unshelve eapply (hinhuniv _ H).
     intro hl.
     destruct hl as [l [hfl hlf]].
     unfold morphism_class_isos.
     
+    (* show f is a z_iso (we have its inverse, the lift l) *)
     assert (is_z_isomorphism f) as f_z_iso.
     {
       exists l.
       split; assumption.
     }
+    (* finish proof *)
     apply is_iso_from_is_z_iso.
     exact f_z_iso.
   - intros x y g _.
+    (* other inclusion is exactly the previous Lemma *)
     exact (lp_isos_univ f g H).
 Defined.
 
+(* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L101 *)
 Lemma rlp_isos : rlp (morphism_class_isos M) = morphism_class_univ M.
 Proof.
   (* This proof is slightly different *)
   apply morphism_class_equal_cond.
   split.
-  - intros x y g H.
+  - (* an iso is a morphism *)
+    intros x y g H.
     unfold morphism_class_univ.
     exact tt.
-  - rewrite <- llp_univ.
+  - (* other inclusion is easy with previous Lemmas *)
+    rewrite <- llp_univ.
     exact (rlp_llp_self _).
 Defined.
 
+(* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L109 *)
 Lemma wfs_isos_univ : is_wfs (morphism_class_isos M) (morphism_class_univ M).
 Proof.
+  (* apply symmetry to immediately exact the previous Lemmas *)
   constructor; try symmetry.
   - exact llp_univ.
   - exact rlp_isos.
-  - intros x y f.
+  - (* factorize a morphism through identity and itself *)
+    intros x y f.
     apply hinhpr.
     exists x, (identity x), f.
-    split; repeat try split.  (* todo: somehow, this solves the second subgoal? *)
+    
+    (* this solves the second subgoal, stating that f is a morphism *)
+    split; repeat try split.
     * exact (identity_is_iso M x).
     * rewrite id_left.
       reflexivity.
 Defined.
+
 
 
 
