@@ -1,4 +1,3 @@
-
 Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.CategoryTheory.Core.Prelude.
 
@@ -12,25 +11,23 @@ Local Open Scope morcls.
 Local Open Scope retract.
 (* Local Open Scope set. *)
 
-Variables M : category.
-
 (* todo: rlp/llp arguments *)
 (* todo: morphism class arguments *)
 
 (* in a category, we know that homs are sets, so equality must be a prop *)
 (* Lean: lp @ https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L14 *)
 (* Normal ∑-type is not a proposition, we need it to be to use it to create morphism classes *)
-Definition lp {a b x y : M} (f : a --> b) (g : x --> y) : UU := 
+Definition lp {M : category} {a b x y : M} (f : a --> b) (g : x --> y) : UU := 
     ∏ (h : a --> x) (k : b --> y), 
         g ∘ h = k ∘ f -> ∃ l : b --> x, (l ∘ f = h) × (g ∘ l = k).
 
-Definition isaprop_lp {a b x y : M} (f : a --> b) (g : x --> y) : isaprop (lp f g).
+Definition isaprop_lp {M : category} {a b x y : M} (f : a --> b) (g : x --> y) : isaprop (lp f g).
 Proof.
   do 3 (apply impred_isaprop; intro).
   apply propproperty.
 Defined.
 
-Definition lp_hProp {a b x y : M} (f : a --> b) (g : x --> y) : hProp :=
+Definition lp_hProp {M : category} {a b x y : M} (f : a --> b) (g : x --> y) : hProp :=
     make_hProp (lp f g) (isaprop_lp f g).
 
 (* Lean: llp @ https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L18 *)
@@ -44,10 +41,10 @@ Definition lp_hProp {a b x y : M} (f : a --> b) (g : x --> y) : hProp :=
        f 
 *)
 (* Messing with hProps gets a bit annoying at times *)
-Definition llp (R : morphism_class M) : (morphism_class M) :=
+Definition llp {M : category} (R : morphism_class M) : (morphism_class M) :=
     λ {a x : M} (i : a --> x), ∀ (e b : M) (p : e --> b), ((R _ _) p ⇒ lp_hProp i p)%logic.
 
-Definition rlp (L : morphism_class M) : (morphism_class M) :=
+Definition rlp {M : category} (L : morphism_class M) : (morphism_class M) :=
     λ {e b : M} (p : e --> b), ∀ (a x : M) (i : a --> x), ((L _ _) i ⇒ lp_hProp i p)%logic.
 
 (* There is stuff in 
@@ -56,7 +53,7 @@ to do this, but I don't know if we want to use this or not...
 I figured I'd define my own, it should be mostly compatible
 *)
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L24 *)
-Lemma llp_anti {R R' : morphism_class M} (h : R ⊆ R') : llp R' ⊆ llp R.
+Lemma llp_anti {M : category} {R R' : morphism_class M} (h : R ⊆ R') : llp R' ⊆ llp R.
 Proof.
   unfold "⊆" in *.
   intros a x i H.
@@ -70,7 +67,7 @@ Proof.
 Defined.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L27 *)
-Record is_wfs (L R : morphism_class M) := {
+Record is_wfs {M : category} (L R : morphism_class M) := {
   wfs_llp  : L = llp R;
   wfs_rlp  : R = rlp L;
   (* Any map can be factored through maps in L and R *)
@@ -78,30 +75,31 @@ Record is_wfs (L R : morphism_class M) := {
              (L _ _) g × (R _ _) h × h ∘ g = f
 }.
 
-Arguments wfs_llp {_ _}.
-Arguments wfs_rlp {_ _}.
-Arguments wfs_fact {_ _}.
+Arguments wfs_llp {_ _ _}.
+Arguments wfs_rlp {_ _ _}.
+Arguments wfs_fact {_ _ _}.
 
 (* todo: in lean this is also a Prop? *)
-Lemma isaprop_is_wfs (L R : morphism_class M) : isaprop (is_wfs L R).
+Lemma isaprop_is_wfs {M : category} (L R : morphism_class M) : isaprop (is_wfs L R).
 Proof.
+  
   admit.
 Admitted.
 
 (* Can't do dot notation like in lean (is_wfs.lp)*)
 (* any two maps in a wfs have the lifting property with respect to each other *)
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L33 *)
-Lemma is_wfs'lp {L R : morphism_class M} (w : is_wfs L R)
+Lemma is_wfs'lp {M : category} {L R : morphism_class M} (w : is_wfs L R)
   {a b x y} {f : a --> b} {g : x --> y} (hf : (L _ _) f) (hg : (R _ _) g) : lp_hProp f g.
 Proof.
   rewrite w.(wfs_llp) in hf.
   exact (hf _ _ _ hg). 
 Defined.
 
-(* if f' is a retract of f and f is in L for some WFS, then so is f'  *)
+(* if f' is a retract of f and f is in L for some WFS, then so is f' *)
 (* proposition 14.1.13 in More Concise AT *)
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L40 *)
-Lemma is_wfs'retract {L R : morphism_class M} (w : is_wfs L R)
+Lemma is_wfs'retract {M : category} {L R : morphism_class M} (w : is_wfs L R)
   {a b a' b'} {f : a --> b} {f' : a' --> b'} (r : retract f f') (hf : (L _ _) f) : (L _ _) f'.
 Proof.
   rewrite w.(wfs_llp).
@@ -132,7 +130,7 @@ Defined.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L52 *)
 (* Lemma 14.1.9 in MCAT *)
-Lemma llp_rlp_self (L : morphism_class M) : L ⊆ llp (rlp L).
+Lemma llp_rlp_self {M : category} (L : morphism_class M) : L ⊆ llp (rlp L).
 Proof.
   intros a b f hf x y g hg.
   apply (hg _ _ _).
@@ -140,7 +138,7 @@ Proof.
 Defined.
 
 (* no counterpart in lean *)
-Lemma rlp_llp_self (L : morphism_class M) : L ⊆ rlp (llp L).
+Lemma rlp_llp_self {M : category} (L : morphism_class M) : L ⊆ rlp (llp L).
 Proof.
   intros a b f hf x y g hg.
   apply (hg _ _ _).
@@ -149,7 +147,7 @@ Defined.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L55 *)
 (* No counterpart in MCAT, (□(I□), I□) is a WFS *)
-Lemma wfs_of_factorization (I : morphism_class M) 
+Lemma wfs_of_factorization {M : category} (I : morphism_class M) 
   (h : ∀ {x y} (f : x --> y), ∃ z (g : x --> z) (h : z --> y), (llp (rlp I) _ _ g) × (rlp I _ _ h) × (h ∘ g = f)) :
   is_wfs (llp (rlp I)) (rlp I).
 Proof.
@@ -168,7 +166,7 @@ Defined.
 (* same name as Lemma 14.1.12 in MCAT, but a different phrasing 
 In MCAT, the statement is in reference of a single morphism, not a whole class
 *)
-Lemma retract_argument {L R L' : morphism_class M} (w : is_wfs L R)
+Lemma retract_argument {M : category} {L R L' : morphism_class M} (w : is_wfs L R)
   (H : ∀ {x y} (f : x --> y), ∃ z (g : x --> z) (h : z --> y), (L' _ _) g × (R _ _) h × h ∘ g = f) :
   ∏ {a b} (f : a --> b), (L _ _) f -> ∃ {x' y'} (f' : x' --> y') (r : retract f' f), (L' _ _) f'.
 Proof.
@@ -194,28 +192,26 @@ Proof.
   intro hl.
   destruct hl as [l [hl1 hl2]].
 
-  (* convert goal to normal ∑-type *)
-  apply hinhpr.
-
-  (* Show that g is a retract of f *)
+  (* Show that f is a retract of g *)
   assert (r : retract g f).
   {
     split with (identity a) (identity a) l h.
     - now rewrite id_left.
-    - exact hl2.
-    - rewrite id_left.
-      now symmetry.
-    - rewrite id_left.
-      now symmetry.
+    - assumption.
+    - rewrite id_left. now symmetry.
+    - rewrite id_left. now symmetry.
   }
 
+  (* convert goal to normal ∑-type *)
+  apply hinhpr.
+  
   (* finish proof *)
   exists a, z, g, r.
   exact hg.
 Defined.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L82 *)
-Lemma lp_isos_univ {a b x y} (f : a --> b) (g : x --> y) : 
+Lemma lp_isos_univ {M : category} {a b x y} (f : a --> b) (g : x --> y) : 
   (morphism_class_isos M _ _) f -> lp f g.
 Proof.
   intro H.
@@ -243,7 +239,7 @@ Proof.
 Defined.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L91 *)
-Lemma llp_univ : llp (morphism_class_univ M) = morphism_class_isos M.
+Lemma llp_univ {M : category} : llp (morphism_class_univ M) = morphism_class_isos M.
 Proof.
   apply morphism_class_equal_cond.
   split; intros a b f H.
@@ -279,7 +275,7 @@ Proof.
 Defined.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L101 *)
-Lemma rlp_isos : rlp (morphism_class_isos M) = morphism_class_univ M.
+Lemma rlp_isos {M : category} : rlp (morphism_class_isos M) = morphism_class_univ M.
 Proof.
   (* This proof is slightly different *)
   apply morphism_class_equal_cond.
@@ -294,7 +290,7 @@ Proof.
 Defined.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L109 *)
-Lemma wfs_isos_univ : is_wfs (morphism_class_isos M) (morphism_class_univ M).
+Lemma wfs_isos_univ {M : category} : is_wfs (morphism_class_isos M) (morphism_class_univ M).
 Proof.
   (* apply symmetry to immediately exact the previous Lemmas *)
   constructor; try symmetry.

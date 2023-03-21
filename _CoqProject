@@ -1,1 +1,6 @@
 -Q . Model
+morphism_class.v
+retract.v
+model/wfs.v
+model/weak_equivalences.v
+model/category.v

@@ -56,6 +56,18 @@ Proof.
     split; intros x y f h; exact h.
 Admitted.
 
+Lemma morphism_class_subset_antisymm {C : category} {I J : morphism_class C} (h : I ⊆ J) (h' : J ⊆ I) : I = J.
+Proof.
+  apply morphism_class_equal_cond.
+  split.
+  - exact h.
+  - exact h'.
+Qed.
+
+Definition morphism_class_intersection {C : category} (S T : morphism_class C) : morphism_class C:=
+    λ X Y f, (S _ _ f) ∧ (T _ _ f).
+
+Notation "S ∩ T" := (morphism_class_intersection S T) (at level 50) : morcls.
 
 (* Back to morphism_class.lean *)
 Definition morphism_class_univ (C : category) : (morphism_class C) :=
