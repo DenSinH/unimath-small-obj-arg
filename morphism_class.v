@@ -1,5 +1,6 @@
 Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.CategoryTheory.Core.Prelude.
+Require Import UniMath.CategoryTheory.opp_precat.
 Require Setoid.
 
 Declare Scope morcls.
@@ -38,6 +39,10 @@ Lemma morphism_class_ext {C : category} {I J : morphism_class C}
   (h : ∏ x y (f : x --> y), ((I _ _) f <-> (J _ _) f)) : I = J.
 Proof.
   do 3 (apply (funextsec _ _ _); intro).
+  specialize ((h x x0 x1)) as test.
+  (* Print subtypePath_prop.
+  apply (subtypePath_prop (_) (isaprop _)).
+  unfold hProptoType in *. *)
   (* now rewrite (h x x0 x1). *)
   admit.
 Admitted.
@@ -62,3 +67,44 @@ Definition morphism_class_univ (C : category) : (morphism_class C) :=
 
 Definition morphism_class_isos (C : category) : (morphism_class C) :=
     λ X Y f, make_hProp (is_iso f) (isaprop_is_iso _ _ _).
+
+(* No longer in lean files *)
+
+Definition morphism_class_opp {C : category} (S : morphism_class C) : (morphism_class (op_cat C)) :=
+    λ X Y f, (S _ _) (opp_mor f).
+
+Definition morphism_class_rm_opp {C : category} (S : morphism_class (op_cat C)) : (morphism_class C) :=
+    λ X Y f, (S _ _) (rm_opp_mor f).
+
+Lemma morphism_class_opp_preserves_containment {C : category} (S T : morphism_class C) : 
+    (S ⊆ T) -> (morphism_class_opp S ⊆ morphism_class_opp T).
+Proof.
+  intro st.
+  intros x y f hf.
+  unfold morphism_class_opp.
+  apply (st _ _ _).
+  exact hf.
+Defined.
+
+Lemma morphism_class_opp_iff_containment {C : category} (S T : morphism_class C) : 
+    (S ⊆ T) <-> (morphism_class_opp S ⊆ morphism_class_opp T).
+Proof.
+  split.
+  - exact (morphism_class_opp_preserves_containment _ _).
+  - intro H.
+    exact (morphism_class_opp_preserves_containment _ _ H).
+Defined.
+
+Lemma morphism_class_opp_opp {C : category} (S : morphism_class C) : 
+    morphism_class_opp (morphism_class_opp S) = S.
+Proof.
+  trivial.
+Defined.
+
+Definition morphism_class_opp_equal {C : category} {S T : morphism_class C} (e : morphism_class_opp S = morphism_class_opp T) : 
+  S = T.
+Proof.
+  rewrite <- (morphism_class_opp_opp S).
+  rewrite <- (morphism_class_opp_opp T).
+  now rewrite e.
+Defined.

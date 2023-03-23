@@ -1,5 +1,7 @@
 Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.CategoryTheory.Core.Prelude.
+Require Import UniMath.CategoryTheory.opp_precat.
+Require Import UniMath.CategoryTheory.limits.pullbacks.
 
 From Model Require Import morphism_class retract.
 
@@ -82,7 +84,6 @@ Arguments wfs_fact {_ _ _}.
 (* todo: in lean this is also a Prop? *)
 Lemma isaprop_is_wfs {M : category} (L R : morphism_class M) : isaprop (is_wfs L R).
 Proof.
-  
   admit.
 Admitted.
 
@@ -114,10 +115,10 @@ Proof.
   }
   
   (* extract lift and turn proof into normal ∑-type *)
-  unshelve eapply (hinhuniv _ ehl).
+  use (hinhuniv _ ehl).
   intro hl.
-  apply hinhpr.
   destruct hl as [l [hlh hlk]].
+  apply hinhpr.
   (* composition in diagram *)
   exists (l ∘ r.(ib)).
   (* diagram chasing *)
@@ -143,6 +144,70 @@ Proof.
   intros a b f hf x y g hg.
   apply (hg _ _ _).
   exact hf.
+Defined.
+
+(* not in Lean file *)
+Lemma opp_rlp_is_llp_opp {M : category} (L : morphism_class M) : 
+    morphism_class_opp (rlp L) = (llp (morphism_class_opp L)).
+Proof.
+  apply morphism_class_subset_antisymm; intros a b f.
+  (* todo: these proofs are the same *)
+  - intro rlpf.
+    intros x y g hg.
+    intros top bottom H.
+    specialize (rlpf _ _ (rm_opp_mor g)) as test.
+    simpl in test.
+    unshelve epose proof (test _) as test.
+    {
+      exact hg.
+    }
+
+    specialize (test (rm_opp_mor bottom) (rm_opp_mor top)) as t.
+    unshelve epose proof (t _) as t.
+    {
+      symmetry.
+      exact H.
+    }
+
+    use (hinhuniv _ t).
+    intro hl.
+    destruct hl as [l [hlg hlf]].
+    apply hinhpr.
+
+    exists (opp_mor l).
+    split; assumption.
+  - intro rlpf.
+    intros x y g hg.
+    intros top bottom H.
+    specialize (rlpf _ _ (rm_opp_mor g)) as test.
+    simpl in test.
+    unshelve epose proof (test _) as test.
+    {
+      exact hg.
+    }
+
+    specialize (test (rm_opp_mor bottom) (rm_opp_mor top)) as t.
+    unshelve epose proof (t _) as t.
+    {
+      symmetry.
+      exact H.
+    }
+
+    use (hinhuniv _ t).
+    intro hl.
+    destruct hl as [l [hlg hlf]].
+    apply hinhpr.
+
+    exists (opp_mor l).
+    split; assumption.
+Defined.
+
+Lemma opp_llp_is_rlp_opp {M : category} (L : morphism_class M) : 
+    morphism_class_opp (llp L) = rlp (morphism_class_opp L).
+Proof.
+  rewrite <- (morphism_class_opp_opp (rlp _)).
+  rewrite (opp_rlp_is_llp_opp _).
+  trivial.
 Defined.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L55 *)
@@ -175,7 +240,7 @@ Proof.
   (* Get factorization for f from H *)
   specialize (H _ _ f) as eHf.
   simpl in eHf.
-  unshelve eapply (hinhuniv _ eHf).
+  use (hinhuniv _ eHf).
   intro Hf.
   destruct Hf as [z [g [h [hg [hh hgh]]]]].
 
@@ -187,7 +252,7 @@ Proof.
     rewrite hgh, id_right.
     reflexivity.
   }
-  unshelve eapply (hinhuniv _ ehl).
+  use (hinhuniv _ ehl).
   intro hl.
   destruct hl as [l [hl1 hl2]].
 
@@ -251,9 +316,9 @@ Proof.
       rewrite id_left, id_right.
       reflexivity.
     }
-    (* todo: turn this unshelve eapply / destruct into an Ltac *)
+    (* todo: turn this use / destruct into an Ltac *)
     (* extract lift l from diagram *)
-    unshelve eapply (hinhuniv _ H).
+    use (hinhuniv _ H).
     intro hl.
     destruct hl as [l [hfl hlf]].
     unfold morphism_class_isos.
@@ -303,6 +368,102 @@ Proof.
     * exact (identity_is_iso M x).
     * rewrite id_left.
       reflexivity.
+Defined.
+
+Lemma wfs_gives_opp_wfs {M : category} {L R : morphism_class M} (w : is_wfs L R) : is_wfs (morphism_class_opp R) (morphism_class_opp L).
+Proof.
+  split.
+  - rewrite (w.(wfs_rlp)).
+    exact (opp_rlp_is_llp_opp _).
+  - rewrite (w.(wfs_llp)).
+    exact (opp_llp_is_rlp_opp _).
+  - intros x y f.
+    specialize (w.(wfs_fact) _ _ (rm_opp_mor f)) as test.
+    simpl in test.
+    use (hinhuniv _ test).
+    intro H.
+    destruct H as [z [g [h [? [? ?]]]]].
+
+    apply hinhpr.
+    exists (opp_ob z), (opp_mor h), (opp_mor g).
+    split; try split; assumption.
+Defined.
+
+Lemma wfs_contains_isos {M : category} {L R : morphism_class M} (w : is_wfs L R) : (morphism_class_isos M) ⊆ L.
+Proof.
+  (* isos are the llp of univ *)
+  rewrite <- llp_univ.
+  (* rewrite llp property *)
+  rewrite (w.(wfs_llp)).
+
+  apply llp_anti.
+  (* every morphism is a morphism *)
+  intros x y f hf.
+  exact tt.
+Defined.
+
+(* https://ncatlab.org/nlab/show/weak+factorization+system#ClosuredPropertiesOfWeakFactorizationSystem *)
+Lemma wfs_closed_pullbacks {M : category} {L R : morphism_class M} (w : is_wfs L R) 
+  {x y z : M} {p : x --> y} {f : z --> y} (Pb : Pullback f p) : ((R _ _) p) -> ((R _ _) (PullbackPr1 Pb)).
+Proof.
+  intro p_r.
+
+  destruct Pb as [[zfx [f'p p2]] [H isPb]].
+  simpl in *.
+  change (R zfx z f'p).
+
+  (* need to show that f'p has rlp w.r.t. all i ∈ L *)
+  rewrite (w.(wfs_rlp)).
+  intros a b i i_l.
+
+  (* commutative diagram *)
+  intros p1 g Hp1g.
+
+  (* obtain diagram
+      p1     p2
+    a --> Pb --> x
+   i|     |f'p   |p
+    v     v      v
+    b --> z  --> y
+       g      f
+  *)
+
+  (* use rlp of p to get lift  in outer diagram*)
+  rewrite (w.(wfs_rlp)) in p_r.
+  unshelve epose proof (p_r _ _ i i_l (p2 ∘ p1) (f ∘ g) _) as iplift.
+  {
+    rewrite <- assoc, <- H, assoc, Hp1g, assoc.
+    reflexivity. 
+  }
+  
+  (* extract lift *)
+  use (hinhuniv _ iplift).
+  intro hl.
+  destruct hl as [l [hl1 hl2]].
+  symmetry in hl2.
+  
+  (* use pullback property to get lift gh in
+          Pb --> x
+    gh  /  |f'p  |p
+      /    v     v
+     b --> z --> y
+        g     f
+  *)
+  destruct (isPb _ g l hl2) as [[gh [hgh1 hgh2]] _].
+  
+  (* gh is the lift in the inner diagram *)
+  apply hinhpr.
+  exists gh.
+  split.
+  - (* use uniqueness of maps into pullback to show commutativity
+       in top triangle *)
+    apply (MorphismsIntoPullbackEqual (isPb)).
+    * rewrite <-assoc, hgh1, Hp1g.
+      reflexivity.
+    * rewrite <- assoc, hgh2, hl1.
+      reflexivity.
+  - (* commutativity in lower triangle is trivial by pullback property *)
+    exact hgh1.
 Defined.
 
 
