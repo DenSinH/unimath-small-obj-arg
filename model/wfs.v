@@ -153,8 +153,7 @@ Lemma wfs_of_factorization {M : category} (I : morphism_class M)
 Proof.
   constructor.
   - reflexivity.
-  - apply morphism_class_equal_cond.
-    split; intros x y g hg.
+  - apply morphism_class_subset_antisymm; intros x y g hg.
     * exact (rlp_llp_self _ _ _ _ hg).
     * intros a b f hf.
       apply (hg _ _ _).
@@ -241,8 +240,7 @@ Defined.
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L91 *)
 Lemma llp_univ {M : category} : llp (morphism_class_univ M) = morphism_class_isos M.
 Proof.
-  apply morphism_class_equal_cond.
-  split; intros a b f H.
+  apply morphism_class_subset_antisymm; intros a b f H.
   - (* apply llp of f with itself *)
     specialize ((H _ _ f) tt).
     (* choose horizontal maps to be identity *)
@@ -278,8 +276,7 @@ Defined.
 Lemma rlp_isos {M : category} : rlp (morphism_class_isos M) = morphism_class_univ M.
 Proof.
   (* This proof is slightly different *)
-  apply morphism_class_equal_cond.
-  split.
+  apply morphism_class_subset_antisymm.
   - (* an iso is a morphism *)
     intros x y g H.
     unfold morphism_class_univ.
