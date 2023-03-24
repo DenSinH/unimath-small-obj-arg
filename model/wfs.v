@@ -173,26 +173,27 @@ Proof.
   - intro rlpf.
     intros x y g hg.
     intros top bottom H.
-    specialize (rlpf _ _ (rm_opp_mor g)) as test.
-    simpl in test.
-    use test.
+    (* extract lift fro rlp of f with respect to the opposite morphism of g *)
+    use (rlpf _ _ (rm_opp_mor g)).
     * exact hg.
+    (* flip diagram *)
     * exact (rm_opp_mor bottom).
     * exact (rm_opp_mor top).
+    (* commutativity *)
     * symmetry.
       exact H.
-    * intros hl.
+    * (* extract lift *)
+      intros hl.
       destruct hl as [l [hlg hlf]].
       apply hinhpr.
 
+      (* the opposite morphism of the lift is the lift of the opposite diagram *)
       exists (opp_mor l).
       split; assumption.
   - intro rlpf.
     intros x y g hg.
     intros top bottom H.
-    specialize (rlpf _ _ (rm_opp_mor g)) as test.
-    simpl in test.
-    use test.
+    use (rlpf _ _ (rm_opp_mor g)).
     * exact hg.
     * exact (rm_opp_mor bottom).
     * exact (rm_opp_mor top).
@@ -206,6 +207,7 @@ Proof.
       split; assumption.
 Defined.
 
+(* dual statement *)
 Lemma opp_llp_is_rlp_opp {M : category} (L : morphism_class M) : 
     morphism_class_opp (llp L) = rlp (morphism_class_opp L).
 Proof.
@@ -278,7 +280,7 @@ Proof.
 Defined.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L82 *)
-Lemma lp_isos_univ {M : category} {a b x y : M} (f : iso a b) (g : x --> y) : lp f g.
+Lemma lp_isos_univ' {M : category} {a b x y : M} (f : iso a b) (g : x --> y) : lp f g.
 Proof.
   intros h k s.
 
@@ -292,6 +294,18 @@ Proof.
   * rewrite <- assoc, s, assoc.
     rewrite iso_after_iso_inv, id_left.
     reflexivity.
+Defined.
+
+Lemma lp_isos_univ {M : category} {a b x y : M} (f : a --> b) (g : x --> y) : 
+  (morphism_class_isos M _ _ f) -> lp f g.
+Proof.
+  intro H.
+  (* todo: remove remember here *)
+  remember (make_iso _ H) as fiso.
+  replace f with (morphism_from_iso fiso) in *.
+  - exact (lp_isos_univ' fiso g).
+  - rewrite Heqfiso.
+    trivial.
 Defined.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L91 *)
