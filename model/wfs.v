@@ -13,9 +13,6 @@ Local Open Scope morcls.
 Local Open Scope retract.
 (* Local Open Scope set. *)
 
-(* todo: rlp/llp arguments *)
-(* todo: morphism class arguments *)
-
 (* in a category, we know that homs are sets, so equality must be a prop *)
 (* Lean: lp @ https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L14 *)
 (* Normal ∑-type is not a proposition, we need it to be to use it to create morphism classes *)
@@ -96,7 +93,6 @@ Definition wfs_llp  {M : category} (w : wfs M) := is_wfs_llp (wfs_is_wfs w).
 Definition wfs_rlp  {M : category} (w : wfs M) := is_wfs_rlp (wfs_is_wfs w).
 Definition wfs_fact {M : category} (w : wfs M) := is_wfs_fact (wfs_is_wfs w).
 
-(* todo: in lean this is also a Prop? *)
 Lemma isaprop_is_wfs {M : category} (L R : morphism_class M) : isaprop (is_wfs L R).
 Proof.
   apply isapropdirprod.
@@ -282,32 +278,20 @@ Proof.
 Defined.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L82 *)
-Lemma lp_isos_univ {M : category} {a b x y} (f : a --> b) (g : x --> y) : 
-  (morphism_class_isos M _ _) f -> lp f g.
+Lemma lp_isos_univ {M : category} {a b x y : M} (f : iso a b) (g : x --> y) : lp f g.
 Proof.
-  intro H.
   intros h k s.
 
-  (* Turn f into the corresponding coerced isomorphism type *)
-  (* todo: get rid of remember here *)
-  simpl in H.
-  remember (make_iso _ H) as fiso.
-  replace f with (morphism_from_iso fiso) in *.
-
-  - (* lift we are looking for is h ∘ f^{-1} *)
-    apply hinhpr.
-    exists (h ∘ (inv_from_iso fiso)).
-    (* diagram chasing *)
-    split.
-    * rewrite assoc, iso_inv_after_iso, id_left.
-      reflexivity.
-    * rewrite <- assoc, s, assoc.
-      rewrite iso_after_iso_inv, id_left.
-      reflexivity.
-  - (* todo: by clause in replace? *)
-    (* prove that f is indeed fiso *)
-    rewrite Heqfiso.
-    trivial.
+  (* lift we are looking for is h ∘ f^{-1} *)
+  apply hinhpr.
+  exists (h ∘ (inv_from_iso f)).
+  (* diagram chasing *)
+  split.
+  * rewrite assoc, iso_inv_after_iso, id_left.
+    reflexivity.
+  * rewrite <- assoc, s, assoc.
+    rewrite iso_after_iso_inv, id_left.
+    reflexivity.
 Defined.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L91 *)

@@ -40,6 +40,7 @@ Lemma morphism_class_ext {C : category} {I J : morphism_class C}
 Proof.
   do 3 (apply (funextsec _ _ _); intro).
   specialize ((h x x0 x1)) as test.
+  unfold hProptoType in *.
   (* Print subtypePath_prop.
   apply (subtypePath_prop (_) (isaprop _)).
   unfold hProptoType in *. *)
@@ -67,6 +68,11 @@ Definition morphism_class_univ (C : category) : (morphism_class C) :=
 
 Definition morphism_class_isos (C : category) : (morphism_class C) :=
     λ X Y f, make_hProp (is_iso f) (isaprop_is_iso _ _ _).
+
+Lemma iso_in_morphism_class_isos {C : category} {a b : C} (f : iso a b) : (morphism_class_isos C _ _ f).
+Proof.
+  exact (iso_is_iso f).
+Defined.
 
 (* No longer in lean files *)
 
