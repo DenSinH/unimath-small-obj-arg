@@ -95,7 +95,7 @@ Proof.
           v /     v
           b ===== b
         *)
-        use (is_wfs'lp (make_wfs C AF caf) f_c h_af g (identity b)).
+        use (wfs'lp (make_wfs C AF caf) f_c h_af g (identity b)).
         {
           (* commutativity of diagram *)
           rewrite id_right.
@@ -125,7 +125,7 @@ Proof.
         }
 
         (* so since g ∈ AC in a WFS acf = (AC, F), so must f be *)
-        exact (is_wfs'retract (make_wfs AC F acf) r g_ac).
+        exact (wfs'retract (make_wfs AC F acf) r g_ac).
       }
 Defined.
 

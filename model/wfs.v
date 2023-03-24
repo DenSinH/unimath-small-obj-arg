@@ -110,7 +110,7 @@ Admitted.
 (* Can't do dot notation like in lean (is_wfs.lp)*)
 (* any two maps in a wfs have the lifting property with respect to each other *)
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L33 *)
-Lemma is_wfs'lp {M : category} (w : wfs M)
+Lemma wfs'lp {M : category} (w : wfs M)
   {a b x y} {f : a --> b} {g : x --> y} (hf : (wfs_L w _ _) f) (hg : (wfs_R w _ _) g) : lp_hProp f g.
 Proof.
   unfold wfs_L in hf.
@@ -121,7 +121,7 @@ Defined.
 (* if f' is a retract of f and f is in L for some WFS, then so is f' *)
 (* proposition 14.1.13 in More Concise AT *)
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L40 *)
-Lemma is_wfs'retract {M : category} (w : wfs M)
+Lemma wfs'retract {M : category} (w : wfs M)
   {a b a' b'} {f : a --> b} {f' : a' --> b'} (r : retract f f') (hf : (wfs_L w _ _) f) : (wfs_L w _ _) f'.
 Proof.
   destruct r as [ia [ra [ib [rb [ha [hb [hi hr]]]]]]].
@@ -130,7 +130,7 @@ Proof.
   rewrite (wfs_llp w).
   intros x y g hg h k s.
   (* existence of lift in part of diagram *)
-  use (is_wfs'lp w hf hg (h ∘ ra) (k ∘ rb) _).
+  use (wfs'lp w hf hg (h ∘ ra) (k ∘ rb) _).
   {
     rewrite <- assoc, s, assoc, assoc, hr.
     reflexivity.
@@ -254,7 +254,7 @@ Proof.
 
   (* rcases w.lp hf hh g (𝟙 _) (by rw hgh; simp) with ⟨l, hl₁, hl₂⟩, *)
   (* Use lifting property to get map l in diagram *)
-  use (is_wfs'lp w hf hh g (identity _)).
+  use (wfs'lp w hf hh g (identity _)).
   {
     rewrite hgh, id_right.
     reflexivity.
