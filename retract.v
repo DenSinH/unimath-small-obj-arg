@@ -26,65 +26,54 @@ Local Open Scope cat.
         f'
 *)
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/retract.lean#L15 *)
-Record retract {C : category} {a b a' b' : C} (f : a --> b) (f' : a' --> b') : UU := {
-    ia : a' --> a;
-    ra : a  --> a';
-    ib : b' --> b;
-    rb : b  --> b';
-    ha : ra ∘ ia = identity a';
-    hb : rb ∘ ib = identity b';
-    hi : f  ∘ ia = ib ∘ f';
-    hr : f' ∘ ra = rb ∘ f
-}.
+Definition is_retract {C : category} {a b a' b' : C} (f : a --> b) (f' : a' --> b')
+    (ia : a' --> a) (ra : a --> a') (ib : b' --> b) (rb : b --> b') : UU :=
+  (ra ∘ ia = identity a') × (rb ∘ ib = identity b') × (f  ∘ ia = ib ∘ f') × (f' ∘ ra = rb ∘ f).
 
-Arguments ia {_ _ _ _ _ _ _}.
-Arguments ra {_ _ _ _ _ _ _}.
-Arguments ib {_ _ _ _ _ _ _}.
-Arguments rb {_ _ _ _ _ _ _}.
-Arguments ha {_ _ _ _ _ _ _}.
-Arguments hb {_ _ _ _ _ _ _}.
-Arguments hi {_ _ _ _ _ _ _}.
-Arguments hr {_ _ _ _ _ _ _}.
+Definition make_is_retract {C : category} {a b a' b' : C} {f : a --> b} {f' : a' --> b'}
+    {ia : a' --> a} {ra : a --> a'} {ib : b' --> b} {rb : b --> b'} 
+    (ha : ra ∘ ia = identity a') (hb : rb ∘ ib = identity b')  (hi : f  ∘ ia = ib ∘ f') (hr : f' ∘ ra = rb ∘ f): is_retract f f' ia ra ib rb :=
+  make_dirprod ha (make_dirprod hb (make_dirprod hi hr)).
 
-Variable C : category.
+Definition retract {C : category} {a b a' b' : C} (f : a --> b) (f' : a' --> b') : UU :=
+  ∑ (ia : a' --> a) (ra : a --> a') (ib : b' --> b) (rb : b --> b'), is_retract f f' ia ra ib rb.
+
+Definition make_retract {C : category} {a b a' b' : C} {f : a --> b} {f' : a' --> b'} 
+    (ia : a' --> a) (ra : a --> a') (ib : b' --> b) (rb : b --> b') (r : is_retract f f' ia ra ib rb) : retract f f' :=
+  tpair _ ia (tpair _ ra (tpair _ ib (tpair _ rb r))).
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/retract.lean#L23 *)
 (* Lemma 14.1.2 in MCAT *)
-Lemma retract_is_iso {a b a' b' : C} {f : a --> b} {f' : a' --> b'} (r : retract f f')
-  (h : is_iso f) : is_iso f'.
+Lemma retract_is_iso {C : category} {a b a' b' : C} {f : iso a b} {f' : a' --> b'} (r : retract f f') : is_iso f'.
 Proof.
+  destruct r as [ia [ra [ib [rb [ha [hb [hi hr]]]]]]].
+
   (* we construct an explicit inverse from the retract diagram *)  
   apply is_iso_from_is_z_iso.
-  remember (make_iso _ h) as fiso.
-  replace f with (morphism_from_iso fiso) in *.
 
   (* inverse is ra ∘ f^{-1} ∘ ib *)
-  exists (r.(ra) ∘ (inv_from_iso fiso) ∘ r.(ib)).
+  exists (ra ∘ (inv_from_iso f) ∘ ib).
   split.
   (* diagram chasing *)
-  - rewrite assoc, <- r.(hi), assoc.
-    rewrite <- (assoc (r.(ia)) _ _).
+  - rewrite assoc, <- hi, assoc.
+    rewrite <- (assoc ia _ _).
     rewrite iso_inv_after_iso, id_right.
-    exact (r.(ha)).
-  - rewrite <- assoc, <- assoc, r.(hr), assoc, assoc.
-    rewrite <- (assoc (r.(ib)) _ _).
+    exact ha.
+  - rewrite <- assoc, <- assoc, hr, assoc, assoc.
+    rewrite <- (assoc ib _ _).
     rewrite iso_after_iso_inv, id_right.
-    exact (r.(hb)).
-  - (* f is indeed fiso *)
-    rewrite Heqfiso.
-    trivial.
+    exact hb.
 Defined.
 
-Variable D : category.
-
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/retract.lean#L36 *)
-Lemma functor_on_retract (F : functor C D) {a b a' b' : C} {f : a --> b} {f' : a' --> b'} (r : retract f f') :
+Lemma functor_on_retract {C D : category} (F : functor C D) {a b a' b' : C} {f : a --> b} {f' : a' --> b'} (r : retract f f') :
   retract (#F f) (#F f').
 Proof.
-  split with (#F r.(ia)) (#F r.(ra)) (#F r.(ib)) (#F r.(rb)); 
-      repeat rewrite <- functor_comp; try rewrite <- functor_id.
-  - now rewrite (r.(ha)).
-  - now rewrite (r.(hb)).
-  - now rewrite (r.(hi)).
-  - now rewrite (r.(hr)).
+  destruct r as [ia [ra [ib [rb [ha [hb [hi hr]]]]]]].
+  use (make_retract (#F ia) (#F ra) (#F ib) (#F rb)).
+  use make_is_retract; repeat rewrite <- functor_comp; try rewrite <- functor_id.
+  - now rewrite ha.
+  - now rewrite hb.
+  - now rewrite hi.
+  - now rewrite hr.
 Defined.
