@@ -2,6 +2,10 @@ Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.CategoryTheory.Core.Prelude.
 Require Import UniMath.CategoryTheory.opp_precat.
 Require Import UniMath.CategoryTheory.limits.pullbacks.
+Require Import UniMath.CategoryTheory.limits.pushouts.
+Require Import UniMath.CategoryTheory.limits.coproducts.
+Require Import UniMath.CategoryTheory.limits.products.
+Require Import UniMath.CategoryTheory.limits.Opp.
 
 From Model Require Import morphism_class retract.
 
@@ -96,12 +100,13 @@ Definition wfs_fact {M : category} (w : wfs M) := is_wfs_fact (wfs_is_wfs w).
 Lemma isaprop_is_wfs {M : category} (L R : morphism_class M) : isaprop (is_wfs L R).
 Proof.
   apply isapropdirprod.
-  - admit.
+  - unfold isaprop.
+    exact (isasetmorphism_class _ _).
   - apply isapropdirprod.
-    * admit.
+    * exact (isasetmorphism_class _ _).
     * do 3 (apply impred_isaprop; intro).
       apply propproperty.
-Admitted.
+Defined.
 
 (* Can't do dot notation like in lean (is_wfs.lp)*)
 (* any two maps in a wfs have the lifting property with respect to each other *)
@@ -279,7 +284,6 @@ Proof.
   exact hg.
 Defined.
 
-(* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L82 *)
 Lemma lp_isos_univ' {M : category} {a b x y : M} (f : iso a b) (g : x --> y) : lp f g.
 Proof.
   intros h k s.
@@ -296,6 +300,7 @@ Proof.
     reflexivity.
 Defined.
 
+(* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L82 *)
 Lemma lp_isos_univ {M : category} {a b x y : M} (f : a --> b) (g : x --> y) : 
   (morphism_class_isos M _ _ f) -> lp f g.
 Proof.
@@ -367,13 +372,13 @@ Proof.
     exists x, (identity x), f.
 
     (* this solves the second subgoal, stating that f is a morphism *)
-    split; repeat try split.
+    repeat split.
     * exact (identity_is_iso M x).
     * rewrite id_left.
       reflexivity.
 Defined.
 
-Lemma is_wfs_gives_opp_is_wfs {M : category} {L R : morphism_class M} (w : is_wfs L R) : is_wfs (morphism_class_opp R) (morphism_class_opp L).
+Definition opp_is_wfs {M : category} {L R : morphism_class M} (w : is_wfs L R) : is_wfs (morphism_class_opp R) (morphism_class_opp L).
 Proof.
   use make_is_wfs.
   - rewrite (is_wfs_rlp w).
@@ -389,13 +394,13 @@ Proof.
     
     apply hinhpr.
     exists (opp_ob z), (opp_mor h), (opp_mor g).
-    split; try split; assumption.
+    repeat split; assumption.
 Defined.
 
-Lemma wfs_gives_opp_wfs {M : category} (w : wfs M) : wfs (op_cat M).
+Definition opp_wfs {M : category} (w : wfs M) : wfs (op_cat M).
 Proof.
   exists (morphism_class_opp (wfs_R w)), (morphism_class_opp (wfs_L w)).
-  exact (is_wfs_gives_opp_is_wfs (wfs_is_wfs w)).
+  exact (opp_is_wfs (wfs_is_wfs w)).
 Defined.
 
 Lemma wfs_contains_isos {M : category} (w : wfs M) : (morphism_class_isos M) ⊆ (wfs_L w).
@@ -469,7 +474,7 @@ Proof.
   split.
   - (* use uniqueness of maps into pullback to show commutativity
        in top triangle *)
-    apply (MorphismsIntoPullbackEqual (isPb)).
+    apply (MorphismsIntoPullbackEqual isPb).
     * rewrite <-assoc, hgh1, Hp1g.
       reflexivity.
     * rewrite <- assoc, hgh2, hl1.
@@ -477,5 +482,67 @@ Proof.
   - (* commutativity in lower triangle is trivial by pullback property *)
     exact hgh1.
 Defined.
+
+(* Dual statement *)
+Lemma wfs_closed_pushouts {M : category} (w : wfs M) 
+    {x y z : M} {p : x --> y} {f : x --> z} (Po : Pushout f p) : ((wfs_L w _ _) p) -> ((wfs_L w _ _) (PushoutIn1 Po)).
+Proof.
+  (* didn't expect Coq would be this powerful... *)
+  apply (wfs_closed_pullbacks (opp_wfs w)).
+Defined.
+
+(* https://ncatlab.org/nlab/show/weak+factorization+system#ClosuredPropertiesOfWeakFactorizationSystem *)
+(* map between coproducts is in L if all arrows between objects in coproduct are *)
+Lemma wfs_closed_coproducts {I : UU} {M : category} (w : wfs M)
+    {a b : I -> M} {f : ∏ (i : I), a i --> b i} (hf : ∀ (i : I), (wfs_L w _ _) (f i))
+    (CCa : Coproduct _ _ a) (CCb : Coproduct _ _ b) : 
+  (wfs_L w _ _) (CoproductOfArrows _ _ CCa CCb f).
+Proof.
+  unfold wfs_L in *.
+  (* create square with g ∈ R *)
+  rewrite (wfs_llp w) in *.
+  intros x y g hg.
+  intros h k s.
+
+  (* obtain a square for all i ∈ I *)
+  (* factor maps from A_i / B_i through coproduct object *)
+  set (hi := λ i, h ∘ (CoproductIn _ _ CCa i)).
+  set (ki := λ i, k ∘ (CoproductIn _ _ CCb i)).
+  assert (∏ i, ∃ li, (li ∘ (f i) = hi i) × (g ∘ li = ki i)) as ilift.
+  {
+    intro i.
+    (* extract lift in i-th diagram *)
+    specialize (hf i _ _ g hg) as H.
+    specialize (H (hi i) (ki i)).
+    
+    use H.
+    
+    unfold hi, ki.
+    rewrite <- assoc, s, assoc, assoc.
+    now rewrite (CoproductOfArrowsIn _ _).
+  }
+  
+  (* obtain lift in original diagram *)
+  admit.
+  (* set (iscop := isCoproduct_Coproduct _ _ CCb).
+  specialize ((λ i, ilift i)) as test.
+  
+  specialize (iscop x (λ i, ilift i)) as test.
+  set (l := λ i, (ilift i)).
+  simpl in l. *)
+  
+Admitted.
+
+(* Dual statement *)
+Lemma wfs_closed_products {I : UU} {M : category} (w : wfs M)
+    {a b : I -> M} {f : ∏ (i : I), b i --> a i} (hf : ∀ (i : I), (wfs_R w _ _) (f i))
+    (CCa : Product _ _ a) (CCb : Product _ _ b) : 
+  (wfs_R w _ _) (ProductOfArrows _ _ CCa CCb f).
+Proof.
+  (* again superpowers by Coq *)
+  apply (wfs_closed_coproducts (opp_wfs w)).
+  exact hf.
+Defined.
+
 
 End wfs.

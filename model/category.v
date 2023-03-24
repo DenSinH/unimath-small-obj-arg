@@ -16,6 +16,13 @@ Definition is_model_category {M : category} (W C F : morphism_class M) :=
 Definition model_category (M : category) :=
   ∑ (W C F : morphism_class M), is_model_category W C F.
 
+Lemma isprop_is_model_category {M : category} (W C F : morphism_class M) : isaprop (is_model_category W C F).
+Proof.
+  apply isapropdirprod.
+  apply isaprop_is_weak_equivalences.
+  apply isapropdirprod; apply isaprop_is_wfs.
+Defined.
+
 Lemma is_model_category_mk' {M : category} {W C AF AC F : morphism_class M}
     (weq : is_weak_equivalences W)
     (caf : is_wfs C AF) (acf : is_wfs AC F)
@@ -117,7 +124,7 @@ Proof.
         assert (r : retract g f).
         {
           use (make_retract (identity a) (identity a) l h).
-          idtac; repeat split.
+          use make_is_retract.
           - now rewrite id_left.
           - assumption.
           - rewrite id_left. now symmetry.
