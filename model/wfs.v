@@ -56,6 +56,7 @@ to do this, but I don't know if we want to use this or not...
 I figured I'd define my own, it should be mostly compatible
 *)
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L24 *)
+(* MCAT: Lemma 14.1.9 *)
 Lemma llp_anti {M : category} {R R' : morphism_class M} (h : R ⊆ R') : llp R' ⊆ llp R.
 Proof.
   unfold "⊆" in *.
@@ -67,6 +68,58 @@ Proof.
   apply (h e b p).
   (* i in R *)
   exact K.
+Defined.
+
+(* not in Lean file *)
+Lemma opp_rlp_is_llp_opp {M : category} (L : morphism_class M) : 
+    morphism_class_opp (rlp L) = (llp (morphism_class_opp L)).
+Proof.
+  apply morphism_class_subset_antisymm; intros a b f.
+  (* todo: these proofs are the same *)
+  - intro rlpf.
+    intros x y g hg.
+    intros top bottom H.
+    (* extract lift fro rlp of f with respect to the opposite morphism of g *)
+    use (rlpf _ _ (rm_opp_mor g)).
+    * exact hg.
+    (* flip diagram *)
+    * exact (rm_opp_mor bottom).
+    * exact (rm_opp_mor top).
+    (* commutativity *)
+    * symmetry.
+      exact H.
+    * (* extract lift *)
+      intros hl.
+      destruct hl as [l [hlg hlf]].
+      apply hinhpr.
+
+      (* the opposite morphism of the lift is the lift of the opposite diagram *)
+      exists (opp_mor l).
+      split; assumption.
+  - intro rlpf.
+    intros x y g hg.
+    intros top bottom H.
+    use (rlpf _ _ (rm_opp_mor g)).
+    * exact hg.
+    * exact (rm_opp_mor bottom).
+    * exact (rm_opp_mor top).
+    * symmetry.
+      exact H.
+    * intro hl.
+      destruct hl as [l [hlg hlf]].
+      apply hinhpr.
+
+      exists (opp_mor l).
+      split; assumption.
+Defined.
+
+(* dual statement *)
+Lemma opp_llp_is_rlp_opp {M : category} (L : morphism_class M) : 
+    morphism_class_opp (llp L) = rlp (morphism_class_opp L).
+Proof.
+  rewrite <- (morphism_class_opp_opp (rlp _)).
+  rewrite (opp_rlp_is_llp_opp _).
+  trivial.
 Defined.
 
 (* Any map can be factored through maps in L and R *)
@@ -122,7 +175,7 @@ Defined.
 (* if f' is a retract of f and f is in L for some WFS, then so is f' *)
 (* proposition 14.1.13 in More Concise AT *)
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L40 *)
-Lemma wfs'retract {M : category} (w : wfs M)
+Lemma wfs_L_retract {M : category} (w : wfs M)
   {a b a' b'} {f : a --> b} {f' : a' --> b'} (r : retract f f') (hf : (wfs_L w _ _) f) : (wfs_L w _ _) f'.
 Proof.
   destruct r as [ia [ra [ib [rb [ha [hb [hi hr]]]]]]].
@@ -167,58 +220,6 @@ Proof.
   intros a b f hf x y g hg.
   apply (hg _ _ _).
   exact hf.
-Defined.
-
-(* not in Lean file *)
-Lemma opp_rlp_is_llp_opp {M : category} (L : morphism_class M) : 
-    morphism_class_opp (rlp L) = (llp (morphism_class_opp L)).
-Proof.
-  apply morphism_class_subset_antisymm; intros a b f.
-  (* todo: these proofs are the same *)
-  - intro rlpf.
-    intros x y g hg.
-    intros top bottom H.
-    (* extract lift fro rlp of f with respect to the opposite morphism of g *)
-    use (rlpf _ _ (rm_opp_mor g)).
-    * exact hg.
-    (* flip diagram *)
-    * exact (rm_opp_mor bottom).
-    * exact (rm_opp_mor top).
-    (* commutativity *)
-    * symmetry.
-      exact H.
-    * (* extract lift *)
-      intros hl.
-      destruct hl as [l [hlg hlf]].
-      apply hinhpr.
-
-      (* the opposite morphism of the lift is the lift of the opposite diagram *)
-      exists (opp_mor l).
-      split; assumption.
-  - intro rlpf.
-    intros x y g hg.
-    intros top bottom H.
-    use (rlpf _ _ (rm_opp_mor g)).
-    * exact hg.
-    * exact (rm_opp_mor bottom).
-    * exact (rm_opp_mor top).
-    * symmetry.
-      exact H.
-    * intro hl.
-      destruct hl as [l [hlg hlf]].
-      apply hinhpr.
-
-      exists (opp_mor l).
-      split; assumption.
-Defined.
-
-(* dual statement *)
-Lemma opp_llp_is_rlp_opp {M : category} (L : morphism_class M) : 
-    morphism_class_opp (llp L) = rlp (morphism_class_opp L).
-Proof.
-  rewrite <- (morphism_class_opp_opp (rlp _)).
-  rewrite (opp_rlp_is_llp_opp _).
-  trivial.
 Defined.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L55 *)
@@ -403,7 +404,7 @@ Proof.
   exact (opp_is_wfs (wfs_is_wfs w)).
 Defined.
 
-Lemma wfs_contains_isos {M : category} (w : wfs M) : (morphism_class_isos M) ⊆ (wfs_L w).
+Lemma wfs_L_contains_isos {M : category} (w : wfs M) : (morphism_class_isos M) ⊆ (wfs_L w).
 Proof.
   (* isos are the llp of univ *)
   rewrite <- llp_univ.
@@ -415,6 +416,22 @@ Proof.
   (* every morphism is a morphism *)
   intros x y f hf.
   exact tt.
+Defined.
+
+(* Dual statement *)
+Lemma wfs_R_contains_isos {M : category} (w : wfs M) : (morphism_class_isos M) ⊆ (wfs_R w).
+Proof.
+  intros x y f hf.
+  set (opp_containment := wfs_L_contains_isos (opp_wfs w)).
+  exact (opp_containment _ _ (opp_mor f) (opp_is_iso _ hf)).
+Defined.
+
+(* Dual statement of wfs_L_retract *)
+Lemma wfs_R_retract {M : category} (w : wfs M)
+  {a b a' b'} {f : a --> b} {f' : a' --> b'} (r : retract f f') (hf : (wfs_R w _ _) f) : (wfs_R w _ _) f'.
+Proof.
+  use (wfs_L_retract (opp_wfs w) (opp_retract r)).
+  exact hf.
 Defined.
 
 (* https://ncatlab.org/nlab/show/weak+factorization+system#ClosuredPropertiesOfWeakFactorizationSystem *)
@@ -543,6 +560,17 @@ Proof.
   apply (wfs_closed_coproducts (opp_wfs w)).
   exact hf.
 Defined.
+
+(*
+(i)   wfs_<X>_contains_isos
+(ii)  wfs_<X>_retract
+(iii) wfs_closed_<co>products
+(iv)  wfs_closed_<pushouts|pullbacks>
+(v)   NOT DONE
+
+prove that L is left saturated, and R is right saturated in a WFS
+or lemma 14.1.8
+*)
 
 
 End wfs.

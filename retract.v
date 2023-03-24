@@ -1,5 +1,6 @@
 Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.CategoryTheory.Core.Prelude.
+Require Import UniMath.CategoryTheory.opp_precat.
 
 
 Declare Scope retract.
@@ -76,4 +77,20 @@ Proof.
   - now rewrite hb.
   - now rewrite hi.
   - now rewrite hr.
+Defined.
+
+Definition opp_retract {C : category} {a b a' b' : C} {f : a --> b} {f' : a' --> b'} (r : retract f f') : 
+    retract (C:=op_cat C) (opp_mor f) (opp_mor f').
+Proof.
+  destruct r as [ia [ra [ib [rb [ha [hb [hi hr]]]]]]].
+  use make_retract.
+  - exact (opp_mor rb).
+  - exact (opp_mor ib).
+  - exact (opp_mor ra).
+  - exact (opp_mor ia).
+  - use make_is_retract.
+    * exact hb.
+    * exact ha.
+    * symmetry. exact hr.
+    * symmetry. exact hi.
 Defined.

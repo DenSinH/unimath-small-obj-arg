@@ -82,7 +82,7 @@ Definition morphism_class_opp {C : category} (S : morphism_class C) : (morphism_
 Definition morphism_class_rm_opp {C : category} (S : morphism_class (op_cat C)) : (morphism_class C) :=
     λ X Y f, (S _ _) (rm_opp_mor f).
 
-Lemma morphism_class_opp_preserves_containment {C : category} (S T : morphism_class C) : 
+(* Lemma morphism_class_opp_preserves_containment {C : category} (S T : morphism_class C) : 
     (S ⊆ T) -> (morphism_class_opp S ⊆ morphism_class_opp T).
 Proof.
   intro st.
@@ -99,7 +99,7 @@ Proof.
   - exact (morphism_class_opp_preserves_containment _ _).
   - intro H.
     exact (morphism_class_opp_preserves_containment _ _ H).
-Defined.
+Defined. *)
 
 Lemma morphism_class_opp_opp {C : category} (S : morphism_class C) : 
     morphism_class_opp (morphism_class_opp S) = S.
