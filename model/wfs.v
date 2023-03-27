@@ -285,13 +285,19 @@ Proof.
   exact hg.
 Defined.
 
-Lemma lp_isos_univ' {M : category} {a b x y : M} (f : iso a b) (g : x --> y) : lp f g.
+(* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L82 *)
+Lemma lp_isos_univ {M : category} {a b x y : M} (f : a --> b) (g : x --> y) : 
+  (morphism_class_isos M _ _ f) -> lp f g.
 Proof.
+  intro H.
+  set (fiso := make_iso _ H).
+  (* change f to the isomorphism in the goal *)
+  change (lp fiso g).
+  
   intros h k s.
-
   (* lift we are looking for is h ∘ f^{-1} *)
   apply hinhpr.
-  exists (h ∘ (inv_from_iso f)).
+  exists (h ∘ (inv_from_iso fiso)).
   (* diagram chasing *)
   split.
   * rewrite assoc, iso_inv_after_iso, id_left.
@@ -299,19 +305,6 @@ Proof.
   * rewrite <- assoc, s, assoc.
     rewrite iso_after_iso_inv, id_left.
     reflexivity.
-Defined.
-
-(* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L82 *)
-Lemma lp_isos_univ {M : category} {a b x y : M} (f : a --> b) (g : x --> y) : 
-  (morphism_class_isos M _ _ f) -> lp f g.
-Proof.
-  intro H.
-  (* todo: remove remember here *)
-  remember (make_iso _ H) as fiso.
-  replace f with (morphism_from_iso fiso) in *.
-  - exact (lp_isos_univ' fiso g).
-  - rewrite Heqfiso.
-    trivial.
 Defined.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L91 *)
@@ -525,6 +518,7 @@ Proof.
   (* factor maps from A_i / B_i through coproduct object *)
   set (hi := λ i, h ∘ (CoproductIn _ _ CCa i)).
   set (ki := λ i, k ∘ (CoproductIn _ _ CCb i)).
+
   assert (∏ i, ∃ li, (li ∘ (f i) = hi i) × (g ∘ li = ki i)) as ilift.
   {
     intro i.
@@ -538,9 +532,47 @@ Proof.
     rewrite <- assoc, s, assoc, assoc.
     now rewrite (CoproductOfArrowsIn _ _).
   }
-  
+
+  assert (∑ (li : (∏ i, (b i --> x))), (∏ i, (li i) ∘ (f i) = hi i × (g ∘ (li i) = ki i))) as ilifts.
+  {
+    admit.
+    (* use tpair.
+    - intro i.
+      specialize (ilift i) as li.
+      destruct li as [l hl].
+      exact l.
+    - simpl.
+      intro i.
+      set (li := ilift i).
+      destruct li as [l hl].
+      exact hl. *)
+  }
+
+  destruct ilifts as [li hli].
+
   (* obtain lift in original diagram *)
-  admit.
+  set (hl := isCoproduct_Coproduct _ _ CCb x li).
+
+  destruct hl as [[l hl] uniqueness].
+  
+  apply hinhpr.
+  exists l.
+  split.
+  - rewrite CoproductArrowEta.
+    rewrite (CoproductArrowEta _ _ _ _ _ l).
+    rewrite (precompWithCoproductArrow).
+    apply CoproductArrowUnique.
+    intro i.
+    rewrite CoproductInCommutes.
+    destruct (hli i) as [hlicomm klicomm].
+    (* this goal is exactly hlicomm, but we "forgot" what the definition of li was *)
+    change (f i · (CoproductIn I M CCb i · l) = hi i).
+    rewrite <- hlicomm.
+
+    admit.
+  - 
+    admit.
+  
   (* set (iscop := isCoproduct_Coproduct _ _ CCb).
   specialize ((λ i, ilift i)) as test.
   
