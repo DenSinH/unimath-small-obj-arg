@@ -38,15 +38,13 @@ Notation "S ⊆ T" := (morphism_class_containedIn S T) (at level 70) : morcls.
 Lemma morphism_class_ext {C : category} {I J : morphism_class C}
   (h : ∏ x y (f : x --> y), ((I _ _) f <-> (J _ _) f)) : I = J.
 Proof.
-  do 3 (apply (funextsec _ _ _); intro).
-  specialize ((h x x0 x1)) as test.
-  unfold hProptoType in *.
-  (* Print subtypePath_prop.
-  apply (subtypePath_prop (_) (isaprop _)).
-  unfold hProptoType in *. *)
-  (* now rewrite (h x x0 x1). *)
-  admit.
-Admitted.
+  do 3 (apply funextsec; intro).
+  destruct ((h x x0 x1)) as [impl conv].
+
+  (* in the statement we wish to prove that two hProps are equal,
+     this boils down to univalence on hProps *)
+  exact (hPropUnivalence _ _ impl conv).
+Defined.
 
 Lemma morphism_class_subset_antisymm {C : category} {I J : morphism_class C} (h : I ⊆ J) (h' : J ⊆ I) : I = J.
 Proof.
