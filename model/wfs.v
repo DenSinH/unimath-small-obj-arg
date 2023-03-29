@@ -43,18 +43,12 @@ Definition lp_hProp {M : category} {a b x y : M} (f : a --> b) (g : x --> y) : h
     X ---> B
        f 
 *)
-(* Messing with hProps gets a bit annoying at times *)
 Definition llp {M : category} (R : morphism_class M) : (morphism_class M) :=
     λ {a x : M} (i : a --> x), ∀ (e b : M) (p : e --> b), ((R _ _) p ⇒ lp_hProp i p)%logic.
 
 Definition rlp {M : category} (L : morphism_class M) : (morphism_class M) :=
     λ {e b : M} (p : e --> b), ∀ (a x : M) (i : a --> x), ((L _ _) i ⇒ lp_hProp i p)%logic.
 
-(* There is stuff in 
-  https://unimath.github.io/doc/UniMath/4dd5c17/UniMath.MoreFoundations.Subtypes.html
-to do this, but I don't know if we want to use this or not...
-I figured I'd define my own, it should be mostly compatible
-*)
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L24 *)
 (* MCAT: Lemma 14.1.9 *)
 Lemma llp_anti {M : category} {R R' : morphism_class M} (h : R ⊆ R') : llp R' ⊆ llp R.
@@ -533,6 +527,7 @@ Proof.
     now rewrite (CoproductOfArrowsIn _ _).
   }
 
+  (* we need the axiom of choice here *)
   assert (∑ (li : (∏ i, (b i --> x))), (∏ i, (li i) ∘ (f i) = hi i × (g ∘ (li i) = ki i))) as ilifts.
   {
     admit.
@@ -604,5 +599,97 @@ prove that L is left saturated, and R is right saturated in a WFS
 or lemma 14.1.8
 *)
 
+Definition wfs_llp' {M : category} (w : wfs M) : (morphism_class M) :=
+    λ {x y : M} (f : x --> y), ∃ z (g : x --> z) (h : z --> y), (wfs_L w _ _) g × (wfs_R w _ _) h × h ∘ g = f × lp_hProp g f.
+
+Definition wfs_rlp' {M : category} (w : wfs M) : (morphism_class M) :=
+    λ {x y : M} (f : x --> y), ∃ z (g : x --> z) (h : z --> y), (wfs_L w _ _) g × (wfs_R w _ _) h × h ∘ g = f × lp_hProp f h.
+
+Lemma llp_iff_lift_with_R {M : category} (w : wfs M) {x y : M} (f : x --> y) : (wfs_llp' w _ _) f <-> (wfs_R w _ _) f.
+Proof.
+  split.
+  - intro hf.
+    unfold wfs_R.
+    rewrite (wfs_rlp w).
+
+    intros a b g hg.
+    intros top bottom comm_total.
+
+    (* extract lp of λ_f and f (assumption) *)
+    (* this diagram has a lift
+       x ==== x
+  λ_f  |      | f
+       |      |
+       Mf --> y
+          ρ_f
+    *)
+    use hf.
+    intro h.
+    destruct h as [Mf [lf [rf [lf_l [rf_r [fact lp_lff]]]]]].
+    
+    (* extract lift *)
+    use (lp_lff (identity _) rf).
+    {
+      rewrite id_left.
+      now symmetry.
+    }
+    intro H.
+    destruct H as [lift_lff [comm_lff1 comm_lff2]].
+    
+    (* Since ρ_f ∈ R, this diagram has a lift
+        top     λ_f
+      a ---> x ---> Mf
+    g |             | ρ_f
+      |             |
+      b ----------> y
+           bottom
+    *)
+    (* g and rf indeed have the rlp *)
+    assert (lp_hProp g rf) as lp_grf.
+    {
+      unfold wfs_R in rf_r.
+      rewrite (wfs_rlp) in rf_r.
+      exact (rf_r _ _ g hg).
+    }
+
+    (* extract this lift *)
+    use (lp_grf (lf ∘ top) bottom).
+    {
+      rewrite <- assoc, fact.
+      exact comm_total.
+    }
+
+    intro H.
+    destruct H as [lift_grf [comm_grf1 comm_grf2]].
+
+    (* Compose lifts to get total lift *)
+    apply hinhpr.
+    exists (lift_lff ∘ lift_grf).
+
+    (* diagram chasing *)
+    split.
+    * rewrite assoc, comm_grf1, <- assoc, comm_lff1, id_right.
+      reflexivity.
+    * rewrite <- assoc, comm_lff2.
+      exact comm_grf2.
+  - (* this side is easy, we know that f has a lift for all functions in L, 
+       so also for its factorization *)
+    intro hf.
+    
+    (* get factorization of f *)
+    use (wfs_fact w _ _ f).
+    intro h.
+    destruct h as [z [g [h [g_l [h_r comp]]]]].
+    
+    (* use lift as lift in diagram *)
+    apply hinhpr.
+    exists z, g, h.
+    repeat split; try assumption.
+
+    (* wfs property *)
+    unfold wfs_R in hf.
+    rewrite wfs_rlp in hf.
+    exact (hf _ _ _ g_l).
+Defined.
 
 End wfs.
