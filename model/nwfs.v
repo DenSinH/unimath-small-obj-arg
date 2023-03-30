@@ -2,11 +2,9 @@ Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.CategoryTheory.Core.Prelude.
 Require Import UniMath.CategoryTheory.Core.Categories.
 Require Import UniMath.CategoryTheory.Core.Functors.
-Require Import UniMath.CategoryTheory.Core.Isos.
 Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
-Require Import UniMath.CategoryTheory.Core.Univalence.
-Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
+Require Import UniMath.CategoryTheory.whiskering.
 Require Import UniMath.CategoryTheory.Monads.Monads.
 
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
@@ -70,6 +68,9 @@ Definition arrow : category := total_category arrow_disp.
 
 End Arrow_Disp.
 
+Definition arrow_dom {C : category} (f : arrow C) : C := pr11 f.
+Definition arrow_cod {C : category} (f : arrow C) : C := pr21 f.
+
 Section Three_disp.
 
 Context (C:category).
@@ -130,6 +131,10 @@ Definition three : category := total_category three_disp.
 
 End Three_disp.
 
+Definition three_dom {C : category} (f : three C) : C := pr11 f.
+Definition three_mid {C : category} (f : three C) : C := pr121 f.
+Definition three_cod {C : category} (f : three C) : C := pr221 f.
+
 Section Face_maps.
 
 Context (C : category).
@@ -139,9 +144,9 @@ Proof.
   use make_functor.
   - use make_functor_data.
     * intro xxx.
-      exact (make_dirprod (pr1 xxx) (pr12 xxx)).
+      exact (make_dirprod (pr12 xxx) (pr22 xxx)).
     * intros xxx yyy fff.
-      exact (make_dirprod (pr1 fff) (pr12 fff)).
+      exact (make_dirprod (pr12 fff) (pr22 fff)).
   - split.
     * intro xxx.
       apply binprod_id.
@@ -169,9 +174,9 @@ Proof.
   use make_functor.
   - use make_functor_data.
     * intro xxx.
-      exact (make_dirprod (pr12 xxx) (pr22 xxx)).
+      exact (make_dirprod (pr1 xxx) (pr12 xxx)).
     * intros xxx yyy fff.
-      exact (make_dirprod (pr12 fff) (pr22 fff)).
+      exact (make_dirprod (pr1 fff) (pr12 fff)).
   - split.
     * intro xxx.
       apply binprod_id.
@@ -185,14 +190,14 @@ Proof.
   - (* map on displayed objects *)
     intros xxx xxx'.
     simpl.
-    destruct xxx' as [f1 _].
-    exact f1.
+    destruct xxx' as [_ f2].
+    exact f2.
   - (* map on displayed arrows *)
     simpl.
     intros xxx yyy ff gg F H.
-    destruct H as [h1 _].
+    destruct H as [_ h2].
     symmetry.
-    exact (pathsinv0 h1).
+    exact (pathsinv0 h2).
 Defined.
 
 Definition face_map_1_functor_data : disp_functor_data face_map_1_base (three_disp C) (arrow_disp C).
@@ -223,13 +228,13 @@ Proof.
   - (* map on displayed objects *)
     intros xxx xxx'.
     simpl.
-    destruct xxx' as [_ f2].
-    exact f2.
+    destruct xxx' as [f1 _].
+    exact f1.
   - (* map on displayed arrows *)
     simpl.
     intros xxx yyy ff gg F H.
-    destruct H as [_ h2].
-    exact h2.
+    destruct H as [h1 _].
+    exact h1.
 Defined.
 
 Definition face_map_0_disp : disp_functor face_map_0_base (three_disp C) (arrow_disp C).
@@ -259,13 +264,156 @@ Definition face_map_1 := total_functor face_map_1_disp.
 Definition face_map_2 := total_functor face_map_2_disp.
 
 (* verify that they are indeed compatible *)
-Lemma compatibility (fg : three C) : pr2 (face_map_2 fg ) ∘ pr2 (face_map_0 fg) = pr2 (face_map_1 fg).
+Lemma face_compatibility (fg : three C) : pr2 (face_map_0 fg) ∘ pr2 (face_map_2 fg) = pr2 (face_map_1 fg).
 Proof.
   trivial.
 Defined.
 
+Definition c_21 : face_map_2 ⟹ face_map_1.
+Proof.
+  (* this natural transformation boils down to square
+    0 ===== 0
+    |       |
+    |       |
+    1 ----> 2
+  *)
+  use make_nat_trans.
+  - intro xxx.
+    destruct xxx as [xxx [f1 f2]].
+    simpl.
+    exists (make_dirprod (identity _) f2).
+    simpl.
+    now rewrite id_left.
+  - intros xxx yyy ff. 
+    cbn.
+    (* hot mess again, don't know what to do *)
+    admit.
+Admitted.
+
+Definition c_10 : face_map_1 ⟹ face_map_0.
+Proof.
+  (* this natural transformation boils down to square
+    0 ----> 1
+    |       |
+    |       |
+    2 ===== 2
+  *)
+  use make_nat_trans.
+  - intro xxx.
+    destruct xxx as [xxx [f1 f2]].
+    simpl.
+    exists (make_dirprod f1 (identity _)).
+    simpl.
+    now rewrite id_right.
+  - intros xxx yyy ff. 
+    (* hot mess again, don't know what to do *)
+    admit.
+Admitted.
+
 End Face_maps.
 
-Definition functorial_factorization (C : category) 
-    := ∑ F : (arrow C ⟶ three C), functor_composite F (face_map_1 C) = functor_identity (arrow C).
+Arguments face_map_0 {_}.
+Arguments face_map_1 {_}.
+Arguments face_map_2 {_}.
+
+(* Lemma face_map_1_preserves_dom {C : category} : ∏ g : three C, arrow_dom (face_map_1 g) = three_dom g.
+Proof.
+  trivial.
+Defined.
+
+Lemma face_map_1_preserves_cod {C : category} : ∏ g : three C, arrow_cod (face_map_1 g) = three_cod g.
+Proof.
+  trivial.
+Defined. *)
+
+Definition functorial_factorization (C : category) : UU := 
+    ∑ F : (arrow C ⟶ three C), 
+        F ∙ face_map_1 = functor_identity (arrow C).
+
+Definition fact_functor {C : category} (F : functorial_factorization C) := pr1 F.
+Coercion fact_functor : functorial_factorization >-> functor.
+Definition fact_cond {C : category} (F : functorial_factorization C) := pr2 F.
+
+Definition factorization_L {C : category} (F : functorial_factorization C) :=
+    F ∙ face_map_2.
+Definition factorization_R {C : category} (F : functorial_factorization C) :=
+    F ∙ face_map_0.
+
+Lemma fact_preserves_dom {C : category} (F : functorial_factorization C) (f : arrow C) :
+    (three_dom (F f)) = arrow_dom f.
+Proof.
+  (* todo: why do I _have_ to use pr1 here (coercion)? *)
+  change (arrow_dom ((functor_composite (pr1 F) face_map_1) f) = arrow_dom f).
+  rewrite (fact_cond F).
+  trivial.
+Defined.
+
+Lemma fact_preserves_cod {C : category} (F : functorial_factorization C) (f : arrow C) :
+    (three_cod (F f)) = arrow_cod f.
+Proof.
+  change (arrow_cod ((functor_composite (pr1 F) face_map_1) f) = arrow_cod f).
+  rewrite (fact_cond F).
+  trivial.
+Defined.
+
+Lemma LR_compatibility {C : category} (F : functorial_factorization C) (f : arrow C) : 
+   Type.
+(* coq does not deduce that the resulting morphism has the same domain/codomain *)
+(* pr2 (factorization_R F f) ∘ pr2 (factorization_L F f) = (pr2 f). *)
+Proof.
+  (* (factorization_R F f) ∘ (factorization_L F f) = (pr1 F f). *)
+  set (lr := pr2 (factorization_R F f) ∘ pr2 (factorization_L F f)).
+  set (id := pr2 f).
+  simpl in id.
+  simpl in lr.
+  assert (three_cod (F f) = arrow_cod f).
+  {
+    apply fact_preserves_cod.
+  }
+  assert (three_dom (F f) = arrow_dom f).
+  {
+    apply fact_preserves_dom.
+  }
+
+  unfold three_cod in X.
+  unfold arrow_cod in X.
+  unfold three_dom in X0.
+  unfold arrow_dom in X0.
+  admit.
+Admitted.
+
+(* without any type specified, we get:
+  fact_Φ : ∏ F : functorial_factorization ?C,
+       functor_composite_data F face_map_2
+       ⟹ functor_composite_data F face_map_1 *)
+(* but we want:
+  (functor_composite_data F face_map_2) ⟹ (functor_identity_data (arrow C)) *)
+(* this should be the same by assumption in F *)
+(* first definition: *)
+(* Definition fact_Φ {C : category} (F : functorial_factorization C) :=
+    pre_whisker F (c_21 C). *)
+Definition fact_Φ {C : category} (F : functorial_factorization C) :
+    (functor_composite F face_map_2) ⟹ (functor_identity (arrow C)).
+Proof.
+  (* use the condition in the factorization to rewrite the goal type to that
+     of pre_whisker F (c_21 C) *)
+  set (fact_condition := fact_cond F).
+  simpl in fact_condition.
+  change (functor_identity _) with (functor_identity (arrow C)) in fact_condition.
+  rewrite <- fact_condition.
+  exact (pre_whisker F (c_21 C)).
+Defined.
+
+(* similar here *)
+(* Definition fact_Λ {C : category} (F : functorial_factorization C) :=
+    pre_whisker F (c_10 C). *)
+Definition fact_Λ {C : category} (F : functorial_factorization C) :
+    (functor_identity (arrow C)) ⟹ (functor_composite F face_map_0).
+Proof.
+  set (fact_condition := fact_cond F).
+  simpl in fact_condition.
+  change (functor_identity _) with (functor_identity (arrow C)) in fact_condition.
+  rewrite <- fact_condition.
+  exact (pre_whisker F (c_10 C)).
+Defined.
 
