@@ -1,4 +1,5 @@
 Require Import UniMath.MoreFoundations.All.
+Require Import UniMath.MoreFoundations.Tactics.
 Require Import UniMath.CategoryTheory.Core.Prelude.
 Require Import UniMath.CategoryTheory.opp_precat.
 Require Import UniMath.CategoryTheory.limits.pullbacks.
@@ -301,6 +302,26 @@ Proof.
     reflexivity.
 Defined.
 
+Lemma lp_univ_isos {M : category} {a b x y : M} (f : a --> b) (g : x --> y) : 
+  (morphism_class_isos M _ _ f) -> lp g f.
+Proof.
+  intro H.
+  set (fiso := make_iso _ H).
+  (* change f to the isomorphism in the goal *)
+  change (lp g fiso).
+  
+  intros h k s.
+  (* lift we are looking for is h ∘ f^{-1} *)
+  apply hinhpr.
+  exists ((inv_from_iso fiso) ∘ k).
+  (* diagram chasing *)
+  split.
+  * rewrite assoc, <- s, <- assoc, iso_inv_after_iso, id_right.
+    reflexivity.
+  * rewrite <- assoc, iso_after_iso_inv, id_right.
+    reflexivity.
+Defined.
+
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L91 *)
 Lemma llp_univ {M : category} : llp (morphism_class_univ M) = morphism_class_isos M.
 Proof.
@@ -429,7 +450,7 @@ Proof.
 
   destruct Pb as [[zfx [f'p p2]] [H isPb]].
   simpl in *.
-  change (wfs_R w zfx z f'p).
+  cbn.
 
   (* need to show that f'p has rlp w.r.t. all i ∈ L *)
   unfold wfs_R.
@@ -497,7 +518,7 @@ Defined.
 
 (* https://ncatlab.org/nlab/show/weak+factorization+system#ClosuredPropertiesOfWeakFactorizationSystem *)
 (* map between coproducts is in L if all arrows between objects in coproduct are *)
-Lemma wfs_closed_coproducts {I : UU} {M : category} (w : wfs M)
+Lemma wfs_closed_coproducts {I : hSet} {M : category} (w : wfs M)
     {a b : I -> M} {f : ∏ (i : I), a i --> b i} (hf : ∀ (i : I), (wfs_L w _ _) (f i))
     (CCa : Coproduct _ _ a) (CCb : Coproduct _ _ b) : 
   (wfs_L w _ _) (CoproductOfArrows _ _ CCa CCb f).
@@ -527,58 +548,84 @@ Proof.
     now rewrite (CoproductOfArrowsIn _ _).
   }
 
-  (* we need the axiom of choice here *)
-  assert (∑ (li : (∏ i, (b i --> x))), (∏ i, (li i) ∘ (f i) = hi i × (g ∘ (li i) = ki i))) as ilifts.
+  (* we need the axiom of choice here 
+     it is basically exactly the definition of the axiom of choice *)
+  assert (aoc : AxiomOfChoice). admit.
+  assert (∥∏ i, ∑ li, (li ∘ (f i) = hi i) × (g ∘ li = ki i)∥) as ilift_aoc.
   {
-    admit.
-    (* use tpair.
-    - intro i.
-      specialize (ilift i) as li.
-      destruct li as [l hl].
-      exact l.
-    - simpl.
-      intro i.
-      set (li := ilift i).
-      destruct li as [l hl].
-      exact hl. *)
+    set (aocI := aoc I).
+    simpl in aocI.
+    apply (aocI).
+    exact ilift.
   }
 
-  destruct ilifts as [li hli].
-
   (* obtain lift in original diagram *)
-  set (hl := isCoproduct_Coproduct _ _ CCb x li).
+  assert (∃ (li : (∏ i, (b i --> x))), (∏ i, (li i) ∘ (f i) = hi i × (g ∘ (li i) = ki i))) as ilifts.
+  {
+    use (hinhuniv _ ilift_aoc).
+    intro ilift_aoc_sig.
+    apply hinhpr.
+    
+    use tpair.
+    - intro i.
+      set (li := ilift_aoc_sig i).
+      destruct li as [l hl].
+      exact l.
+    - intro i.
+      set (li := ilift_aoc_sig i).
+      simpl.
+      destruct li as [l hl].
+      exact hl.
+  }
 
+  use (hinhuniv _ ilifts).
+  intro ilift_sig.
+  destruct ilift_sig as [li hli].
+
+  (* turn individual lifts into lift from coproduct *)
+  set (hl := isCoproduct_Coproduct _ _ CCb x li).
   destruct hl as [[l hl] uniqueness].
   
   apply hinhpr.
   exists l.
-  split.
-  - rewrite CoproductArrowEta.
-    rewrite (CoproductArrowEta _ _ _ _ _ l).
+  (* factor maps through coproduct object *)
+  split; rewrite CoproductArrowEta, (CoproductArrowEta _ _ _ _ _ l).
+  - (* factor f as well *)
     rewrite (precompWithCoproductArrow).
+
+    (* maps are equal if maps through coproduct are equal *)
     apply CoproductArrowUnique.
+
+    (* now we can reason in separate diagrams again *)
     intro i.
     rewrite CoproductInCommutes.
-    destruct (hli i) as [hlicomm klicomm].
-    (* this goal is exactly hlicomm, but we "forgot" what the definition of li was *)
-    change (f i · (CoproductIn I M CCb i · l) = hi i).
-    rewrite <- hlicomm.
 
-    admit.
-  - 
-    admit.
-  
-  (* set (iscop := isCoproduct_Coproduct _ _ CCb).
-  specialize ((λ i, ilift i)) as test.
-  
-  specialize (iscop x (λ i, ilift i)) as test.
-  set (l := λ i, (ilift i)).
-  simpl in l. *)
-  
+    (* this is basically exactly the relation we want to prove: *)
+    destruct (hli i) as [hlicomm _].
+
+    (* by definition *)
+    change (CoproductIn _ _ _ _ · h) with (hi i).
+    rewrite (hl i).
+    exact hlicomm.
+  - (* factor through coproduct object *)
+    apply CoproductArrowUnique.
+
+    (* reason about separate diagrams again *)
+    intro i.
+    rewrite assoc.
+    rewrite CoproductInCommutes.
+
+    (* the relation we want to prove *)
+    destruct (hli i) as [_ klicomm].
+
+    (* by definition *)
+    change (CoproductIn _ _ _ _ · k) with (ki i).
+    rewrite (hl i).
+    exact klicomm.
 Admitted.
 
 (* Dual statement *)
-Lemma wfs_closed_products {I : UU} {M : category} (w : wfs M)
+Lemma wfs_closed_products {I : hSet} {M : category} (w : wfs M)
     {a b : I -> M} {f : ∏ (i : I), b i --> a i} (hf : ∀ (i : I), (wfs_R w _ _) (f i))
     (CCa : Product _ _ a) (CCb : Product _ _ b) : 
   (wfs_R w _ _) (ProductOfArrows _ _ CCa CCb f).
@@ -599,6 +646,7 @@ prove that L is left saturated, and R is right saturated in a WFS
 or lemma 14.1.8
 *)
 
+(* todo: can't extract lift from current definition of wfs outside proof environments *)
 Definition wfs_llp' {M : category} (w : wfs M) : (morphism_class M) :=
     λ {x y : M} (f : x --> y), ∃ z (g : x --> z) (h : z --> y), (wfs_L w _ _) g × (wfs_R w _ _) h × h ∘ g = f × lp_hProp g f.
 
