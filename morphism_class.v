@@ -18,7 +18,7 @@ Definition morphism_class (C : category) : UU :=
 
 Lemma isasetmorphism_class {C : category} : isaset (morphism_class C).
 Proof.
-  change (isofhlevel 2 (morphism_class C)).
+  change (isaset) with (isofhlevel 2).
   apply impred; intro x.
   apply impred; intro t.
   exact (isasethsubtype _).
