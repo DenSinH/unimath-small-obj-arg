@@ -21,9 +21,9 @@ Local Open Scope retract.
 (* in a category, we know that homs are sets, so equality must be a prop *)
 (* Lean: lp @ https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L14 *)
 (* Normal ∑-type is not a proposition, we need it to be to use it to create morphism classes *)
-Definition lp {M : category} {a b x y : M} (f : a --> b) (g : x --> y) : UU := 
-    ∏ (h : a --> x) (k : b --> y), 
-        g ∘ h = k ∘ f -> ∃ l : b --> x, (l ∘ f = h) × (g ∘ l = k).
+Definition lp {M : category} {a x e b : M} (i : a --> x) (p : e --> b) : UU := 
+  ∏ (g : a --> e) (f : x --> b), 
+      p ∘ g = f ∘ i -> ∃ l : x --> e, (l ∘ i = g) × (p ∘ l = f).
 
 Definition isaprop_lp {M : category} {a b x y : M} (f : a --> b) (g : x --> y) : isaprop (lp f g).
 Proof.

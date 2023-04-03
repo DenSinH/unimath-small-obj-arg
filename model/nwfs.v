@@ -432,17 +432,25 @@ Defined.
 
 (* todo: does this encapsulate the relation between L and R wel enough *)
 Definition nwfs (C : category) :=
-    (functorial_factorization C) × (Monad (arrow C)) × (Monad (op_cat (arrow C))).
+    ∑ (F : functorial_factorization C) (Σ : (fact_L F) ⟹ (fact_L F) ∙ (fact_L F)) (Π : (fact_R F) ∙ (fact_R F) ⟹ (fact_R F)) ,
+    (Monad_laws (L_monad_data F Σ)) × (Monad_laws (R_monad_data F Π)).
 
 Definition make_nwfs {C : category} (F : functorial_factorization C)
-    (Π : (fact_R F) ∙ (fact_R F) ⟹ (fact_R F)) (R : Monad_laws (R_monad_data F Π))
     (Σ : (fact_L F) ⟹ (fact_L F) ∙ (fact_L F)) (L : Monad_laws (L_monad_data F Σ)) 
-        : nwfs C :=
-  make_dirprod F (make_dirprod (R_monad F Π R) (L_monad F Σ L)).
+    (Π : (fact_R F) ∙ (fact_R F) ⟹ (fact_R F)) (R : Monad_laws (R_monad_data F Π))
+        : nwfs C.
+Proof.
+  exists F, Σ, Π.
+  exact (make_dirprod L R).
+Defined.
 
 Definition nwfs_fact {C : category} (n : nwfs C) := pr1 n.
-Definition nwfs_R_monad {C : category} (n : nwfs C) := pr12 n.
-Definition nwfs_L_monad {C : category} (n : nwfs C) := pr22 n.
+Definition nwfs_Σ {C : category} (n : nwfs C) := pr12 n.
+Definition nwfs_Π {C : category} (n : nwfs C) := pr122 n.
+Definition nwfs_Σ_laws {C : category} (n : nwfs C) := pr1 (pr222 n).
+Definition nwfs_Π_laws {C : category} (n : nwfs C) := pr2 (pr222 n).
+Definition nwfs_R_monad {C : category} (n : nwfs C) := R_monad (nwfs_fact n) (nwfs_Π n) (nwfs_Π_laws n).
+Definition nwfs_L_monad {C : category} (n : nwfs C) := L_monad (nwfs_fact n) (nwfs_Σ n) (nwfs_Σ_laws n).
 
 (* In a monad algebra, we have [[f α] laws] : nwfs_R_maps n *)
 Definition nwfs_R_maps {C : category} (n : nwfs C) :=
@@ -477,7 +485,7 @@ Proof.
         use (hinhuniv _ hg').
         intro hg.
         destruct hg as [[αg αgcomm] [hαg1 hαg2]].
-        simpl in hαg1, hαg2, αg, αgcomm.
+        simpl in hαg1, αg, αgcomm.
         (* αg = [p id] as in 2.15 in Garner *)
         admit.
       + admit.
