@@ -14,6 +14,7 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.SIP.
 Require Import UniMath.CategoryTheory.DisplayedCats.Total.
 Require Import UniMath.CategoryTheory.DisplayedCats.Functors.
+Require Import UniMath.CategoryTheory.DisplayedCats.NaturalTransformations.
 
 From Model Require Import morphism_class.
 From Model.model Require Import wfs.
@@ -59,8 +60,17 @@ Definition arrow_dom {C : category} (f : arrow C) : C := pr11 f.
 Definition arrow_cod {C : category} (f : arrow C) : C := pr21 f.
 Definition arrow_mor {C : category} (f : arrow C) := pr2 f.
 
-Definition mor_to_arrow {C : category} {x y : C} (f : x --> y) : arrow C :=
+Definition mor_to_arrow_ob {C : category} {x y : C} (f : x --> y) : arrow C :=
     (make_dirprod x y,, f).
+
+Definition mors_to_arrow_mor {C : category} {a b x y : C} (f : a --> b) (g : x --> y) 
+    (h : a --> x) (k : b --> y) (H : g ∘ h = k ∘ f) : (mor_to_arrow_ob f) --> (mor_to_arrow_ob g).
+Proof.
+  use tpair.
+  - exact (make_dirprod h k).
+  - exact H.
+Defined.
+    
 
 Section Three_disp.
 
@@ -238,10 +248,28 @@ Definition face_map_1 := total_functor face_map_1_disp.
 Definition face_map_2 := total_functor face_map_2_disp.
 
 (* verify that they are indeed compatible *)
-Lemma face_compatibility (fg : three C) : pr2 (face_map_0 fg) ∘ pr2 (face_map_2 fg) = pr2 (face_map_1 fg).
+Lemma face_compatibility (fg : three C) : arrow_mor (face_map_0 fg) ∘ arrow_mor (face_map_2 fg) = arrow_mor (face_map_1 fg).
 Proof.
   trivial.
 Defined.
+
+(* We can't just define c_21 as a displayed natural transformation like this 
+   since we need a natural transformation from d_2 to d_1 in the base categories,
+   but we can't do that, as we need a map from 1 --> 2, which we don't have 
+   in the base category...
+*)
+(* 
+Definition c_21_map_on_objects : ∏ x, face_map_2_base x --> face_map_1_base x.
+Proof.
+  intro xxx.
+  split.
+  - exact (identity _).
+  - admit.
+Admitted.
+
+Definition c_21_disp_data : disp_nat_trans_data c_21_map_on_objects face_map_2_disp face_map_1_disp.
+*)
+
 
 Definition c_21_data : nat_trans_data face_map_2 face_map_1.
 Proof.
@@ -263,12 +291,38 @@ Definition c_21 : face_map_2 ⟹ face_map_1.
 Proof.
   use make_nat_trans.
   - exact c_21_data.
-  - intros xxx yyy ff.
-    show_id_type.
-    (* exists (make_dirprod (three_mor01 xxx) (three_mor02 yyy)). *)
-    (* hot mess again, don't know what to do *)
-    admit.
-Admitted.
+  - (* natural transformation commutativity axiom *)
+    intros xxx yyy ff.
+
+    (* use displayed properties to turn path in total category
+    into path in base category, given our displayed properties
+
+    subtypePath: equality on ∑ x : X, P x is the same as equality
+    on X if P is a predicate (maps to a prop).
+    In the total category, objects are ∑ c : C, D c
+    i.e., objects with displayed data. Morphisms are morphisms
+    with displayed data. Our morphisms displayed data is indeed 
+    propositional: commutative diagram.
+    *)
+    apply subtypePath.
+    * (* For any map in the base category, the induced map
+      on the displayed category is a property.
+      
+      This is because the induced map is a commuting square,
+      so an equality between maps. Therefore, the homset property
+      says this is a property. *)
+      intro f.
+      simpl.
+      apply homset_property.
+    * (* We are left to prove the commutativity in the base category,
+      given our displayed properties *)
+      cbn.
+      rewrite id_left, id_right.
+      destruct ff as [[f0 [f1 f2]] [? f1comm]].
+      cbn in *.
+      (* equality of dirprod, second eq is exactly f1comm *)
+      apply pathsdirprod; trivial.
+Defined.
 
 Definition c_10_data : nat_trans_data face_map_1 face_map_0.
 Proof.
@@ -291,9 +345,15 @@ Proof.
   use make_nat_trans.
   - exact c_10_data.
   - intros xxx yyy ff.
-    (* hot mess again, don't know what to do *)
-    admit.
-Admitted.
+    apply subtypePath.
+    * intro x.
+      apply homset_property.
+    * cbn.
+      rewrite id_left, id_right.
+      destruct ff as [[f0 [f1 f2]] []].
+      cbn in *.
+      apply pathsdirprod; trivial.
+Defined.
 
 End Face_maps.
 
@@ -452,16 +512,16 @@ Definition nwfs_Π_laws {C : category} (n : nwfs C) := pr2 (pr222 n).
 Definition nwfs_R_monad {C : category} (n : nwfs C) := R_monad (nwfs_fact n) (nwfs_Π n) (nwfs_Π_laws n).
 Definition nwfs_L_monad {C : category} (n : nwfs C) := L_monad (nwfs_fact n) (nwfs_Σ n) (nwfs_Σ_laws n).
 
-(* In a monad algebra, we have [[f α] laws] : nwfs_R_maps n *)
+(* In a monad algebra, we have [[f αf] laws] : nwfs_R_maps n *)
 Definition nwfs_R_maps {C : category} (n : nwfs C) :=
     MonadAlg (nwfs_R_monad n).
 Definition nwfs_L_maps {C : category} (n : nwfs C) :=
     MonadAlg (nwfs_L_monad n).
 
 Definition isAlgebra {C : category} (M : Monad (arrow C)) {x y : C} (f : x --> y) :=
-    ∃ α, Algebra_laws M (mor_to_arrow f,, α).
+    ∃ α, Algebra_laws M (mor_to_arrow_ob f,, α).
 Definition isCoAlgebra {C : category} (M : Monad (op_cat (arrow C))) {x y : C} (f : x --> y) :=
-    ∃ α, Algebra_laws M (mor_to_arrow f,, α).
+    ∃ α, Algebra_laws M (mor_to_arrow_ob f,, α).
 
 (* we can obtain a wfs from an nwfs *)
 Definition nwfs_R_maps_class {C : category} (n : nwfs C) : morphism_class C :=
@@ -476,22 +536,66 @@ Proof.
   - exact (nwfs_R_maps_class n).
   - use make_is_wfs.
     * apply morphism_class_subset_antisymm.
-      + intros x y f hf'.
-        intros a b g hg'.
-        intros top bottom H.
+      + intros a b f hf'.
+        intros c d g hg'.
+        intros h k H.
 
         use (hinhuniv _ hf').
         intro hf.
+        destruct hf as [[αf αfcomm] [hαf1 hαf2]].
+        destruct αf as [ida s].
+        simpl in ida, s.
+        cbn in hαf1, hαf2, αfcomm.
+
         use (hinhuniv _ hg').
         intro hg.
         destruct hg as [[αg αgcomm] [hαg1 hαg2]].
-        simpl in hαg1, αg, αgcomm.
-        (* αg = [p id] as in 2.15 in Garner *)
-        admit.
+        destruct αg as [p idd].
+        simpl in p, idd.
+        cbn in hαg1, αgcomm.
+
+        apply hinhpr.
+        
+        set (hk := mors_to_arrow_mor f g h k H).
+        set (Fhk := functor_on_morphisms (fact_functor (nwfs_fact n)) hk).
+        (* middle map (todo: wrap this) *)
+        set (Khk := pr121 Fhk). (* Kf --> Kg *)
+
+        set (Hhk2 := pr22 Fhk).
+        cbn in Hhk2.
+
+        (*    
+                    h
+         A ==== A ----> C
+         |      |       |
+         |  αf  |       |
+         v      v  Khk  v   p
+         B ---> Kf ---> Kg ---> C
+            s   |       |       |
+                |       |  αg   |
+                v       |       v
+                B ----> D ===== D
+                    k
+        *)
+
+        exists (s · Khk · p).
+        split.
+        -- (* f · (s · Khk · p) = h *)
+           admit.
+        -- (* s · Khk · p · g = k *)
+           rewrite <- (assoc _ p g).
+           rewrite αgcomm.
+           rewrite (assoc _ _ idd).
+           rewrite <- (assoc s _ _).
+           cbv [Khk].
+           (* rewrite Hhk2. *)
+           
+           admit.
       + admit.
-    * admit.
+    * (* this should just be the same as above *)
+      admit.
     * intros x y f.
-      set (farr := mor_to_arrow f).
+      set (farr := mor_to_arrow_ob f).
       set (fact := nwfs_fact n farr).
       destruct fact as [[x0 [x1 x2]] [f01 f12]].
       simpl in f01, f12.
