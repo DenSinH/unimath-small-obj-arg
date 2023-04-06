@@ -10,266 +10,105 @@ Require Import UniMath.CategoryTheory.Monads.Monads.
 Require Import UniMath.CategoryTheory.Monads.MonadAlgebras.
 
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
-(* The Structure Identity Principle (HoTT book, chapter 9.8) *)
-Require Import UniMath.CategoryTheory.DisplayedCats.SIP.
 Require Import UniMath.CategoryTheory.DisplayedCats.Total.
 Require Import UniMath.CategoryTheory.DisplayedCats.Functors.
 Require Import UniMath.CategoryTheory.DisplayedCats.NaturalTransformations.
 
-From Model Require Import morphism_class.
+From Model Require Import morphism_class arrow three.
 From Model.model Require Import wfs.
 
 Local Open Scope cat.
 Local Open Scope mor_disp.
 
-(* This based on an "examples" file, not sure if we want to use
-that or just roll our own.
-The code in the examples file seems to no longer work... *)
-(* UniMath/CategoryTheory/DisplayedCats/Examples.v *)
-Section Arrow_Disp.
-
-Context (C:category).
-
-Definition arrow_base := category_binproduct C C.
-
-Definition arrow_disp : disp_cat arrow_base.
-Proof.
-  use disp_cat_from_SIP_data.
-  - exact (λ xy, pr1 xy --> pr2 xy).
-  - simpl.
-    intros xx' yy' g h ff'.
-    exact (pr1 ff' · h = g · pr2 ff').
-  - simpl.
-    intros.
-    use homset_property.
-  - simpl. 
-    intros.
-    now rewrite id_left, id_right.
-  - simpl.
-    intros.
-    rewrite assoc, <- X.
-    symmetry.
-    now rewrite <- assoc, <- X0, assoc.
-Defined.
-
-Definition arrow : category := total_category arrow_disp.
-
-End Arrow_Disp.
-
-Definition arrow_dom {C : category} (f : arrow C) : C := pr11 f.
-Definition arrow_cod {C : category} (f : arrow C) : C := pr21 f.
-Definition arrow_mor {C : category} (f : arrow C) := pr2 f.
-
-Definition mor_to_arrow_ob {C : category} {x y : C} (f : x --> y) : arrow C :=
-    (make_dirprod x y,, f).
-
-Definition mors_to_arrow_mor {C : category} {a b x y : C} (f : a --> b) (g : x --> y) 
-    (h : a --> x) (k : b --> y) (H : g ∘ h = k ∘ f) : (mor_to_arrow_ob f) --> (mor_to_arrow_ob g).
-Proof.
-  use tpair.
-  - exact (make_dirprod h k).
-  - exact H.
-Defined.
-
-Section Three_disp.
-
-Context (C:category).
-
-Definition three_base := (category_binproduct C (category_binproduct C C)).
-Definition three_disp : disp_cat three_base.
-Proof.
-  use disp_cat_from_SIP_data.
-  - exact (λ xyz, pr1 xyz --> pr12 xyz × pr12 xyz --> pr22 xyz).
-  - (* double commutative square *)
-    simpl; intros xxx yyy gg hh fff.
-    exact ((pr1 fff · pr1 hh = pr1 gg · pr12 fff) × (pr12 fff · pr2 hh = pr2 gg · pr22 fff)).
-  - simpl.
-    intros.
-    apply isapropdirprod; use homset_property.
-  - simpl. 
-    intros.
-    split; now rewrite id_left, id_right.
-  - simpl.
-    intros.
-    destruct X as [X1 X2].
-    destruct X0 as [Y1 Y2].
-    split.
-    * rewrite assoc, <- X1.
-      symmetry.
-      now rewrite <- assoc, <- Y1, assoc.
-    * rewrite assoc, <- X2.
-      symmetry.
-      now rewrite <- assoc, <- Y2, assoc.
-Defined.
-
-Definition three : category := total_category three_disp.
-
-End Three_disp.
-
-Definition three_ob0 {C : category} (xyz : three C) : C := pr11 xyz.
-Definition three_ob1 {C : category} (xyz : three C) : C := pr121 xyz.
-Definition three_ob2 {C : category} (xyz : three C) : C := pr221 xyz.
-Definition three_mor01 {C : category} (xyz : three C) := pr12 xyz.
-Definition three_mor12 {C : category} (xyz : three C) := pr22 xyz.
-Definition three_mor02 {C : category} (xyz : three C) := (three_mor01 xyz) · (three_mor12 xyz).
-(* Definition three_comp {C : category} (xyz : three C) := pr. *)
-Definition three_mor00 {C : category} {xxx yyy : three C} (fff : xxx --> yyy) := pr11 fff.
-Definition three_mor11 {C : category} {xxx yyy : three C} (fff : xxx --> yyy) := pr121 fff.
-Definition three_mor22 {C : category} {xxx yyy : three C} (fff : xxx --> yyy) := pr221 fff.
-Definition three_mor_comm {C : category} {xxx yyy : three C} (fff : xxx --> yyy) := pr2 fff.
-
 Section Face_maps.
 
 Context (C : category).
 
-Definition face_map_0_base : three_base C ⟶ arrow_base C.
+(* face map 1 now rolls out just as the projection *)
+Definition face_map_1 : three C ⟶ arrow C := pr1_category _.
+
+(* we have to define face maps 0 and 2 as proper functors,
+since we need the factorization to obtain an object in the arrow
+category. *)
+Definition face_map_0_data : functor_data (three C) (arrow C).
+Proof.
+  use make_functor_data.
+  - intro xxx.
+    use tpair.
+    * exact (make_dirprod (three_ob1 xxx) (three_ob2 xxx)).
+    * simpl.
+      exact (three_mor12 xxx).
+  - intros xxx yyy fff.
+    simpl.
+    (* for morphisms we simply forget the 0th morphism *)
+    use tpair.
+    * split; simpl.
+      + exact (three_mor11 fff).
+      + exact (three_mor22 fff).
+    * simpl.
+      (* commutativity is just commutativity in the lower diagram *)
+      symmetry.
+      exact (pr2 (three_mor_comm fff)).
+Defined.
+
+Definition face_map_0 : three C ⟶ arrow C.
 Proof.
   use make_functor.
-  - use make_functor_data.
-    * intro xxx.
-      exact (make_dirprod (pr12 xxx) (pr22 xxx)).
-    * intros xxx yyy fff.
-      exact (make_dirprod (pr12 fff) (pr22 fff)).
+  - exact face_map_0_data.
   - split.
-    * unfold functor_idax; intros.
-      apply binprod_id.
-    * unfold functor_compax; intros.
-      apply binprod_comp.
+    * unfold functor_idax.
+      intro.
+      apply subtypePath.
+      + intro; apply homset_property.
+      + trivial.
+    * unfold functor_compax.
+      intros.
+      apply subtypePath.
+      + intro; apply homset_property.
+      + trivial.
 Defined.
 
-Definition face_map_1_base : three_base C ⟶ arrow_base C.
+Definition face_map_2_data : functor_data (three C) (arrow C).
+Proof.
+  use make_functor_data.
+  - intro xxx.
+    use tpair.
+    * exact (make_dirprod (three_ob0 xxx) (three_ob1 xxx)).
+    * simpl.
+      exact (three_mor01 xxx).
+  - intros xxx yyy fff.
+    simpl.
+    use tpair.
+    * split; simpl.
+      + exact (three_mor00 fff).
+      + exact (three_mor11 fff).
+    * simpl.
+      symmetry.
+      exact (pr1 (three_mor_comm fff)).
+Defined.
+
+Definition face_map_2 : three C ⟶ arrow C.
 Proof.
   use make_functor.
-  - use make_functor_data.
-    * intro xxx.
-      exact (make_dirprod (pr1 xxx) (pr22 xxx)).
-    * intros xxx yyy fff.
-      exact (make_dirprod (pr1 fff) (pr22 fff)).
+  - exact face_map_2_data.
   - split.
-    * unfold functor_idax; intros.
-      apply binprod_id.
-    * unfold functor_compax; intros.
-      apply binprod_comp.
+    * unfold functor_idax.
+      intro.
+      apply subtypePath.
+      + intro; apply homset_property.
+      + trivial.
+    * unfold functor_compax.
+      intros.
+      apply subtypePath.
+      + intro; apply homset_property.
+      + trivial.
 Defined.
-
-Definition face_map_2_base : three_base C ⟶ arrow_base C.
-Proof.
-  use make_functor.
-  - use make_functor_data.
-    * intro xxx.
-      exact (make_dirprod (pr1 xxx) (pr12 xxx)).
-    * intros xxx yyy fff.
-      exact (make_dirprod (pr1 fff) (pr12 fff)).
-  - split.
-    * unfold functor_idax; intros.
-      apply binprod_id.
-    * unfold functor_compax; intros.
-      apply binprod_comp.
-Defined.
-
-Definition face_map_0_functor_data : disp_functor_data face_map_0_base (three_disp C) (arrow_disp C).
-Proof.
-  use tpair.
-  - (* map on displayed objects *)
-    intros xxx xxx'.
-    simpl.
-    destruct xxx' as [_ f2].
-    exact f2.
-  - (* map on displayed arrows *)
-    simpl.
-    intros xxx yyy ff gg F H.
-    destruct H as [_ h2].
-    symmetry.
-    exact (pathsinv0 h2).
-Defined.
-
-Definition face_map_1_functor_data : disp_functor_data face_map_1_base (three_disp C) (arrow_disp C).
-Proof.
-  use tpair.
-  - (* map on displayed objects *)
-    intros xxx xxx'.
-    simpl.
-    destruct xxx' as [f1 f2].
-    exact (f2 ∘ f1).
-  - (* map on displayed arrows *)
-    simpl.
-    intros xxx yyy ff gg F H.
-    destruct H as [h1 h2].
-    symmetry.
-    rewrite <- assoc.
-    etrans.
-    apply maponpaths.
-    exact (pathsinv0 h2).
-    rewrite assoc, assoc.
-    apply cancel_postcomposition.
-    exact (pathsinv0 h1).
-Defined.
-
-Definition face_map_2_functor_data : disp_functor_data face_map_2_base (three_disp C) (arrow_disp C).
-Proof.
-  use tpair.
-  - (* map on displayed objects *)
-    intros xxx xxx'.
-    simpl.
-    destruct xxx' as [f1 _].
-    exact f1.
-  - (* map on displayed arrows *)
-    simpl.
-    intros xxx yyy ff gg F H.
-    destruct H as [h1 _].
-    exact h1.
-Defined.
-
-Definition face_map_0_disp : disp_functor face_map_0_base (three_disp C) (arrow_disp C).
-Proof.
-  use tpair.
-  - exact face_map_0_functor_data.
-  (* todo: this is still a bit vague to me *)
-  (* can use homset_property of C to show that the morphisms are indeed equal *)
-  - repeat split; intros; apply C.
-Defined.
-
-Definition face_map_1_disp : disp_functor face_map_1_base (three_disp C) (arrow_disp C).
-Proof.
-  use tpair.
-  - exact face_map_1_functor_data.
-  - repeat split; intros; apply C.
-Defined.
-
-Definition face_map_2_disp : disp_functor face_map_2_base (three_disp C) (arrow_disp C).
-Proof.
-  use tpair.
-  - exact face_map_2_functor_data.
-  - repeat split; intros; apply C.
-Defined.
-
-Definition face_map_0 := total_functor face_map_0_disp.
-Definition face_map_1 := total_functor face_map_1_disp.
-Definition face_map_2 := total_functor face_map_2_disp.
 
 (* verify that they are indeed compatible *)
 Lemma face_compatibility (fg : three C) : arrow_mor (face_map_0 fg) ∘ arrow_mor (face_map_2 fg) = arrow_mor (face_map_1 fg).
 Proof.
-  trivial.
+  exact (three_comp fg).
 Defined.
-
-(* We can't just define c_21 as a displayed natural transformation like this 
-   since we need a natural transformation from d_2 to d_1 in the base categories,
-   but we can't do that, as we need a map from 1 --> 2, which we don't have 
-   in the base category...
-*)
-(* 
-Definition c_21_map_on_objects : ∏ x, face_map_2_base x --> face_map_1_base x.
-Proof.
-  intro xxx.
-  split.
-  - exact (identity _).
-  - admit.
-Admitted.
-
-Definition c_21_disp_data : disp_nat_trans_data c_21_map_on_objects face_map_2_disp face_map_1_disp.
-*)
-
 
 Definition c_21_data : nat_trans_data face_map_2 face_map_1.
 Proof.
@@ -280,11 +119,12 @@ Proof.
     1 ----> 2
   *)
   intro xxx.
-  destruct xxx as [xxx [f1 f2]].
   simpl.
-  exists (make_dirprod (identity _) f2).
+  exists (make_dirprod (identity _) (three_mor12 xxx)).
   simpl.
-  now rewrite id_left.
+  rewrite id_left.
+  symmetry.
+  exact (three_comp xxx).
 Defined.
 
 Definition c_21 : face_map_2 ⟹ face_map_1.
@@ -315,13 +155,13 @@ Proof.
       simpl.
       apply homset_property.
     * (* We are left to prove the commutativity in the base category,
-      given our displayed properties *)
+      given our displayed properties. This is effectively just commutativity
+      in the bottom square. *)
       cbn.
       rewrite id_left, id_right.
-      destruct ff as [[f0 [f1 f2]] [? f1comm]].
-      cbn in *.
-      (* equality of dirprod, second eq is exactly f1comm *)
       apply pathsdirprod; trivial.
+      symmetry.
+      exact (pr2 (three_mor_comm ff)).
 Defined.
 
 Definition c_10_data : nat_trans_data face_map_1 face_map_0.
@@ -333,11 +173,11 @@ Proof.
     2 ===== 2
   *)
   intro xxx.
-  destruct xxx as [xxx [f1 f2]].
   simpl.
-  exists (make_dirprod f1 (identity _)).
+  exists (make_dirprod (three_mor01 xxx) (identity _)).
   simpl.
-  now rewrite id_right.
+  rewrite id_right.
+  exact (three_comp xxx).
 Defined.
 
 Definition c_10 : face_map_1 ⟹ face_map_0.
@@ -350,9 +190,9 @@ Proof.
       apply homset_property.
     * cbn.
       rewrite id_left, id_right.
-      destruct ff as [[f0 [f1 f2]] []].
-      cbn in *.
       apply pathsdirprod; trivial.
+      symmetry.
+      exact (pr1 (three_mor_comm ff)).
 Defined.
 
 End Face_maps.
@@ -377,6 +217,7 @@ Proof.
   - intros
 Defined. *)
 
+(* todo: CategoryTheory/DisplayedCats/Constructions.v:section_disp_data / section_functor *)
 Definition functorial_factorization (C : category) : UU := 
     ∑ F : (arrow C ⟶ three C), 
         F ∙ face_map_1 = functor_identity (arrow C).
@@ -529,6 +370,24 @@ Definition nwfs_R_maps_class {C : category} (n : nwfs C) : morphism_class C :=
 Definition nwfs_L_maps_class {C : category} (n : nwfs C) : morphism_class C :=
     λ (x y : C) (f : x --> y), isCoAlgebra (nwfs_L_monad n) (opp_mor f).
 
+
+
+(*
+Diagram in NWFS to WFS for "weak" definition of NWFS:
+            h
+  A ~~~~ A ----> ? ~~~~ C~
+  |      |       |      |  ~
+f |  αf  |       |      |    ~
+  v      v  Khk  v      v   p  ~
+  B ---> Kf ---> ? ~~~~ Kg ---> C
+   ~ s   |       |      |       |
+     ~   |       |      |  αg   | g
+       ~ v       v      |       v
+         B ----> ? ~~~~ D ~~~~~ D
+             k
+*)
+
+
 Lemma nwfs_is_wfs {C : category} (n : nwfs C) : wfs C.
 Proof.
   use make_wfs.
@@ -558,36 +417,60 @@ Proof.
         
         set (hk := mors_to_arrow_mor f g h k H).
         set (Fhk := functor_on_morphisms (fact_functor (nwfs_fact n)) hk).
-        set (Khk := three_mor11 Fhk). (* Kf --> Kg *)
+        (* Kf --> Kg *)
+        (* set (Khk := three_mor11 Fhk).  *)
 
-        set (Hhk2 := pr22 Fhk).
+        (* commutativity in bottom diagram *)
+        set (Hhk2 := three_mor_comm Fhk).
         cbn in Hhk2.
 
         (*    
                     h
          A ==== A ----> C
          |      |       |
-         |  αf  |       |
+       f |  αf  |       |
          v      v  Khk  v   p
          B ---> Kf ---> Kg ---> C
             s   |       |       |
-                |       |  αg   |
+                |       |  αg   | g
                 v       |       v
                 B ----> D ===== D
                     k
         *)
 
-        exists (s · Khk · p).
+        exists (s · (three_mor11 Fhk) · p).
         split.
         -- (* f · (s · Khk · p) = h *)
            admit.
         -- (* s · Khk · p · g = k *)
            rewrite <- (assoc _ p g).
            rewrite αgcomm.
-           rewrite (assoc _ _ idd).
            rewrite <- (assoc s _ _).
-           cbv [Khk].
-           (* rewrite Hhk2. *)
+           etrans.
+           apply maponpaths_1.
+           rewrite (assoc _ _ idd).
+           apply maponpaths_2.
+           exact (pathsinv0 (pr2 Hhk2)).
+           (* now the LHS goes along the bottom of the
+              above diagram *)
+           set (Fhkk := three_mor22 Fhk).
+           simpl in Fhkk.
+           
+           (* domain of Fhkk *)
+           assert (three_ob2 (nwfs_fact n (mor_to_arrow_ob g)) = d) as codg.
+           {
+             exact (fact_preserves_cod (nwfs_fact n) (mor_to_arrow_ob g)).
+           }
+
+           (* codomain of Fhkk *)
+           assert (three_ob2 (nwfs_fact n (mor_to_arrow_ob f)) = b) as codf.
+           {
+             exact (fact_preserves_cod (nwfs_fact n) (mor_to_arrow_ob f)).
+           }
+           
+           unfold three_ob2 in codf, codg.
+           rewrite codf in Fhkk.
+           (* assert ((pr211 Fhk) = k). *)
            admit.
       + admit.
     * (* this should just be the same as above *)
@@ -601,14 +484,16 @@ Proof.
       (* rewrite <- (fact_preserves_dom (nwfs_fact n) farr) in f01. *)
 
       apply hinhpr.
-      exists (three_ob1 fact). (* x1 *)
+      exists (three_ob1 fact).
       (* we know that x0 = x and x2 = y, but this is not automatically rewritten *)
       set (f01 := three_mor01 fact).
+      fold (three_ob0 (C:=C) fact) in f01.
       assert ((three_ob0 fact) = x) as Hx.
       {
         exact (fact_preserves_dom (nwfs_fact n) farr).
       }
       unfold three_ob0 in Hx.
+      unfold arrow_dom in f01.
       rewrite Hx in f01.
       exists f01.
 
@@ -619,6 +504,7 @@ Proof.
         exact (fact_preserves_cod (nwfs_fact n) farr).
       }
       unfold three_ob2 in Hy.
+      unfold arrow_cod in f12.
       rewrite Hy in f12.
       exists f12.
 
@@ -630,4 +516,4 @@ Proof.
       + set (test := fact_cond (nwfs_fact n)).
         (* this is precisely fact_cond (nwfs_fact n) applied to f *)
         admit.
-Defined.
+Admitted.
