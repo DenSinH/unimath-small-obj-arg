@@ -13,6 +13,7 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Total.
 Require Import UniMath.CategoryTheory.DisplayedCats.Functors.
 Require Import UniMath.CategoryTheory.DisplayedCats.NaturalTransformations.
+Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 
 From Model Require Import morphism_class arrow three.
 From Model.model Require Import wfs.
@@ -217,120 +218,62 @@ Proof.
   - intros
 Defined. *)
 
-(* todo: CategoryTheory/DisplayedCats/Constructions.v:section_disp_data / section_functor *)
-Definition functorial_factorization (C : category) : UU := 
-    ∑ F : (arrow C ⟶ three C), 
-        F ∙ face_map_1 = functor_identity (arrow C).
-
-Definition fact_functor {C : category} (F : functorial_factorization C) := pr1 F.
+(* We can't really do this with the "naive definition" of three C, since then we need
+the middle object for the section. We would have to define our own theory.  *)
+Definition functorial_factorization (C : category) := section_disp (three_disp C).
+Definition fact_functor {C : category} (F : functorial_factorization C) : arrow C ⟶ three C.
+Proof.
+  unfold functorial_factorization in F.
+  exact (section_functor F).
+Defined.
 Coercion fact_functor : functorial_factorization >-> functor.
-Definition fact_cond {C : category} (F : functorial_factorization C) := pr2 F.
 
-Definition fact_L {C : category} (F : functorial_factorization C) : arrow C ⟶ arrow C:=
+(* Functorial factorizations indeed split face map 1 (d1) *)
+Lemma functorial_factorization_splits_face_map_1 {C : category} (F : functorial_factorization C) :
+    F ∙ face_map_1 = functor_identity (arrow C).
+Proof.
+  apply functor_eq; trivial.
+  apply homset_property.
+Defined.
+
+Definition fact_L {C : category} (F : functorial_factorization C) : arrow C ⟶ arrow C :=
     F ∙ face_map_2.
 Definition fact_R {C : category} (F : functorial_factorization C) : arrow C ⟶ arrow C :=
     F ∙ face_map_0.
 
-Lemma fact_preserves_dom {C : category} (F : functorial_factorization C) (f : arrow C) :
-    (three_ob0 (F f)) = arrow_dom f.
+(* At least now it knows they are compatible *)
+Lemma LR_compatibility {C : category} (F : functorial_factorization C) : 
+    ∏ (f : arrow C), arrow_mor (fact_L F f) · arrow_mor (fact_R F f) = arrow_mor f.
 Proof.
-  (* todo: why do I _have_ to use pr1 here (coercion)? *)
-  change (arrow_dom (((pr1 F) ∙ face_map_1) f) = arrow_dom f).
-  rewrite (fact_cond F).
-  trivial.
+  intro.
+  exact (three_comp _).
 Defined.
 
-Lemma fact_preserves_cod {C : category} (F : functorial_factorization C) (f : arrow C) :
-    (three_ob2 (F f)) = arrow_cod f.
-Proof.
-  change (arrow_cod (((pr1 F) ∙ face_map_1) f) = arrow_cod f).
-  rewrite (fact_cond F).
-  trivial.
-Defined.
-
-Lemma LR_compatibility {C : category} (F : functorial_factorization C) (f : arrow C) : 
-   Type.
-(* coq does not deduce that the resulting morphism has the same domain/codomain *)
-(* pr2 (fact_R F f) ∘ pr2 (fact_L F f) = (pr2 f). *)
-Proof.
-  (* (fact_R F f) ∘ (fact_L F f) = (pr1 F f). *)
-  set (lr := pr2 (fact_R F f) ∘ pr2 (fact_L F f)).
-  set (id := pr2 f).
-  simpl in id.
-  simpl in lr.
-  assert (three_ob2 (F f) = arrow_cod f).
-  {
-    apply fact_preserves_cod.
-  }
-  assert (three_ob0 (F f) = arrow_dom f).
-  {
-    apply fact_preserves_dom.
-  }
-
-  unfold three_ob2 in X.
-  unfold arrow_cod in X.
-  unfold three_ob0 in X0.
-  unfold arrow_dom in X0.
-  unfold three_ob2 in X.
-  admit.
-Admitted.
-
-(* without any type specified, we get:
-  fact_Φ : ∏ F : functorial_factorization ?C,
-       functor_composite_data F face_map_2
-       ⟹ functor_composite_data F face_map_1 *)
-(* but we want:
-  (functor_composite_data F face_map_2) ⟹ (functor_identity_data (arrow C)) *)
-(* this should be the same by assumption in F *)
-(* first definition: *)
-(* Definition fact_Φ {C : category} (F : functorial_factorization C) :=
-    pre_whisker F (c_21 C). *)
 Definition Φ {C : category} (F : functorial_factorization C) :
-    (fact_L F) ⟹ (functor_identity (arrow C)).
-Proof.
-  (* use the condition in the factorization to rewrite the goal type to that
-     of pre_whisker F (c_21 C) *)
-  rewrite <- (fact_cond F).
-  exact (pre_whisker F (c_21 C)).
-Defined.
+    (fact_L F) ⟹ (functor_identity (arrow C)) := 
+  pre_whisker F (c_21 C).
 
-(* similar here *)
-(* Definition fact_Λ {C : category} (F : functorial_factorization C) :=
-    pre_whisker F (c_10 C). *)
 Definition Λ {C : category} (F : functorial_factorization C) :
-    (functor_identity (arrow C)) ⟹ (fact_R F).
-Proof.
-  rewrite <- (fact_cond F).
-  exact (pre_whisker F (c_10 C)).
-Defined.
+    (functor_identity (arrow C)) ⟹ (fact_R F) :=
+  pre_whisker F (c_10 C).
 
-Definition R_monad_data {C : category} (F : functorial_factorization C) (Π : (fact_R F) ∙ (fact_R F) ⟹ (fact_R F)) : Monad_data (arrow C).
-Proof.
-  use tpair.
-  - exists (fact_R F).
-    exact Π.
-  - exact (Λ F).
-Defined.
+Definition R_monad_data {C : category} (F : functorial_factorization C) 
+    (Π : (fact_R F) ∙ (fact_R F) ⟹ (fact_R F)) : Monad_data (arrow C) :=
+  ((fact_R F,, Π),, (Λ F)).
 
-Definition R_monad {C : category} (F : functorial_factorization C) (Π : (fact_R F) ∙ (fact_R F) ⟹ (fact_R F)) (R : Monad_laws (R_monad_data F Π)) : Monad (arrow C).
-Proof.
-  exists (R_monad_data F Π).
-  exact R.
-Defined.
+Definition R_monad {C : category} (F : functorial_factorization C) 
+    (Π : (fact_R F) ∙ (fact_R F) ⟹ (fact_R F)) 
+    (R : Monad_laws (R_monad_data F Π)) : Monad (arrow C) :=
+  (R_monad_data F Π,, R).
 
-Definition L_monad_data {C : category} (F : functorial_factorization C) (Σ : (fact_L F) ⟹ (fact_L F) ∙ (fact_L F)) : Monad_data (op_cat (arrow C)).
-Proof.
-  use tpair.
-  - exists (functor_opp (fact_L F)).
-    exact (op_nt Σ).
-  - exact (op_nt (Φ F)).
-Defined.
+Definition L_monad_data {C : category} (F : functorial_factorization C) 
+    (Σ : (fact_L F) ⟹ (fact_L F) ∙ (fact_L F)) : Monad_data (op_cat (arrow C)) :=
+  ((functor_opp (fact_L F),, op_nt Σ),, op_nt (Φ F)).
 
-Definition L_monad {C : category} (F : functorial_factorization C) (Σ : (fact_L F) ⟹ (fact_L F) ∙ (fact_L F)) (L : Monad_laws (L_monad_data F Σ)) : Monad (op_cat (arrow C)).
-Proof.
-  exists (L_monad_data F Σ).
-  exact L.
-Defined.
+Definition L_monad {C : category} (F : functorial_factorization C) 
+    (Σ : (fact_L F) ⟹ (fact_L F) ∙ (fact_L F)) 
+    (L : Monad_laws (L_monad_data F Σ)) : Monad (op_cat (arrow C)) :=
+  (L_monad_data F Σ,, L).
 
 Definition nwfs (C : category) :=
     ∑ (F : functorial_factorization C) (Σ : (fact_L F) ⟹ (fact_L F) ∙ (fact_L F)) (Π : (fact_R F) ∙ (fact_R F) ⟹ (fact_R F)) ,
@@ -371,21 +314,98 @@ Definition nwfs_L_maps_class {C : category} (n : nwfs C) : morphism_class C :=
     λ (x y : C) (f : x --> y), isCoAlgebra (nwfs_L_monad n) (opp_mor f).
 
 
+(*
+Shape of comonad morphism diagram (2.15)
+  A ===== A ===== A  ~~> id_A
+  |       |       |
+f |   α   |λf  η  | f
+  v       v       v
+  B ---> Kf ----> B  ~~> id_B
+     s       ρ_f
+*)
+Lemma L_map_section {C : category} {n : nwfs C} {a b : C} {f : a --> b} (hf : nwfs_L_maps_class n _ _ f) :
+    ∃ s, f · s = arrow_mor (fact_L (nwfs_fact n) (mor_to_arrow_ob f)) × 
+         s · arrow_mor (fact_R (nwfs_fact n) (mor_to_arrow_ob f)) = identity _.
+Proof.
+  use (hinhuniv _ hf).
+  intro hf'.
+  destruct hf' as [[[ida s] αfcomm] [hαfη _]].
+  cbn in ida, s, αfcomm.
+  simpl in hαfη.
+  cbn in hαfη.
+
+  apply hinhpr.
+  exists s.
+
+  (* top line of hαfη: *)
+  assert (ida = identity a) as Hida.
+  {
+    (* base_paths : equality in pr1 of ∑-type (paths in base category)
+       pathsdirprodweq : _ × _ = _ × _ -> equality of terms
+    *)
+    set (top_line := dirprod_pr1 (pathsdirprodweq (base_paths _ _ hαfη))).
+    rewrite id_right in top_line.
+    exact top_line.
+  }
+
+  split.
+  - (* f ⋅ s = λ_f *)
+    (* commutativity and ida = identity a *)
+    specialize (αfcomm) as αfcomm'. 
+    rewrite Hida, id_left in αfcomm'.
+    symmetry.
+    exact αfcomm'.
+  - (* s · ρ_f = id_b *)
+    (* bottom line of hαfη *)
+    set (bottom_line := dirprod_pr2 (pathsdirprodweq (base_paths _ _ hαfη))).
+    exact bottom_line.
+Defined.
 
 (*
-Diagram in NWFS to WFS for "weak" definition of NWFS:
-            h
-  A ~~~~ A ----> ? ~~~~ C~
-  |      |       |      |  ~
-f |  αf  |       |      |    ~
-  v      v  Khk  v      v   p  ~
-  B ---> Kf ---> ? ~~~~ Kg ---> C
-   ~ s   |       |      |       |
-     ~   |       |      |  αg   | g
-       ~ v       v      |       v
-         B ----> ? ~~~~ D ~~~~~ D
-             k
+Shape of monad morphism diagram (2.15)
+     λg       p
+  C ---> Kg ----> C  ~~> id_C
+  |       |       |
+g |   η   |ρg  α  | g
+  v       v       v
+  D ===== D ===== D  ~~> id_D
 *)
+Lemma R_map_section {C : category} {n : nwfs C} {c d : C} {g : c --> d} (hg : nwfs_R_maps_class n _ _ g) :
+    ∃ p, p · g = arrow_mor (fact_R (nwfs_fact n) (mor_to_arrow_ob g)) × 
+         arrow_mor (fact_L (nwfs_fact n) (mor_to_arrow_ob g)) · p = identity _.
+Proof.
+  use (hinhuniv _ hg).
+  intro hg'.
+  destruct hg' as [[[p idd] αgcomm] [hαgη _]].
+  cbn in p, idd, αgcomm.
+  simpl in hαgη.
+  cbn in hαgη.
+
+  apply hinhpr.
+  exists p.
+
+  (* bottom line of hαgη: *)
+  assert (idd = identity d) as Hidd.
+  {
+    (* base_paths : equality in pr1 of ∑-type (paths in base category)
+       pathsdirprodweq : _ × _ = _ × _ -> equality of terms
+    *)
+    set (bottom_line := dirprod_pr2 (pathsdirprodweq (base_paths _ _ hαgη))).
+    rewrite id_left in bottom_line.
+    exact bottom_line.
+  }
+
+  split.
+  - (* p ⋅ g = ρ_g *)
+    (* commutativity and ida = identity a *)
+    specialize (αgcomm) as αgcomm'. 
+    rewrite Hidd, id_right in αgcomm'.
+    exact αgcomm'.
+  - (* λg · p = id_c *)
+    (* top line of hαfη *)
+    set (top_line := dirprod_pr1 (pathsdirprodweq (base_paths _ _ hαgη))).
+    exact top_line.
+Defined.
 
 
 Lemma nwfs_is_wfs {C : category} (n : nwfs C) : wfs C.
@@ -395,84 +415,124 @@ Proof.
   - exact (nwfs_R_maps_class n).
   - use make_is_wfs.
     * apply morphism_class_subset_antisymm.
-      + intros a b f hf'.
-        intros c d g hg'.
+      + (* L-Map ⊆ llp (R-Map) *)
+        (* want to construct a lift of an L-map using monad properties *)
+        intros a b f hf.
+        intros c d g hg.
         intros h k H.
 
-        use (hinhuniv _ hf').
-        intro hf.
-        destruct hf as [[αf αfcomm] [hαf1 hαf2]].
-        destruct αf as [ida s].
-        simpl in ida, s.
-        cbn in hαf1, hαf2, αfcomm.
-
-        use (hinhuniv _ hg').
-        intro hg.
-        destruct hg as [[αg αgcomm] [hαg1 hαg2]].
-        destruct αg as [p idd].
-        simpl in p, idd.
-        cbn in hαg1, αgcomm.
+        use (hinhuniv _ (L_map_section hf)).
+        intro Hs.
+        destruct Hs as [s [Hs0 Hs1]].
+        
+        use (hinhuniv _ (R_map_section hg)).
+        intro Hp.
+        destruct Hp as [p [Hp0 Hp1]].
 
         apply hinhpr.
         
         set (hk := mors_to_arrow_mor f g h k H).
         set (Fhk := functor_on_morphisms (fact_functor (nwfs_fact n)) hk).
         (* Kf --> Kg *)
-        (* set (Khk := three_mor11 Fhk).  *)
+        set (Khk := three_mor11 Fhk). 
 
-        (* commutativity in bottom diagram *)
-        set (Hhk2 := three_mor_comm Fhk).
-        cbn in Hhk2.
+        (* commutativity in diagrams *)
+        set (Hhk := three_mor_comm Fhk).
+        simpl in Hhk.
+        destruct Hhk as [Hhk0 Hhk1].
 
         (*    
                     h
          A ==== A ----> C
          |      |       |
-       f |  αf  |       |
+       f |  Lf  |       |
          v      v  Khk  v   p
          B ---> Kf ---> Kg ---> C
             s   |       |       |
-                |       |  αg   | g
+                |       |  Rg   | g
                 v       |       v
                 B ----> D ===== D
                     k
         *)
 
-        exists (s · (three_mor11 Fhk) · p).
+        exists (s · Khk · p).
         split.
         -- (* f · (s · Khk · p) = h *)
-           admit.
+           rewrite assoc, assoc.
+           rewrite Hs0.
+           (* λ_f · Khk · p = h *)
+           (* rewrite Hhk0 : (λ_f · Hhk = h · λ_g) *)
+           etrans.
+           apply maponpaths_2.
+           exact Hhk0.
+           (* h · λ_g · p = h *)
+           (* rewrite Hp1 : (λ_g · p = id_C) *)
+           rewrite <- assoc.
+           etrans.
+           apply maponpaths.
+           exact Hp1.
+           (* h · id_C = h *)
+           now rewrite id_right.
         -- (* s · Khk · p · g = k *)
            rewrite <- (assoc _ p g).
-           rewrite αgcomm.
-           rewrite <- (assoc s _ _).
+           rewrite Hp0.
+           (* s · Khk · ρ_g = k *)
+           (* rewrite Hhk1 : ρ_f · k = Khk · ρ_g *)
+           rewrite <- assoc.
            etrans.
-           apply maponpaths_1.
-           rewrite (assoc _ _ idd).
+           apply maponpaths.
+           exact (pathsinv0 Hhk1).
+           (* s · ρ_f · k = k *)
+           (* rewrite Hs1 : s · ρ_f = id_B *)
+           rewrite assoc.
+           etrans.
            apply maponpaths_2.
-           exact (pathsinv0 (pr2 Hhk2)).
-           (* now the LHS goes along the bottom of the
-              above diagram *)
-           set (Fhkk := three_mor22 Fhk).
-           simpl in Fhkk.
-           
-           (* domain of Fhkk *)
-           assert (three_ob2 (nwfs_fact n (mor_to_arrow_ob g)) = d) as codg.
-           {
-             exact (fact_preserves_cod (nwfs_fact n) (mor_to_arrow_ob g)).
-           }
+           exact Hs1.
+           (* id_B · k = k *)
+           now rewrite id_left.
+      + (* llp (R-Map) ⊆ L-Map *)
+        (* Want to construct α using lift *)
+        intros a b f hf.
 
-           (* codomain of Fhkk *)
-           assert (three_ob2 (nwfs_fact n (mor_to_arrow_ob f)) = b) as codf.
-           {
-             exact (fact_preserves_cod (nwfs_fact n) (mor_to_arrow_ob f)).
-           }
-           
-           unfold three_ob2 in codf, codg.
-           rewrite codf in Fhkk.
-           (* assert ((pr211 Fhk) = k). *)
+        set (Lf := arrow_mor (fact_L (nwfs_fact n) (mor_to_arrow_ob f))).
+        set (Rf := arrow_mor (fact_R (nwfs_fact n) (mor_to_arrow_ob f))).
+        cbn in Lf, Rf.
+
+        (* f ∈ llp (R-Map), so has llp with Rf *)
+        (* the lift gives us precisely the map we need for α *)
+        use (hf _ _ Rf).
+        
+        -- (* ρ_f ∈ R-Map *)
            admit.
-      + admit.
+        -- exact Lf.
+        -- exact (identity _).
+        -- rewrite id_right.
+           (* or: three_comp ((nwfs_fact n) (mor_to_arrow_ob f)) *)
+           exact (LR_compatibility (nwfs_fact n) (mor_to_arrow_ob f)).
+        -- intro hl.
+           destruct hl as [l [hl0 hl1]].
+           unfold nwfs_L_maps_class, isCoAlgebra.
+           apply hinhpr.
+           use tpair.
+           ** use mors_to_arrow_mor.
+             ++ exact (identity _).
+             ++ exact l.
+             ++ rewrite id_left.
+                symmetry.
+                exact hl0.
+           ** cbn.
+              unfold Algebra_laws.
+              repeat split.
+              ++ simpl.
+                 apply subtypePath; [intro; apply homset_property|].
+                 cbn.
+                 apply pathsdirprod; [now rewrite id_left|].
+                 exact hl1.
+              ++ apply subtypePath; [intro; apply homset_property|].
+                 cbn.
+                 apply pathsdirprod.
+                 --- admit.
+                 --- admit.
     * (* this should just be the same as above *)
       admit.
     * intros x y f.
@@ -487,25 +547,9 @@ Proof.
       exists (three_ob1 fact).
       (* we know that x0 = x and x2 = y, but this is not automatically rewritten *)
       set (f01 := three_mor01 fact).
-      fold (three_ob0 (C:=C) fact) in f01.
-      assert ((three_ob0 fact) = x) as Hx.
-      {
-        exact (fact_preserves_dom (nwfs_fact n) farr).
-      }
-      unfold three_ob0 in Hx.
-      unfold arrow_dom in f01.
-      rewrite Hx in f01.
       exists f01.
 
       set (f12 := three_mor12 fact).
-      simpl in f12.
-      assert ((three_ob2 fact) = y) as Hy.
-      {
-        exact (fact_preserves_cod (nwfs_fact n) farr).
-      }
-      unfold three_ob2 in Hy.
-      unfold arrow_cod in f12.
-      rewrite Hy in f12.
       exists f12.
 
       repeat split.
@@ -513,7 +557,7 @@ Proof.
         unfold isCoAlgebra.
         admit.
       + admit.
-      + set (test := fact_cond (nwfs_fact n)).
-        (* this is precisely fact_cond (nwfs_fact n) applied to f *)
-        admit.
+      + change (f) with (three_mor02 fact).
+        unfold f01, f12.
+        exact (three_comp fact).
 Admitted.

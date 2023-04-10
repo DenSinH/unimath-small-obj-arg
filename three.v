@@ -21,7 +21,6 @@ Context (C : category).
    so long as the one element maps properly... 
    
    So we have to do things the long way: *)
-
 Definition three_disp_ob_mor : disp_cat_ob_mor (arrow C).
 Proof.
   use make_disp_cat_ob_mor.
