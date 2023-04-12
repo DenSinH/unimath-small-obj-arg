@@ -45,7 +45,11 @@ End Arrow_Disp.
 
 Definition arrow_dom {C : category} (f : arrow C) : C := pr11 f.
 Definition arrow_cod {C : category} (f : arrow C) : C := pr21 f.
-Definition arrow_mor {C : category} (f : arrow C) := pr2 f.
+Coercion arrow_mor {C : category} (f : arrow C) := pr2 f.
+
+Definition arrow_mor00 {C : category} {f g : arrow C} (F : f --> g) := pr11 F. 
+Definition arrow_mor11 {C : category} {f g : arrow C} (F : f --> g) := pr21 F. 
+Definition arrow_mor_comm {C : category} {f g : arrow C} (F : f --> g) := pr2 F. 
 
 Definition mor_to_arrow_ob {C : category} {x y : C} (f : x --> y) : arrow C :=
     (make_dirprod x y,, f).
