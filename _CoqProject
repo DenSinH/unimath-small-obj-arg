@@ -4,5 +4,7 @@ retract.v
 arrow.v
 three.v
 model/wfs.v
+model/nwfs.v
+model/nwfs_is_wfs.v
 model/weak_equivalences.v
 model/category.v

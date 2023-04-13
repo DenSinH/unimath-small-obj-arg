@@ -1,0 +1,563 @@
+Require Import UniMath.MoreFoundations.All.
+Require Import UniMath.CategoryTheory.Core.Prelude.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.opp_precat.
+Require Import UniMath.CategoryTheory.Monads.Monads.
+Require Import UniMath.CategoryTheory.Monads.MonadAlgebras.
+Require Import UniMath.CategoryTheory.DisplayedCats.Core.
+
+From Model Require Import morphism_class arrow three.
+From Model.model Require Import wfs nwfs.
+
+Local Open Scope cat.
+Local Open Scope mor_disp.
+Local Open Scope morcls.
+
+(* we can obtain a wfs from an nwfs *)
+Definition nwfs_R_maps_class {C : category} (n : nwfs C) : morphism_class C :=
+    λ (x y : C) (f : x --> y), isAlgebra (nwfs_R_monad n) f.
+Definition nwfs_L_maps_class {C : category} (n : nwfs C) : morphism_class C :=
+    λ (x y : C) (f : x --> y), isCoAlgebra (nwfs_L_monad n) (opp_mor f).
+
+
+(*
+Shape of comonad morphism diagram (2.15, Garner)
+  A ===== A ===== A  ~~> id_A
+  |       |       |
+f |   α   |λf  η  | f
+  v       v       v
+  B ---> Kf ----> B  ~~> id_B
+     s       ρ_f
+*)
+Lemma L_map_section {C : category} {n : nwfs C} {a b : C} {f : a --> b} (hf : nwfs_L_maps_class n _ _ f) :
+    ∃ s, f · s = arrow_mor (fact_L n (mor_to_arrow_ob f)) × 
+         s · arrow_mor (fact_R n (mor_to_arrow_ob f)) = identity _.
+Proof.
+  use (hinhuniv _ hf).
+  intro hf'.
+  destruct hf' as [[[ida s] αfcomm] [hαfη _]].
+  cbn in ida, s, αfcomm.
+  simpl in hαfη.
+  cbn in hαfη.
+
+  apply hinhpr.
+  exists s.
+
+  (* top line of hαfη: *)
+  assert (ida = identity a) as Hida.
+  {
+    (* base_paths : equality in pr1 of ∑-type (paths in base category)
+       pathsdirprodweq : _ × _ = _ × _ -> equality of terms
+    *)
+    set (top_line := dirprod_pr1 (pathsdirprodweq (base_paths _ _ hαfη))).
+    rewrite id_right in top_line.
+    exact top_line.
+  }
+
+  split.
+  - (* f ⋅ s = λ_f *)
+    (* commutativity and ida = identity a *)
+    specialize (αfcomm) as αfcomm'. 
+    rewrite Hida, id_left in αfcomm'.
+    apply pathsinv0.
+    exact αfcomm'.
+  - (* s · ρ_f = id_b *)
+    (* bottom line of hαfη *)
+    set (bottom_line := dirprod_pr2 (pathsdirprodweq (base_paths _ _ hαfη))).
+    exact bottom_line.
+Defined.
+
+(*
+Shape of monad morphism diagram (2.15, Garner)
+     λg       p
+  C ---> Kg ----> C  ~~> id_C
+  |       |       |
+g |   η   |ρg  α  | g
+  v       v       v
+  D ===== D ===== D  ~~> id_D
+*)
+Lemma R_map_section {C : category} {n : nwfs C} {c d : C} {g : c --> d} (hg : nwfs_R_maps_class n _ _ g) :
+    ∃ p, p · g = arrow_mor (fact_R n (mor_to_arrow_ob g)) × 
+         arrow_mor (fact_L n (mor_to_arrow_ob g)) · p = identity _.
+Proof.
+  use (hinhuniv _ hg).
+  intro hg'.
+  destruct hg' as [[[p idd] αgcomm] [hαgη _]].
+  cbn in p, idd, αgcomm.
+  simpl in hαgη.
+  cbn in hαgη.
+
+  apply hinhpr.
+  exists p.
+
+  (* bottom line of hαgη: *)
+  assert (idd = identity d) as Hidd.
+  {
+    (* base_paths : equality in pr1 of ∑-type (paths in base category)
+       pathsdirprodweq : _ × _ = _ × _ -> equality of terms
+    *)
+    set (bottom_line := dirprod_pr2 (pathsdirprodweq (base_paths _ _ hαgη))).
+    rewrite id_left in bottom_line.
+    exact bottom_line.
+  }
+
+  split.
+  - (* p ⋅ g = ρ_g *)
+    (* commutativity and ida = identity a *)
+    specialize (αgcomm) as αgcomm'. 
+    rewrite Hidd, id_right in αgcomm'.
+    exact αgcomm'.
+  - (* λg · p = id_c *)
+    (* top line of hαfη *)
+    set (top_line := dirprod_pr1 (pathsdirprodweq (base_paths _ _ hαgη))).
+    exact top_line.
+Defined.
+
+Lemma L_map_R_map_llp {C : category} {n : nwfs C} {a b c d : C}
+    {f : a --> b} {g : c --> d} (hf : nwfs_L_maps_class n _ _ f)
+    (hg : nwfs_R_maps_class n c d g) : lp_hProp f g.
+Proof.
+  (* want to construct a lift of an L-map and an R-map
+     using monad properties *)
+  intros h k H.
+
+  use (hinhuniv _ (L_map_section hf)).
+  intro Hs.
+  destruct Hs as [s [Hs0 Hs1]].
+
+  use (hinhuniv _ (R_map_section hg)).
+  intro Hp.
+  destruct Hp as [p [Hp0 Hp1]].
+
+  apply hinhpr.
+
+  set (hk := mors_to_arrow_mor f g h k H).
+  set (Fhk := functor_on_morphisms (fact_functor n) hk).
+  (* Kf --> Kg *)
+  set (Khk := three_mor11 Fhk). 
+
+  (* commutativity in diagrams *)
+  set (Hhk := three_mor_comm Fhk).
+  simpl in Hhk.
+  destruct Hhk as [Hhk0 Hhk1].
+
+  (*    
+              h
+  A ==== A ----> C
+  |      |       |
+  f |  Lf  |       |
+  v      v  Khk  v   p
+  B ---> Kf ---> Kg ---> C
+      s   |       |       |
+          |       |  Rg   | g
+          v       |       v
+          B ----> D ===== D
+              k
+  *)
+
+  exists (s · Khk · p).
+  split.
+  - (* f · (s · Khk · p) = h *)
+    rewrite assoc, assoc.
+    rewrite Hs0.
+    (* λ_f · Khk · p = h *)
+    (* rewrite Hhk0 : (λ_f · Hhk = h · λ_g) *)
+    etrans.
+    apply maponpaths_2.
+    exact Hhk0.
+    (* h · λ_g · p = h *)
+    (* rewrite Hp1 : (λ_g · p = id_C) *)
+    rewrite <- assoc.
+    etrans.
+    apply maponpaths.
+    exact Hp1.
+    (* h · id_C = h *)
+    now rewrite id_right.
+  - (* s · Khk · p · g = k *)
+    rewrite <- (assoc _ p g).
+    rewrite Hp0.
+    (* s · Khk · ρ_g = k *)
+    (* rewrite Hhk1 : ρ_f · k = Khk · ρ_g *)
+    rewrite <- assoc.
+    etrans.
+    apply maponpaths.
+    exact (pathsinv0 Hhk1).
+    (* s · ρ_f · k = k *)
+    (* rewrite Hs1 : s · ρ_f = id_B *)
+    rewrite assoc.
+    etrans.
+    apply maponpaths_2.
+    exact Hs1.
+    (* id_B · k = k *)
+    now rewrite id_left.
+Qed.
+
+Lemma nwfs_L_maps_subs_llp_R_maps {C : category} (n : nwfs C) :
+    nwfs_L_maps_class n ⊆ llp (nwfs_R_maps_class n).
+Proof.
+  intros a b f hf.
+  intros c d g hg.
+  exact (L_map_R_map_llp hf hg).
+Qed.
+
+(* dual to above statement *)
+Lemma nwfs_R_maps_subs_rlp_L_maps {C : category} (n : nwfs C) :
+    nwfs_R_maps_class n ⊆ rlp (nwfs_L_maps_class n).
+Proof.
+  intros c d g hg.
+  intros a b f hf.
+  exact (L_map_R_map_llp hf hg).
+Qed.
+
+(* the following lemmas about Σ and Π are from 
+   Grandis, Tholen, (6), (7), diagram after (7), (8), (9) *)
+
+(* diagram after (7) *)
+Lemma nwfs_Σ_top_map_id {C : category} (n : nwfs C) (f : arrow C) :
+    arrow_mor00 (nwfs_Σ n f) = identity _.
+Proof.
+  set (law1 := Monad_law1 (T:=nwfs_L_monad n) f).
+  specialize (dirprod_pr1 (pathsdirprodweq (base_paths _ _ law1))) as top.
+  apply pathsinv0.
+  etrans.
+  exact (pathsinv0 top).
+  apply id_right.
+Qed.
+
+(* σ_f · ρ_{λf} = id (6, 2nd) *)
+Lemma nwfs_Σ_bottom_map_inv {C : category} (n : nwfs C) (f : arrow C) :
+    arrow_mor11 (nwfs_Σ n f) · arrow_mor (fact_R n (fact_L n f)) = identity _.
+Proof.
+  set (law1 := Monad_law1 (T:=nwfs_L_monad n) f).
+  specialize (dirprod_pr2 (pathsdirprodweq (base_paths _ _ law1))) as bottom.
+  exact bottom.
+Qed.
+
+(* σ_{λf} · σ_f = F(1_A, σ_f) · σ_f 
+  where F(1_a, σ_f) is the map on middle objects of F(Σ_f)
+  if we see Σ_f as a morphism in the arrow category 
+   (9, top right + cancel_postcomposition) *)
+Lemma nwfs_Σ_bottom_map_L_is_middle_map_of_Σ {C : category} (n : nwfs C) (f : arrow C) :
+    (arrow_mor11 (nwfs_Σ n f)) · arrow_mor11 (nwfs_Σ n (fact_L n f)) =
+    (arrow_mor11 (nwfs_Σ n f)) · three_mor11 (functor_on_morphisms n (nwfs_Σ n f)).
+Proof.
+  set (law3 := Monad_law3 (T:=nwfs_L_monad n) f).
+  specialize (dirprod_pr2 (pathsdirprodweq (base_paths _ _ law3))) as bottom.
+  apply pathsinv0.
+  exact bottom.
+Qed.
+
+(* diagram after (7) *)
+Lemma nwfs_Π_bottom_map_id {C : category} (n : nwfs C) (f : arrow C) :
+    arrow_mor11 (nwfs_Π n f) = identity _.
+Proof.
+  set (law1 := Monad_law1 (T:=nwfs_R_monad n) f).
+  specialize (dirprod_pr2 (pathsdirprodweq (base_paths _ _ law1))) as bottom.
+  apply pathsinv0.
+  etrans.
+  exact (pathsinv0 bottom).
+  apply id_left.
+Qed.
+
+(* λ_{ρf} · π_f = id (6, 4th) *)
+Lemma nwfs_Π_top_map_inv {C : category} (n : nwfs C) (f : arrow C) :
+    arrow_mor (fact_L n (fact_R n f)) · arrow_mor00 (nwfs_Π n f) = identity _.
+Proof.
+  set (law1 := Monad_law1 (T:=nwfs_R_monad n) f).
+  specialize (dirprod_pr1 (pathsdirprodweq (base_paths _ _ law1))) as top.
+  exact top.
+Qed.
+
+(* π_{ρf} · π_f = F(π_f, 1_b) · π_f) 
+  where F(π_f, 1_b) = map on middle objects of F(Π_f)
+  if we see Π_f as a morphism in the arrow category
+   (9, bottom right + cancel_precomposition) *)
+Lemma nwfs_Π_bottom_map_R_is_middle_map_of_Π {C : category} (n : nwfs C) (f : arrow C) :
+    arrow_mor00 (nwfs_Π n (fact_R n f)) · arrow_mor00 (nwfs_Π n f) = 
+    three_mor11 (functor_on_morphisms n (nwfs_Π n f)) · arrow_mor00 (nwfs_Π n f).
+Proof.
+  set (law3 := Monad_law3 (T:=nwfs_R_monad n) f).
+  specialize (dirprod_pr1 (pathsdirprodweq (base_paths _ _ law3))) as top.
+  apply pathsinv0.
+  exact top.
+Qed.
+
+Lemma nwfs_Lf_is_L_map {C : category} (n : nwfs C) :
+    ∏ f : arrow C, (nwfs_L_maps_class n) _ _ (arrow_mor (fact_L n f)).
+Proof.
+  intro f.
+
+  (* unfold nwfs_L_maps_class, isCoAlgebra. *)
+  apply hinhpr.
+  exists (nwfs_Σ n f).
+
+  split; use subtypePath; try (intro; apply homset_property); cbn.
+  - apply pathsdirprod.
+    * etrans.
+      apply maponpaths_2.
+      exact (nwfs_Σ_top_map_id n f).
+      now rewrite id_right.
+    * exact (nwfs_Σ_bottom_map_inv n f).
+  - apply pathsdirprod.
+    * apply cancel_precomposition.
+      (* rhs is just pr11 nwfs_Σ n f
+         unfold three_mor00; simpl. *)
+      apply pathsinv0.
+      etrans.
+      exact (nwfs_Σ_top_map_id n f).
+      apply pathsinv0.
+      exact (nwfs_Σ_top_map_id n (mor_to_arrow_ob _)).
+    * exact (nwfs_Σ_bottom_map_L_is_middle_map_of_Σ _ _).
+Qed.
+
+(* dual statement *)
+Lemma nwfs_Rf_is_R_map {C : category} (n : nwfs C) :
+    ∏ f : arrow C, (nwfs_R_maps_class n) _ _ (arrow_mor (fact_R n f)).
+Proof.
+  intro f.
+
+  (* unfold nwfs_R_maps_class, isAlgebra. *)
+  apply hinhpr.
+  exists (nwfs_Π n f).
+
+  split; use subtypePath; try (intro; apply homset_property); cbn.
+  - apply pathsdirprod.
+    * exact (nwfs_Π_top_map_inv n f).
+    * etrans.
+      apply maponpaths.
+      exact (nwfs_Π_bottom_map_id n f).
+      now rewrite id_right.
+  - apply pathsdirprod.
+    * exact (nwfs_Π_bottom_map_R_is_middle_map_of_Π _ _).
+    * apply cancel_postcomposition.
+      (* rhs is just pr21 nwfs_Π n f
+        unfold three_mor22; simpl. *)
+      apply pathsinv0.
+      etrans.
+      exact (nwfs_Π_bottom_map_id n f).
+      apply pathsinv0.
+      exact (nwfs_Π_bottom_map_id n (mor_to_arrow_ob _)).
+Qed.
+
+Lemma nwfs_llp_R_maps_subs_L_maps {C : category} (n : nwfs C) :
+    llp (nwfs_R_maps_class n) ⊆ nwfs_L_maps_class n.
+Proof.
+  (* Want to construct α using lift *)
+  intros a b f hf.
+
+  set (Lf := arrow_mor (fact_L n (mor_to_arrow_ob f))).
+  set (Rf := arrow_mor (fact_R n (mor_to_arrow_ob f))).
+  cbn in Rf.
+
+  (* f ∈ llp (R-Map), so has llp with Rf *)
+  (* the lift gives us precisely the map we need for α *)
+  use (hf _ _ Rf).
+
+  - exact (nwfs_Rf_is_R_map _ _).
+  - exact Lf.
+  - exact (identity _).
+  - rewrite id_right.
+    (* or: three_comp (n (mor_to_arrow_ob f)) *)
+    exact (LR_compatibility n (mor_to_arrow_ob f)).
+  - intro hl.
+    destruct hl as [l [hl0 hl1]].
+
+    (* unfold nwfs_L_maps_class, isCoAlgebra. *)
+    apply hinhpr.
+    (* 
+      A ===== A
+      |       |
+    f |       | λf
+      v       v
+      B ----> Kf
+          l
+    *)
+    assert (identity a · Lf = f · l) as αcomm.
+    {
+      rewrite id_left.
+      exact (pathsinv0 hl0).
+    }
+
+    set (α := mors_to_arrow_mor f Lf (identity _) l αcomm).
+    exists α.
+    split.
+    * (* η · α = id *)
+      simpl.
+      apply subtypePath; [intro; apply homset_property|].
+      cbn.
+      (* top map is just identity for both *)
+      apply pathsdirprod; [now rewrite id_left|].
+      exact hl1.
+    * (* μ · α = T (α) · α  (flipped in comonad)*)
+      (* ~ α · Σ = α · L (α)*)
+      apply subtypePath; [intro; apply homset_property|].
+      cbn.
+      apply pathsdirprod.
+      + (* top maps are both identity *)
+        apply cancel_precomposition.
+        exact (nwfs_Σ_top_map_id n (mor_to_arrow_ob f)).
+      + (* commutativity in bottom maps *)
+        (* We consider the diagram induced by applying the functorial
+        factorization to α, i.e. f --> λf (id, l).
+        Only the bottom half is interesting.
+          A ====== A
+          |        |
+          |        |
+          v  α11   v
+         Kf ----> KLf
+          |        | ^
+       ρf |    ρλf | | σf
+          v        v |
+          B -----> Kf
+              l
+
+        where l is also a section of ρf.
+        We need to show that σf = α11, which is the same as showing
+        that l is an inverse for ρf and σf is an inverse for ρ_{λf}.
+        *)
+        apply cancel_precomposition.
+
+        set (σf := arrow_mor11 (nwfs_Σ n (mor_to_arrow_ob (opp_mor f)))).
+        set (α11 := three_mor11 (functor_on_morphisms n α)).
+        change (σf = α11).
+
+        assert (is_z_isomorphism σf) as σf_is_iso.
+        {
+          exists (arrow_mor (fact_R n (fact_L n (mor_to_arrow_ob (opp_mor f))))).
+          unfold is_inverse_in_precat.
+          split.
+          - exact (nwfs_Σ_bottom_map_inv n (mor_to_arrow_ob f)).
+          - (* inverese of nwfs_Σ_bottom_map_inv *)
+            admit.
+        }
+        set (σfiso := make_z_iso' σf σf_is_iso).
+
+        set (α3comm := dirprod_pr2 (three_mor_comm (functor_on_morphisms n α))).
+        simpl in α3comm.
+
+        assert (Rf · l = identity _) as Rflid.
+        {
+          (* inverse of hl1 *)
+          admit.
+        }
+        specialize (pathscomp0 (pathsinv0 Rflid) α3comm) as α3comm'.
+
+        assert (z_iso_mor (z_iso_inv σfiso) = three_mor12 (n (mor_to_arrow_ob Lf))) as σfinv.
+        {
+          apply pathsinv0.
+          apply inv_z_iso_unique'.
+          unfold precomp_with.
+
+          exact (nwfs_Σ_bottom_map_inv n (mor_to_arrow_ob f)).
+        }
+        
+        assert (α11 · (z_iso_inv σfiso) = identity _) as α3comm''.
+        {
+          etrans.
+          apply maponpaths.
+          exact σfinv.
+          exact (pathsinv0 α3comm').
+        }
+
+        assert (α11 = z_iso_inv (z_iso_inv σfiso)) as H.
+        {
+          apply (post_comp_with_z_iso_is_inj (z_iso_inv σfiso)).
+          apply pathsinv0.
+          etrans.
+          exact (z_iso_after_z_iso_inv ((z_iso_inv σfiso))).
+          exact (pathsinv0 α3comm'').
+        }
+
+        rewrite z_iso_inv_z_iso_inv in H.
+        exact (pathsinv0 H).
+Admitted.
+
+(* dual statement *)
+Lemma nwfs_rlp_L_maps_subs_R_maps {C : category} (n : nwfs C) :
+    rlp (nwfs_L_maps_class n) ⊆ nwfs_R_maps_class n.
+Proof.
+  (* Want to construct α using lift *)
+  intros a b f hf.
+
+  set (Lf := arrow_mor (fact_L n (mor_to_arrow_ob f))).
+  set (Rf := arrow_mor (fact_R n (mor_to_arrow_ob f))).
+  cbn in Lf, Rf.
+
+  (* f ∈ rlp (L-Map), so has rlp with Lf *)
+  (* the lift gives us precisely the map we need for α *)
+  use (hf _ _ Lf).
+
+  - exact (nwfs_Lf_is_L_map n (mor_to_arrow_ob f)).
+  - exact (identity _).
+  - exact Rf.
+  - rewrite id_left.
+    apply pathsinv0.
+    (* or: three_comp (n (mor_to_arrow_ob f)) *)
+    exact (LR_compatibility n (mor_to_arrow_ob f)).
+  - intro hl.
+    destruct hl as [l [hl0 hl1]].
+
+    (* unfold nwfs_R_maps_class, isAlgebra. *)
+    apply hinhpr.
+    use tpair.
+    * use mors_to_arrow_mor.
+      + exact l.
+      + exact (identity _).
+      + rewrite id_right.
+        exact hl1.
+    * simpl.
+      split.
+      + (* η · α = id *)
+        simpl.
+        apply subtypePath; [intro; apply homset_property|].
+        cbn.
+        (* top map is just identity for both *)
+        apply pathsdirprod; [|now rewrite id_left].
+        exact hl0.
+      + (* μ · α = T (α) · α  (flipped in comonad)*)
+        (* ~ Π · α = L (α) · α*)
+        apply subtypePath; [intro; apply homset_property|].
+        cbn.
+        apply pathsdirprod.
+        -- (* commutativity in top maps *)
+           (* we probably should NOT do cancel_postcomposition here *)
+           unfold three_mor11.
+           simpl.
+           (* π_f · l = three_map11 (#n (l, id)) · l *)
+           (* since: pr1: three_map11
+              section_disp_on_morphisms n : #n
+              from three_mor12 to f ... : ρ_f -> f
+              (internal_paths_rew_r ...) : commutativity *)
+           admit.
+        -- (* bottom maps are both identity *)
+           apply cancel_postcomposition.
+           exact (nwfs_Π_bottom_map_id n (mor_to_arrow_ob f)).
+Admitted.
+    
+Lemma nwfs_is_wfs {C : category} (n : nwfs C) : wfs C.
+Proof.
+  use make_wfs.
+  - exact (nwfs_L_maps_class n).
+  - exact (nwfs_R_maps_class n).
+  - use make_is_wfs.
+    * apply morphism_class_subset_antisymm.
+      + exact (nwfs_L_maps_subs_llp_R_maps _).
+      + exact (nwfs_llp_R_maps_subs_L_maps _).
+    * apply morphism_class_subset_antisymm.
+      + exact (nwfs_R_maps_subs_rlp_L_maps _).
+      + exact (nwfs_rlp_L_maps_subs_R_maps _).
+    * intros x y f.
+      apply hinhpr.
+
+      set (fact := n (mor_to_arrow_ob f)).
+      set (f01 := three_mor01 fact).
+      set (f12 := three_mor12 fact).
+      cbn in f01, f12.
+
+      exists (three_ob1 fact), f01, f12.
+
+      repeat split.
+      + exact (nwfs_Lf_is_L_map n (three_mor02 fact)).
+      + exact (nwfs_Rf_is_R_map n (three_mor02 fact)).
+      + exact (three_comp fact).
+Qed.
