@@ -16,6 +16,7 @@ Require Import UniMath.CategoryTheory.DisplayedCats.NaturalTransformations.
 Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 
 From Model Require Import morphism_class arrow three.
+From Model.displayed Require Import natural_transformation.
 
 Local Open Scope cat.
 Local Open Scope mor_disp.
@@ -301,7 +302,160 @@ Definition nwfs_R_maps {C : category} (n : nwfs C) :=
 Definition nwfs_L_maps {C : category} (n : nwfs C) :=
     MonadAlg (nwfs_L_monad n).
 
-Definition isAlgebra {C : category} (M : Monad (arrow C)) {x y : C} (f : x --> y) :=
-    ∃ α, Algebra_laws M (mor_to_arrow_ob f,, α).
-Definition isCoAlgebra {C : category} (M : Monad (op_cat (arrow C))) {x y : C} (f : x --> y) :=
-    ∃ α, Algebra_laws M (mor_to_arrow_ob f,, α).
+(* the following lemmas about Σ and Π are from 
+   Grandis, Tholen, (6), (7), diagram after (7), (8), (9) *)
+
+(* diagram after (7) *)
+Lemma nwfs_Σ_top_map_id {C : category} (n : nwfs C) (f : arrow C) :
+    arrow_mor00 (nwfs_Σ n f) = identity _.
+Proof.
+  set (law1 := Monad_law1 (T:=nwfs_L_monad n) f).
+  specialize (dirprod_pr1 (pathsdirprodweq (base_paths _ _ law1))) as top.
+  apply pathsinv0.
+  etrans.
+  exact (pathsinv0 top).
+  apply id_right.
+Qed.
+
+(* σ_f · ρ_{λf} = id (6, 2nd) *)
+Lemma nwfs_Σ_bottom_map_inv {C : category} (n : nwfs C) (f : arrow C) :
+    arrow_mor11 (nwfs_Σ n f) · arrow_mor (fact_R n (fact_L n f)) = identity _.
+Proof.
+  set (law1 := Monad_law1 (T:=nwfs_L_monad n) f).
+  specialize (dirprod_pr2 (pathsdirprodweq (base_paths _ _ law1))) as bottom.
+  exact bottom.
+Qed.
+
+(* σ_{λf} · σ_f = F(1_A, σ_f) · σ_f 
+  where F(1_a, σ_f) is the map on middle objects of F(Σ_f)
+  if we see Σ_f as a morphism in the arrow category 
+   (9, top right + cancel_postcomposition) *)
+Lemma nwfs_Σ_bottom_map_L_is_middle_map_of_Σ {C : category} (n : nwfs C) (f : arrow C) :
+    (arrow_mor11 (nwfs_Σ n f)) · arrow_mor11 (nwfs_Σ n (fact_L n f)) =
+    (arrow_mor11 (nwfs_Σ n f)) · three_mor11 (functor_on_morphisms n (nwfs_Σ n f)).
+Proof.
+  set (law3 := Monad_law3 (T:=nwfs_L_monad n) f).
+  specialize (dirprod_pr2 (pathsdirprodweq (base_paths _ _ law3))) as bottom.
+  apply pathsinv0.
+  exact bottom.
+Qed.
+
+(* diagram after (7) *)
+Lemma nwfs_Π_bottom_map_id {C : category} (n : nwfs C) (f : arrow C) :
+    arrow_mor11 (nwfs_Π n f) = identity _.
+Proof.
+  set (law1 := Monad_law1 (T:=nwfs_R_monad n) f).
+  specialize (dirprod_pr2 (pathsdirprodweq (base_paths _ _ law1))) as bottom.
+  apply pathsinv0.
+  etrans.
+  exact (pathsinv0 bottom).
+  apply id_left.
+Qed.
+
+(* λ_{ρf} · π_f = id (6, 4th) *)
+Lemma nwfs_Π_top_map_inv {C : category} (n : nwfs C) (f : arrow C) :
+    arrow_mor (fact_L n (fact_R n f)) · arrow_mor00 (nwfs_Π n f) = identity _.
+Proof.
+  set (law1 := Monad_law1 (T:=nwfs_R_monad n) f).
+  specialize (dirprod_pr1 (pathsdirprodweq (base_paths _ _ law1))) as top.
+  exact top.
+Qed.
+
+(* π_{ρf} · π_f = F(π_f, 1_b) · π_f) 
+  where F(π_f, 1_b) = map on middle objects of F(Π_f)
+  if we see Π_f as a morphism in the arrow category
+   (9, bottom right + cancel_precomposition) *)
+Lemma nwfs_Π_bottom_map_R_is_middle_map_of_Π {C : category} (n : nwfs C) (f : arrow C) :
+    arrow_mor00 (nwfs_Π n (fact_R n f)) · arrow_mor00 (nwfs_Π n f) = 
+    three_mor11 (functor_on_morphisms n (nwfs_Π n f)) · arrow_mor00 (nwfs_Π n f).
+Proof.
+  set (law3 := Monad_law3 (T:=nwfs_R_monad n) f).
+  specialize (dirprod_pr1 (pathsdirprodweq (base_paths _ _ law3))) as top.
+  apply pathsinv0.
+  exact top.
+Qed.
+
+Definition fact_mor {C : category} (F F' : functorial_factorization C) :=
+    section_nat_trans_disp F F'.
+
+Definition fact_mor_nt {C : category} {F F' : functorial_factorization C} (α : fact_mor F F') :=
+    section_nat_trans α.
+Coercion fact_mor_nt : fact_mor >-> nat_trans.
+
+(* verify that indeed, whiskering with d1 yields id_{C^2} ⟹ id_{C^2} *)
+Lemma fact_mor_whisker_d1_is_id {C : category} {F F' : functorial_factorization C}
+    (α : fact_mor F F') :
+    post_whisker α face_map_1 = nat_trans_id (functor_identity _).
+Proof.
+  apply nat_trans_eq.
+  - apply homset_property.
+  - intro. (* ~~> identity x = identity x *)
+    trivial.
+Defined.
+
+(* todo: this goes the other way around, but I think that's the only way? *)
+Definition nwfs_L_mor {C : category} {n n' : nwfs C}
+    (α : fact_mor n n') : (nwfs_L_monad n') ⟹ (nwfs_L_monad n) :=
+  post_whisker (op_nt α) (functor_opp face_map_2).
+Definition nwfs_R_mor {C : category} {n n' : nwfs C}
+    (α : fact_mor n n') : (nwfs_R_monad n) ⟹ (nwfs_R_monad n') :=
+  post_whisker α face_map_0.
+
+Definition fact_R_mor {C : category} {F F' : functorial_factorization C}
+    (α : fact_mor F F') := post_whisker α face_map_0.
+
+Definition nwfs_mor {C : category} (n n' : nwfs C) :=
+    ∑ α : fact_mor n n', 
+  Monad_Mor_laws (nwfs_L_mor α) × Monad_Mor_laws (nwfs_R_mor α).
+
+
+Section NWFS_cat.
+
+Context (C : category).
+
+Definition nwfs_precategory_ob_mor : precategory_ob_mor.
+Proof.
+  use make_precategory_ob_mor.
+  - exact (nwfs C).
+  - intros n n'.
+    exact (nwfs_mor n n').
+Defined.
+
+Definition nwfs_precategory_data : precategory_data.
+Proof.
+  use make_precategory_data.
+  - exact nwfs_precategory_ob_mor.
+  - intro n.
+    use tpair.
+    * use tpair.
+      + intro x.
+        exact (id_disp _).
+      + unfold section_nat_trans_disp_axioms.
+        simpl.
+        intros.
+        apply subtypePath.
+        -- intro. apply isapropdirprod; apply homset_property.
+        -- simpl.
+           admit.
+    * simpl.
+      split.
+      + admit.
+      + admit.
+  - intros.
+    admit.
+Admitted.
+
+Definition nwfs_is_precategory : is_precategory nwfs_precategory_data.
+Proof.
+  use make_is_precategory; intros.
+  - admit.
+  - admit.
+  - admit.
+  - admit.
+Admitted.
+
+Definition NWFS : precategory := 
+    (nwfs_precategory_data,, nwfs_is_precategory).
+
+End NWFS_cat.
+  

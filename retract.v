@@ -94,3 +94,10 @@ Proof.
     * symmetry. exact hr.
     * symmetry. exact hi.
 Defined.
+
+Definition retract_self {C : category} {a b : C} (f : a --> b) :
+    retract f f.
+Proof.
+  use make_retract; try exact (identity _).
+  use make_is_retract; rewrite id_left; try rewrite id_right; trivial.
+Defined.

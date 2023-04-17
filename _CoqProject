@@ -3,6 +3,7 @@ morphism_class.v
 retract.v
 arrow.v
 three.v
+displayed/natural_transformation.v
 model/wfs.v
 model/nwfs.v
 model/nwfs_is_wfs.v

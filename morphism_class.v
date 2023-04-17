@@ -3,6 +3,8 @@ Require Import UniMath.CategoryTheory.Core.Prelude.
 Require Import UniMath.CategoryTheory.opp_precat.
 Require Setoid.
 
+From Model Require Import retract.
+
 Declare Scope morcls.
 Delimit Scope morcls with morcls.
 
@@ -80,25 +82,6 @@ Definition morphism_class_opp {C : category} (S : morphism_class C) : (morphism_
 Definition morphism_class_rm_opp {C : category} (S : morphism_class (op_cat C)) : (morphism_class C) :=
     λ X Y f, (S _ _) (rm_opp_mor f).
 
-(* Lemma morphism_class_opp_preserves_containment {C : category} (S T : morphism_class C) : 
-    (S ⊆ T) -> (morphism_class_opp S ⊆ morphism_class_opp T).
-Proof.
-  intro st.
-  intros x y f hf.
-  unfold morphism_class_opp.
-  apply (st _ _ _).
-  exact hf.
-Defined.
-
-Lemma morphism_class_opp_iff_containment {C : category} (S T : morphism_class C) : 
-    (S ⊆ T) <-> (morphism_class_opp S ⊆ morphism_class_opp T).
-Proof.
-  split.
-  - exact (morphism_class_opp_preserves_containment _ _).
-  - intro H.
-    exact (morphism_class_opp_preserves_containment _ _ H).
-Defined. *)
-
 Lemma morphism_class_opp_opp {C : category} (S : morphism_class C) : 
     morphism_class_opp (morphism_class_opp S) = S.
 Proof.
@@ -111,4 +94,20 @@ Proof.
   rewrite <- (morphism_class_opp_opp S).
   rewrite <- (morphism_class_opp_opp T).
   now rewrite e.
+Defined.
+
+Definition morphism_class_retract_closure {C : category} (S : morphism_class C) :=
+    λ x y (f : x --> y), ∃ x y (f' : x --> y), (S _ _ f') × (retract f' f).
+
+  Notation "S ^cl" := (morphism_class_retract_closure S) (at level 70) : morcls.
+
+Lemma in_morcls_retc_if_in_morcls {C : category} (S : morphism_class C) 
+    {a b} (f : a --> b) :
+  (S _ _ f) -> (S^cl _ _ f).
+Proof.
+  intro H.
+
+  apply hinhpr.
+  exists _, _, f.
+  exact (make_dirprod H (retract_self f)).
 Defined.

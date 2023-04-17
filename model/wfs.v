@@ -740,4 +740,13 @@ Proof.
     exact (hf _ _ _ g_l).
 Defined.
 
+Lemma lp_of_retracts {M : category} {a b x y a' b' x' y' : M} 
+    {f : a --> b} {f' : a' --> b'}
+    {g : x --> y} {g' : x' --> y'}
+    (rf : retract f f') (rg : retract g g') :
+  (lp f' g') -> (lp f g).
+Proof.
+  admit.
+Admitted.
+
 End wfs.
