@@ -743,10 +743,28 @@ Defined.
 Lemma lp_of_retracts {M : category} {a b x y a' b' x' y' : M} 
     {f : a --> b} {f' : a' --> b'}
     {g : x --> y} {g' : x' --> y'}
-    (rf : retract f f') (rg : retract g g') :
+    (rf : retract f' f) (rg : retract g' g) :
   (lp f' g') -> (lp f g).
 Proof.
-  admit.
-Admitted.
+  intros Hlp h k Hcomm.
+  destruct rf as [ia [ra [ib [rb [ha [hb [hif hrf]]]]]]].
+  destruct rg as [ix [rx [iy [ry [hx [hy [hig hrg]]]]]]].
+
+  use Hlp.
+  - exact (ra · h · ix).
+  - exact (rb · k · iy).
+  - rewrite <- assoc, hig, assoc, <- (assoc _ h g), Hcomm, assoc, hrf, assoc, assoc.
+    reflexivity.
+  - intro Hl.
+    destruct Hl as [l [H1 H2]].
+    
+    apply hinhpr.
+    exists (ib · l · rx).
+    split.
+    * rewrite assoc, assoc, <- hif, <- (assoc _ f' l), H1, assoc, assoc.
+      now rewrite ha, id_left, <- assoc, hx, id_right.
+    * rewrite <- assoc, hrg, assoc, <- (assoc _ l g'), H2, assoc, assoc.
+      now rewrite hb, id_left, <- assoc, hy, id_right.
+Defined.
 
 End wfs.
