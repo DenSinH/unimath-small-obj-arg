@@ -2,7 +2,6 @@ Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.CategoryTheory.Core.Prelude.
 Require Import UniMath.CategoryTheory.opp_precat.
 
-
 Declare Scope retract.
 Delimit Scope morcls with retract.
 

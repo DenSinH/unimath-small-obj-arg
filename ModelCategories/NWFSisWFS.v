@@ -6,8 +6,12 @@ Require Import UniMath.CategoryTheory.Monads.Monads.
 Require Import UniMath.CategoryTheory.Monads.MonadAlgebras.
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 
-From Model Require Import morphism_class arrow three retract.
-From Model.model Require Import wfs nwfs.
+Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
+Require Import CategoryTheory.DisplayedCats.Examples.Three.
+Require Import CategoryTheory.ModelCategories.MorphismClass.
+Require Import CategoryTheory.ModelCategories.Retract.
+Require Import CategoryTheory.ModelCategories.WFS.
+Require Import CategoryTheory.ModelCategories.NWFS.
 
 Local Open Scope cat.
 Local Open Scope mor_disp.
@@ -19,6 +23,7 @@ Definition isCoAlgebra {C : category} (M : Monad (op_cat (arrow C))) {x y : C} (
     ∃ α, Algebra_laws M (mor_to_arrow_ob f,, α).
 
 (* we can obtain a wfs from an nwfs *)
+(* this is exactly ||nwfs_R_maps_disp f|| I think *)
 Definition nwfs_R_maps_class {C : category} (n : nwfs C) : morphism_class C :=
     λ (x y : C) (f : x --> y), isAlgebra (nwfs_R_monad n) f.
 Definition nwfs_L_maps_class {C : category} (n : nwfs C) : morphism_class C :=
@@ -35,8 +40,8 @@ f |   α   |λf  η  | f
      s       ρ_f
 *)
 Lemma L_map_section {C : category} {n : nwfs C} {a b : C} {f : a --> b} (hf : nwfs_L_maps_class n _ _ f) :
-    ∃ s, f · s = arrow_mor (fact_L n (mor_to_arrow_ob f)) × 
-         s · arrow_mor (fact_R n (mor_to_arrow_ob f)) = identity _.
+    ∃ s, f · s = arrow_mor (fact_L n f) × 
+         s · arrow_mor (fact_R n f) = identity _.
 Proof.
   use (hinhuniv _ hf).
   intro hf'.
@@ -82,8 +87,8 @@ g |   η   |ρg  α  | g
   D ===== D ===== D  ~~> id_D
 *)
 Lemma R_map_section {C : category} {n : nwfs C} {c d : C} {g : c --> d} (hg : nwfs_R_maps_class n _ _ g) :
-    ∃ p, p · g = arrow_mor (fact_R n (mor_to_arrow_ob g)) × 
-         arrow_mor (fact_L n (mor_to_arrow_ob g)) · p = identity _.
+    ∃ p, p · g = arrow_mor (fact_R n g) × 
+         arrow_mor (fact_L n g) · p = identity _.
 Proof.
   use (hinhuniv _ hg).
   intro hg'.
@@ -118,7 +123,7 @@ Proof.
     exact top_line.
 Defined.
 
-Lemma L_map_R_map_llp {C : category} {n : nwfs C} {a b c d : C}
+Lemma L_map_R_map_lp {C : category} {n : nwfs C} {a b c d : C}
     {f : a --> b} {g : c --> d} (hf : nwfs_L_maps_class n _ _ f)
     (hg : nwfs_R_maps_class n c d g) : lp_hProp f g.
 Proof.
@@ -202,7 +207,7 @@ Lemma nwfs_L_maps_subs_llp_R_maps {C : category} (n : nwfs C) :
 Proof.
   intros a b f hf.
   intros c d g hg.
-  exact (L_map_R_map_llp hf hg).
+  exact (L_map_R_map_lp hf hg).
 Qed.
 
 (* dual to above statement *)
@@ -211,7 +216,7 @@ Lemma nwfs_R_maps_subs_rlp_L_maps {C : category} (n : nwfs C) :
 Proof.
   intros c d g hg.
   intros a b f hf.
-  exact (L_map_R_map_llp hf hg).
+  exact (L_map_R_map_lp hf hg).
 Qed.
 
 Lemma nwfs_L_maps_cl_subs_llp_R_maps_cl {C : category} (n : nwfs C) :
@@ -449,8 +454,8 @@ Proof.
      The L-map will be Lf *)
   intros a b f Hf.
 
-  set (Lf := arrow_mor (fact_L n (mor_to_arrow_ob f))).
-  set (Rf := arrow_mor (fact_R n (mor_to_arrow_ob f))).
+  set (Lf := arrow_mor (fact_L n f)).
+  set (Rf := arrow_mor (fact_R n f)).
   cbn in Rf.
 
   (* f ∈ llp ((R-Map)^cl), so has llp with Rf *)
@@ -462,14 +467,14 @@ Proof.
   - exact (identity _).
   - rewrite id_right.
     (* or: three_comp (n (mor_to_arrow_ob f)) *)
-    exact (LR_compatibility n (mor_to_arrow_ob f)).
+    exact (LR_compatibility n f).
   - intro hl.
     destruct hl as [l [hl0 hl1]].
 
     apply hinhpr.
     exists _, _, Lf.
     split.
-    * exact (nwfs_Lf_is_L_map n (mor_to_arrow_ob f)).
+    * exact (nwfs_Lf_is_L_map n f).
     (* 
       A ===== A ===== A
       |       |       |
@@ -490,7 +495,7 @@ Proof.
            exact (pathsinv0 hl0).
         -- rewrite id_left.
            apply pathsinv0.
-           exact (LR_compatibility n (mor_to_arrow_ob f)).
+           exact (LR_compatibility n f).
 Qed.
 
 (**
@@ -563,8 +568,8 @@ Proof.
      The map will be Rf *)
   intros a b f hf.
 
-  set (Lf := arrow_mor (fact_L n (mor_to_arrow_ob f))).
-  set (Rf := arrow_mor (fact_R n (mor_to_arrow_ob f))).
+  set (Lf := arrow_mor (fact_L n f)).
+  set (Rf := arrow_mor (fact_R n f)).
   cbn in Lf, Rf.
 
   (* f ∈ rlp (L-Map), so has rlp with Lf *)
@@ -572,20 +577,20 @@ Proof.
   use (hf _ _ Lf).
 
   - apply in_morcls_retc_if_in_morcls.
-    exact (nwfs_Lf_is_L_map n (mor_to_arrow_ob f)).
+    exact (nwfs_Lf_is_L_map n f).
   - exact (identity _).
   - exact Rf.
   - rewrite id_left.
     apply pathsinv0.
     (* or: three_comp (n (mor_to_arrow_ob f)) *)
-    exact (LR_compatibility n (mor_to_arrow_ob f)).
+    exact (LR_compatibility n f).
   - intro hl.
     destruct hl as [l [hl0 hl1]].
 
     apply hinhpr.
     exists _, _, Rf.
     split.
-    * exact (nwfs_Rf_is_R_map n (mor_to_arrow_ob f)).
+    * exact (nwfs_Rf_is_R_map n f).
     (* 
          λf       l
       A ---> Kf ----> A
@@ -603,7 +608,7 @@ Proof.
         -- exact hl0.
         -- now rewrite id_left.
         -- rewrite id_right.
-           exact (LR_compatibility n (mor_to_arrow_ob f)).
+           exact (LR_compatibility n f).
         -- rewrite id_right.
            exact hl1.
 Qed.
@@ -623,7 +628,7 @@ Proof.
     * intros x y f.
       apply hinhpr.
 
-      set (fact := n (mor_to_arrow_ob f)).
+      set (fact := n f).
       set (f01 := three_mor01 fact).
       set (f12 := three_mor12 fact).
       cbn in f01, f12.

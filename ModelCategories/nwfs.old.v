@@ -16,7 +16,7 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Total.
 Require Import UniMath.CategoryTheory.DisplayedCats.Functors.
 Require Import UniMath.CategoryTheory.DisplayedCats.NaturalTransformations.
 
-From Model Require Import morphism_class.
+From Model.model Require Import morphism_class.
 From Model.model Require Import wfs.
 
 Local Open Scope cat.

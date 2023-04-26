@@ -8,8 +8,8 @@ Require Import UniMath.CategoryTheory.limits.coproducts.
 Require Import UniMath.CategoryTheory.limits.products.
 Require Import UniMath.CategoryTheory.limits.Opp.
 
-From Model Require Import morphism_class retract.
-
+Require Import CategoryTheory.ModelCategories.Retract.
+Require Import CategoryTheory.ModelCategories.MorphismClass.
 
 Section wfs.
 

@@ -1,11 +1,13 @@
--Q . Model
-morphism_class.v
-retract.v
-arrow.v
-three.v
-displayed/natural_transformation.v
-model/wfs.v
-model/nwfs.v
-model/nwfs_is_wfs.v
-model/weak_equivalences.v
-model/category.v
+-Q . CategoryTheory
+DisplayedCats/Examples/Arrow.v
+DisplayedCats/Examples/Three.v
+DisplayedCats/natural_transformation.v
+DisplayedCats/algebras.v
+ModelCategories/MorphismClass.v
+ModelCategories/Retract.v
+ModelCategories/WFS.v
+ModelCategories/NWFS.v
+ModelCategories/NWFSisWFS.v
+ModelCategories/NWFSGenerated.v
+ModelCategories/WeakEquivalences.v
+ModelCategories/ModelCategory.v

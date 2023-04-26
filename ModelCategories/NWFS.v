@@ -15,8 +15,11 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Functors.
 Require Import UniMath.CategoryTheory.DisplayedCats.NaturalTransformations.
 Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 
-From Model Require Import morphism_class arrow three.
-From Model.displayed Require Import natural_transformation.
+Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
+Require Import CategoryTheory.DisplayedCats.Examples.Three.
+Require Import CategoryTheory.DisplayedCats.natural_transformation.
+Require Import CategoryTheory.ModelCategories.MorphismClass.
+Require Import CategoryTheory.ModelCategories.Retract.
 
 Local Open Scope cat.
 Local Open Scope mor_disp.
@@ -552,7 +555,7 @@ Proof.
     apply section_nat_trans_id_right.
   - apply subtypePath; [intro; apply isaprop_nwfs_mor_axioms|cbn].
     apply section_nat_trans_assoc.
-Defined.
+Qed.
 
 Definition NWFS_precat : precategory :=
     (nwfs_precategory_data,, nwfs_is_precategory).

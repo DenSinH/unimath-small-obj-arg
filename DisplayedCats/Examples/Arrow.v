@@ -7,9 +7,6 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.SIP.
 Require Import UniMath.CategoryTheory.DisplayedCats.Total.
 
-From Model Require Import morphism_class.
-From Model.model Require Import wfs.
-
 Local Open Scope cat.
 Local Open Scope mor_disp.
 
@@ -51,7 +48,7 @@ Definition arrow_mor00 {C : category} {f g : arrow C} (F : f --> g) := pr11 F.
 Definition arrow_mor11 {C : category} {f g : arrow C} (F : f --> g) := pr21 F. 
 Definition arrow_mor_comm {C : category} {f g : arrow C} (F : f --> g) := pr2 F. 
 
-Definition mor_to_arrow_ob {C : category} {x y : C} (f : x --> y) : arrow C :=
+Coercion mor_to_arrow_ob {C : category} {x y : C} (f : x --> y) : arrow C :=
     (make_dirprod x y,, f).
 
 Definition mors_to_arrow_mor {C : category} {a b x y : C} (f : a --> b) (g : x --> y) 

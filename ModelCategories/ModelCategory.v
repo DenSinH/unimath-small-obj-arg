@@ -1,8 +1,10 @@
 Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.CategoryTheory.Core.Prelude.
 
-From Model Require Import morphism_class retract.
-From Model.model Require Import wfs weak_equivalences.
+Require Import CategoryTheory.ModelCategories.Retract.
+Require Import CategoryTheory.ModelCategories.MorphismClass.
+Require Import CategoryTheory.ModelCategories.WFS.
+Require Import CategoryTheory.ModelCategories.WeakEquivalences.
 
 Section modelcat.
 

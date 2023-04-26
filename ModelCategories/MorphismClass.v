@@ -1,9 +1,8 @@
 Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.CategoryTheory.Core.Prelude.
 Require Import UniMath.CategoryTheory.opp_precat.
-Require Setoid.
 
-From Model Require Import retract.
+Require Import CategoryTheory.ModelCategories.Retract.
 
 Declare Scope morcls.
 Delimit Scope morcls with morcls.
@@ -99,7 +98,7 @@ Defined.
 Definition morphism_class_retract_closure {C : category} (S : morphism_class C) :=
     λ x y (f : x --> y), ∃ x y (f' : x --> y), (S _ _ f') × (retract f' f).
 
-  Notation "S ^cl" := (morphism_class_retract_closure S) (at level 70) : morcls.
+Notation "S ^cl" := (morphism_class_retract_closure S) (at level 70) : morcls.
 
 Lemma in_morcls_retc_if_in_morcls {C : category} (S : morphism_class C) 
     {a b} (f : a --> b) :
