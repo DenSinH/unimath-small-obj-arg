@@ -19,7 +19,7 @@ Proof.
   - exact α.
 Defined.
 
-Definition Algebra_disp_ob_mor {C : category} (T : Monad C) : disp_cat_ob_mor C.
+Definition MonadAlg_disp_ob_mor {C : category} (T : Monad C) : disp_cat_ob_mor C.
 Proof.
   use make_disp_cat_ob_mor.
   - intro X.
@@ -31,15 +31,15 @@ Proof.
     exact (is_Algebra_mor T (X:=X') (Y:=Y') f).
 Defined.
 
-Coercion Algebra_from_Algebra_disp {C : category} {T : Monad C} {x : C} 
-    (X : Algebra_disp_ob_mor T x) : Algebra T :=
+Coercion Algebra_from_MonadAlg_disp {C : category} {T : Monad C} {x : C} 
+    (X : MonadAlg_disp_ob_mor T x) : Algebra T :=
   (make_Algebra_data T x (pr1 X),, pr2 X).
 
 Coercion Algebra_mor_from_Algebra_mor_disp {C : category} {T : Monad C} 
-    {x y : C} (X : Algebra_disp_ob_mor T x) (Y : Algebra_disp_ob_mor T y)
+    {x y : C} (X : MonadAlg_disp_ob_mor T x) (Y : MonadAlg_disp_ob_mor T y)
     {f : x --> y} (F : X -->[f] Y) : Algebra_mor T X Y := (f,, F).
 
-Definition Algebra_disp_id_comp {C : category} (T : Monad C) : disp_cat_id_comp C (Algebra_disp_ob_mor T).
+Definition MonadAlg_disp_id_comp {C : category} (T : Monad C) : disp_cat_id_comp C (MonadAlg_disp_ob_mor T).
 Proof.
   split.
   - intros x xx.
@@ -52,17 +52,17 @@ Proof.
     exact (Algebra_mor_commutes T (Algebra_mor_comp T xx yy zz ff gg)).
 Defined.
 
-Definition Algebra_disp_data {C : category} (T : Monad C) : disp_cat_data C.
+Definition MonadAlg_disp_data {C : category} (T : Monad C) : disp_cat_data C.
 Proof.
   use tpair.
-  - exact (Algebra_disp_ob_mor T).
-  - exact (Algebra_disp_id_comp T).
+  - exact (MonadAlg_disp_ob_mor T).
+  - exact (MonadAlg_disp_id_comp T).
 Defined.
 
-Definition Algebra_disp {C : category} (T : Monad C) : disp_cat C.
+Definition MonadAlg_disp {C : category} (T : Monad C) : disp_cat C.
 Proof.
   use tpair.
-  - exact (Algebra_disp_data T).
+  - exact (MonadAlg_disp_data T).
   - repeat split; intros; try (apply homset_property).
     apply isasetaprop.
     apply homset_property.
@@ -87,13 +87,13 @@ Proof.
   assumption.
 Defined.
 
-Definition Algebra_disp_Algebra_functor {C : category} (T : Monad C) :
-    total_category (Algebra_disp T) ⟶ (MonadAlg T).
+Definition MonadAlg_disp_Algebra_functor {C : category} (T : Monad C) :
+    total_category (MonadAlg_disp T) ⟶ (MonadAlg T).
 Proof.
   use make_functor.
   - use make_functor_data.
     * intro X. 
-      exact (Algebra_from_Algebra_disp (pr2 X)).
+      exact (Algebra_from_MonadAlg_disp (pr2 X)).
     * intros. simpl.
       exact (Algebra_mor_from_Algebra_mor_disp (pr2 a) (pr2 b) (pr2 X)).
   - split.
@@ -103,12 +103,12 @@ Proof.
       reflexivity.
 Defined.
 
-Lemma Algebra_disp_is_Algebra {C : category} (T : Monad C) :
-    total_category (Algebra_disp T) = MonadAlg T.
+Lemma MonadAlg_disp_is_Algebra {C : category} (T : Monad C) :
+    total_category (MonadAlg_disp T) = MonadAlg T.
 Proof.
   apply catiso_to_category_path.
   use tpair.
-  - exact (Algebra_disp_Algebra_functor T).
+  - exact (MonadAlg_disp_Algebra_functor T).
   - split.
     * intros a b.
       use isweq_iso.

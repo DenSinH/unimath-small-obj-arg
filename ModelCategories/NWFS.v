@@ -17,9 +17,12 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 
 Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
-Require Import CategoryTheory.DisplayedCats.natural_transformation.
 Require Import CategoryTheory.ModelCategories.MorphismClass.
 Require Import CategoryTheory.ModelCategories.Retract.
+Require Import CategoryTheory.ModelCategories.Lifting.
+
+Require Import CategoryTheory.DisplayedCats.natural_transformation.
+Require Import CategoryTheory.DisplayedCats.algebras.
 
 Local Open Scope cat.
 Local Open Scope mor_disp.
@@ -300,15 +303,8 @@ Definition nwfs_Π_laws {C : category} (n : nwfs C) := pr2 (pr222 n).
 Definition nwfs_R_monad {C : category} (n : nwfs C) := R_monad (nwfs_fact n) (nwfs_Π n) (nwfs_Π_laws n).
 Definition nwfs_L_monad {C : category} (n : nwfs C) := L_monad (nwfs_fact n) (nwfs_Σ n) (nwfs_Σ_laws n).
 
-(* In a monad algebra, we have [[f αf] laws] : nwfs_R_maps n *)
-Definition nwfs_R_maps {C : category} (n : nwfs C) :=
-    MonadAlg (nwfs_R_monad n).
-Definition nwfs_L_maps {C : category} (n : nwfs C) :=
-    MonadAlg (nwfs_L_monad n).
-
 (* the following lemmas about Σ and Π are from
    Grandis, Tholen, (6), (7), diagram after (7), (8), (9) *)
-
 (* diagram after (7) *)
 Lemma nwfs_Σ_top_map_id {C : category} (n : nwfs C) (f : arrow C) :
     arrow_mor00 (nwfs_Σ n f) = identity _.
@@ -379,6 +375,180 @@ Proof.
   exact top.
 Qed.
 
+(*
+ * L-Map AND R-Map FOR AN NWFS n
+ **)
+
+(* In a monad algebra, we have [[f αf] laws] : nwfs_R_maps n *)
+Definition nwfs_R_maps {C : category} (n : nwfs C) :=
+    MonadAlg_disp (nwfs_R_monad n).
+Definition nwfs_L_maps {C : category} (n : nwfs C) :=
+    MonadAlg_disp (nwfs_L_monad n).
+    
+(*
+Shape of comonad morphism diagram (2.15, Garner)
+  A ===== A ===== A  ~~> id_A
+  |       |       |
+f |   α   |λf  η  | f
+  v       v       v
+  B ---> Kf ----> B  ~~> id_B
+     s       ρ_f
+*)
+Lemma L_map_section {C : category} {n : nwfs C} {a b : C} {f : a --> b} (hf : nwfs_L_maps n f) :
+    ∑ s, f · s = arrow_mor (fact_L n f) × 
+         s · arrow_mor (fact_R n f) = identity _.
+Proof.
+  destruct hf as [[[ida s] αfcomm] [hαfη _]].
+  cbn in ida, s, αfcomm.
+  simpl in hαfη.
+
+  exists s.
+
+  (* top line of hαfη: *)
+  assert (ida = identity a) as Hida.
+  {
+    (* base_paths : equality in pr1 of ∑-type (paths in base category)
+       pathsdirprodweq : _ × _ = _ × _ -> equality of terms
+    *)
+    set (top_line := dirprod_pr1 (pathsdirprodweq (base_paths _ _ hαfη))).
+    rewrite id_right in top_line.
+    exact top_line.
+  }
+
+  split.
+  - (* f ⋅ s = λ_f *)
+    (* commutativity and ida = identity a *)
+    specialize (αfcomm) as αfcomm'. 
+    rewrite Hida, id_left in αfcomm'.
+    apply pathsinv0.
+    exact αfcomm'.
+  - (* s · ρ_f = id_b *)
+    (* bottom line of hαfη *)
+    set (bottom_line := dirprod_pr2 (pathsdirprodweq (base_paths _ _ hαfη))).
+    exact bottom_line.
+Defined.
+
+(*
+Shape of monad morphism diagram (2.15, Garner)
+     λg       p
+  C ---> Kg ----> C  ~~> id_C
+  |       |       |
+g |   η   |ρg  α  | g
+  v       v       v
+  D ===== D ===== D  ~~> id_D
+*)
+Lemma R_map_section {C : category} {n : nwfs C} {c d : C} {g : c --> d} (hg : nwfs_R_maps n g) :
+    ∑ p, p · g = arrow_mor (fact_R n g) × 
+         arrow_mor (fact_L n g) · p = identity _.
+Proof.
+  destruct hg as [[[p idd] αgcomm] [hαgη _]].
+  cbn in p, idd, αgcomm.
+  simpl in hαgη.
+
+  exists p.
+
+  (* bottom line of hαgη: *)
+  assert (idd = identity d) as Hidd.
+  {
+    (* base_paths : equality in pr1 of ∑-type (paths in base category)
+       pathsdirprodweq : _ × _ = _ × _ -> equality of terms
+    *)
+    set (bottom_line := dirprod_pr2 (pathsdirprodweq (base_paths _ _ hαgη))).
+    rewrite id_left in bottom_line.
+    exact bottom_line.
+  }
+
+  split.
+  - (* p ⋅ g = ρ_g *)
+    (* commutativity and ida = identity a *)
+    specialize (αgcomm) as αgcomm'. 
+    rewrite Hidd, id_right in αgcomm'.
+    exact αgcomm'.
+  - (* λg · p = id_c *)
+    (* top line of hαfη *)
+    set (top_line := dirprod_pr1 (pathsdirprodweq (base_paths _ _ hαgη))).
+    exact top_line.
+Defined.
+
+Lemma L_map_R_map_elp {C : category} {n : nwfs C} {a b c d : C}
+    {f : a --> b} {g : c --> d} (hf : nwfs_L_maps n f)
+    (hg : nwfs_R_maps n g) : elp f g.
+Proof.
+  (* want to construct a lift of an L-map and an R-map
+     using monad properties *)
+  intros h k H.
+
+  destruct (L_map_section hf) as [s [Hs0 Hs1]].
+  destruct (R_map_section hg) as [p [Hp0 Hp1]].
+
+  set (hk := mors_to_arrow_mor f g h k H).
+  set (Fhk := functor_on_morphisms (fact_functor n) hk).
+  (* Kf --> Kg *)
+  set (Khk := three_mor11 Fhk). 
+
+  (* commutativity in diagrams *)
+  set (Hhk := three_mor_comm Fhk).
+  simpl in Hhk.
+  destruct Hhk as [Hhk0 Hhk1].
+
+  (*    
+              h
+    A ==== A ----> C
+    |      |       |
+  f |  Lf  |       |
+    v      v  Khk  v   p
+    B ---> Kf ---> Kg ---> C
+        s   |       |       |
+            |       |  Rg   | g
+            v       |       v
+            B ----> D ===== D
+                k
+  *)
+
+  exists (s · Khk · p).
+  split.
+  - (* f · (s · Khk · p) = h *)
+    rewrite assoc, assoc.
+    rewrite Hs0.
+    (* λ_f · Khk · p = h *)
+    (* rewrite Hhk0 : (λ_f · Hhk = h · λ_g) *)
+    etrans.
+    apply maponpaths_2.
+    exact Hhk0.
+    (* h · λ_g · p = h *)
+    (* rewrite Hp1 : (λ_g · p = id_C) *)
+    rewrite <- assoc.
+    etrans.
+    apply maponpaths.
+    exact Hp1.
+    (* h · id_C = h *)
+    now rewrite id_right.
+  - (* s · Khk · p · g = k *)
+    rewrite <- (assoc _ p g).
+    rewrite Hp0.
+    (* s · Khk · ρ_g = k *)
+    (* rewrite Hhk1 : ρ_f · k = Khk · ρ_g *)
+    rewrite <- assoc.
+    etrans.
+    apply maponpaths.
+    exact (pathsinv0 Hhk1).
+    (* s · ρ_f · k = k *)
+    (* rewrite Hs1 : s · ρ_f = id_B *)
+    rewrite assoc.
+    etrans.
+    apply maponpaths_2.
+    exact Hs1.
+    (* id_B · k = k *)
+    now rewrite id_left.
+Defined.
+
+
+(*
+ * CATEGORY OF NWFS's ON A CATEGORY C
+ **)
+
+Section NWFS_cat.
+
 Definition fact_mor {C : category} (F F' : functorial_factorization C) :=
     section_nat_trans_disp F F'.
 
@@ -434,8 +604,6 @@ Definition nwfs_L_monad_mor {C : category} {n n' : nwfs C}
 Definition nwfs_R_monad_mor {C : category} {n n' : nwfs C}
     (α : nwfs_mor n n') : Monad_Mor (nwfs_R_monad n) (nwfs_R_monad n') :=
   (nwfs_R_mor α,, dirprod_pr2 (pr2 α)).
-
-Section NWFS_cat.
 
 Context (C : category).
 

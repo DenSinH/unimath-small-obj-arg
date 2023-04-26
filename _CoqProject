@@ -5,6 +5,7 @@ DisplayedCats/natural_transformation.v
 DisplayedCats/algebras.v
 ModelCategories/MorphismClass.v
 ModelCategories/Retract.v
+ModelCategories/Lifting.v
 ModelCategories/WFS.v
 ModelCategories/NWFS.v
 ModelCategories/NWFSisWFS.v

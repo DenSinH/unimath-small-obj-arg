@@ -10,6 +10,7 @@ Require Import UniMath.CategoryTheory.limits.Opp.
 
 Require Import CategoryTheory.ModelCategories.Retract.
 Require Import CategoryTheory.ModelCategories.MorphismClass.
+Require Import CategoryTheory.ModelCategories.Lifting.
 
 Section wfs.
 
@@ -33,6 +34,19 @@ Defined.
 
 Definition lp_hProp {M : category} {a b x y : M} (f : a --> b) (g : x --> y) : hProp :=
     make_hProp (lp f g) (isaprop_lp f g).
+
+Definition elp {M : category} {a x e b : M} (i : a --> x) (p : e --> b) : UU := 
+  ∏ (g : a --> e) (f : x --> b), 
+      p ∘ g = f ∘ i -> ∑ l : x --> e, (l ∘ i = g) × (p ∘ l = f).
+
+Lemma hinh_elp_impl_lp {M : category} {a x e b : M} (i : a --> x) (p : e --> b) :
+    ∥elp i p∥ -> lp i p.
+Proof.
+  intros elp_ip h k Hhk.
+  use (elp_ip); clear elp_ip; intro elp_ip.
+  apply hinhpr.
+  exact (elp_ip h k Hhk).
+Qed.
 
 (* Lean: llp @ https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L18 *)
 (* 
@@ -738,33 +752,6 @@ Proof.
     unfold wfs_R in hf.
     rewrite wfs_rlp in hf.
     exact (hf _ _ _ g_l).
-Defined.
-
-Lemma lp_of_retracts {M : category} {a b x y a' b' x' y' : M} 
-    {f : a --> b} {f' : a' --> b'}
-    {g : x --> y} {g' : x' --> y'}
-    (rf : retract f' f) (rg : retract g' g) :
-  (lp f' g') -> (lp f g).
-Proof.
-  intros Hlp h k Hcomm.
-  destruct rf as [ia [ra [ib [rb [ha [hb [hif hrf]]]]]]].
-  destruct rg as [ix [rx [iy [ry [hx [hy [hig hrg]]]]]]].
-
-  use Hlp.
-  - exact (ra · h · ix).
-  - exact (rb · k · iy).
-  - rewrite <- assoc, hig, assoc, <- (assoc _ h g), Hcomm, assoc, hrf, assoc, assoc.
-    reflexivity.
-  - intro Hl.
-    destruct Hl as [l [H1 H2]].
-    
-    apply hinhpr.
-    exists (ib · l · rx).
-    split.
-    * rewrite assoc, assoc, <- hif, <- (assoc _ f' l), H1, assoc, assoc.
-      now rewrite ha, id_left, <- assoc, hx, id_right.
-    * rewrite <- assoc, hrg, assoc, <- (assoc _ l g'), H2, assoc, assoc.
-      now rewrite hb, id_left, <- assoc, hy, id_right.
 Defined.
 
 End wfs.

@@ -10,6 +10,7 @@ Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
 Require Import CategoryTheory.ModelCategories.MorphismClass.
 Require Import CategoryTheory.ModelCategories.Retract.
+Require Import CategoryTheory.ModelCategories.Lifting.
 Require Import CategoryTheory.ModelCategories.WFS.
 Require Import CategoryTheory.ModelCategories.NWFS.
 
@@ -17,189 +18,22 @@ Local Open Scope cat.
 Local Open Scope mor_disp.
 Local Open Scope morcls.
 
-Definition isAlgebra {C : category} (M : Monad (arrow C)) {x y : C} (f : x --> y) :=
-    ∃ α, Algebra_laws M (mor_to_arrow_ob f,, α).
-Definition isCoAlgebra {C : category} (M : Monad (op_cat (arrow C))) {x y : C} (f : x --> y) :=
-    ∃ α, Algebra_laws M (mor_to_arrow_ob f,, α).
-
 (* we can obtain a wfs from an nwfs *)
-(* this is exactly ||nwfs_R_maps_disp f|| I think *)
+(* the existence of an algebra map is exactly ||nwfs_R_maps_disp f|| *)
 Definition nwfs_R_maps_class {C : category} (n : nwfs C) : morphism_class C :=
-    λ (x y : C) (f : x --> y), isAlgebra (nwfs_R_monad n) f.
+    λ (x y : C) (f : x --> y), ∥nwfs_R_maps n f∥.
 Definition nwfs_L_maps_class {C : category} (n : nwfs C) : morphism_class C :=
-    λ (x y : C) (f : x --> y), isCoAlgebra (nwfs_L_monad n) (opp_mor f).
+    λ (x y : C) (f : x --> y), ∥nwfs_L_maps n (opp_mor f)∥.
 
-
-(*
-Shape of comonad morphism diagram (2.15, Garner)
-  A ===== A ===== A  ~~> id_A
-  |       |       |
-f |   α   |λf  η  | f
-  v       v       v
-  B ---> Kf ----> B  ~~> id_B
-     s       ρ_f
-*)
-Lemma L_map_section {C : category} {n : nwfs C} {a b : C} {f : a --> b} (hf : nwfs_L_maps_class n _ _ f) :
-    ∃ s, f · s = arrow_mor (fact_L n f) × 
-         s · arrow_mor (fact_R n f) = identity _.
-Proof.
-  use (hinhuniv _ hf).
-  intro hf'.
-  destruct hf' as [[[ida s] αfcomm] [hαfη _]].
-  cbn in ida, s, αfcomm.
-  simpl in hαfη.
-  cbn in hαfη.
-
-  apply hinhpr.
-  exists s.
-
-  (* top line of hαfη: *)
-  assert (ida = identity a) as Hida.
-  {
-    (* base_paths : equality in pr1 of ∑-type (paths in base category)
-       pathsdirprodweq : _ × _ = _ × _ -> equality of terms
-    *)
-    set (top_line := dirprod_pr1 (pathsdirprodweq (base_paths _ _ hαfη))).
-    rewrite id_right in top_line.
-    exact top_line.
-  }
-
-  split.
-  - (* f ⋅ s = λ_f *)
-    (* commutativity and ida = identity a *)
-    specialize (αfcomm) as αfcomm'. 
-    rewrite Hida, id_left in αfcomm'.
-    apply pathsinv0.
-    exact αfcomm'.
-  - (* s · ρ_f = id_b *)
-    (* bottom line of hαfη *)
-    set (bottom_line := dirprod_pr2 (pathsdirprodweq (base_paths _ _ hαfη))).
-    exact bottom_line.
-Defined.
-
-(*
-Shape of monad morphism diagram (2.15, Garner)
-     λg       p
-  C ---> Kg ----> C  ~~> id_C
-  |       |       |
-g |   η   |ρg  α  | g
-  v       v       v
-  D ===== D ===== D  ~~> id_D
-*)
-Lemma R_map_section {C : category} {n : nwfs C} {c d : C} {g : c --> d} (hg : nwfs_R_maps_class n _ _ g) :
-    ∃ p, p · g = arrow_mor (fact_R n g) × 
-         arrow_mor (fact_L n g) · p = identity _.
-Proof.
-  use (hinhuniv _ hg).
-  intro hg'.
-  destruct hg' as [[[p idd] αgcomm] [hαgη _]].
-  cbn in p, idd, αgcomm.
-  simpl in hαgη.
-  cbn in hαgη.
-
-  apply hinhpr.
-  exists p.
-
-  (* bottom line of hαgη: *)
-  assert (idd = identity d) as Hidd.
-  {
-    (* base_paths : equality in pr1 of ∑-type (paths in base category)
-       pathsdirprodweq : _ × _ = _ × _ -> equality of terms
-    *)
-    set (bottom_line := dirprod_pr2 (pathsdirprodweq (base_paths _ _ hαgη))).
-    rewrite id_left in bottom_line.
-    exact bottom_line.
-  }
-
-  split.
-  - (* p ⋅ g = ρ_g *)
-    (* commutativity and ida = identity a *)
-    specialize (αgcomm) as αgcomm'. 
-    rewrite Hidd, id_right in αgcomm'.
-    exact αgcomm'.
-  - (* λg · p = id_c *)
-    (* top line of hαfη *)
-    set (top_line := dirprod_pr1 (pathsdirprodweq (base_paths _ _ hαgη))).
-    exact top_line.
-Defined.
-
-Lemma L_map_R_map_lp {C : category} {n : nwfs C} {a b c d : C}
+Lemma L_map_class_R_map_class_lp {C : category} {n : nwfs C} {a b c d : C}
     {f : a --> b} {g : c --> d} (hf : nwfs_L_maps_class n _ _ f)
-    (hg : nwfs_R_maps_class n c d g) : lp_hProp f g.
+    (hg : nwfs_R_maps_class n _ _ g) : lp_hProp f g.
 Proof.
-  (* want to construct a lift of an L-map and an R-map
-     using monad properties *)
-  intros h k H.
-
-  use (hinhuniv _ (L_map_section hf)).
-  intro Hs.
-  destruct Hs as [s [Hs0 Hs1]].
-
-  use (hinhuniv _ (R_map_section hg)).
-  intro Hp.
-  destruct Hp as [p [Hp0 Hp1]].
-
+  use (hf); clear hf; intro hf.
+  use (hg); clear hg; intro hg.
+  intros h k Hhk.
   apply hinhpr.
-
-  set (hk := mors_to_arrow_mor f g h k H).
-  set (Fhk := functor_on_morphisms (fact_functor n) hk).
-  (* Kf --> Kg *)
-  set (Khk := three_mor11 Fhk). 
-
-  (* commutativity in diagrams *)
-  set (Hhk := three_mor_comm Fhk).
-  simpl in Hhk.
-  destruct Hhk as [Hhk0 Hhk1].
-
-  (*    
-              h
-    A ==== A ----> C
-    |      |       |
-  f |  Lf  |       |
-    v      v  Khk  v   p
-    B ---> Kf ---> Kg ---> C
-        s   |       |       |
-            |       |  Rg   | g
-            v       |       v
-            B ----> D ===== D
-                k
-  *)
-
-  exists (s · Khk · p).
-  split.
-  - (* f · (s · Khk · p) = h *)
-    rewrite assoc, assoc.
-    rewrite Hs0.
-    (* λ_f · Khk · p = h *)
-    (* rewrite Hhk0 : (λ_f · Hhk = h · λ_g) *)
-    etrans.
-    apply maponpaths_2.
-    exact Hhk0.
-    (* h · λ_g · p = h *)
-    (* rewrite Hp1 : (λ_g · p = id_C) *)
-    rewrite <- assoc.
-    etrans.
-    apply maponpaths.
-    exact Hp1.
-    (* h · id_C = h *)
-    now rewrite id_right.
-  - (* s · Khk · p · g = k *)
-    rewrite <- (assoc _ p g).
-    rewrite Hp0.
-    (* s · Khk · ρ_g = k *)
-    (* rewrite Hhk1 : ρ_f · k = Khk · ρ_g *)
-    rewrite <- assoc.
-    etrans.
-    apply maponpaths.
-    exact (pathsinv0 Hhk1).
-    (* s · ρ_f · k = k *)
-    (* rewrite Hs1 : s · ρ_f = id_B *)
-    rewrite assoc.
-    etrans.
-    apply maponpaths_2.
-    exact Hs1.
-    (* id_B · k = k *)
-    now rewrite id_left.
+  exact (L_map_R_map_elp hf hg h k Hhk).
 Qed.
 
 Lemma nwfs_L_maps_subs_llp_R_maps {C : category} (n : nwfs C) :
@@ -207,7 +41,7 @@ Lemma nwfs_L_maps_subs_llp_R_maps {C : category} (n : nwfs C) :
 Proof.
   intros a b f hf.
   intros c d g hg.
-  exact (L_map_R_map_lp hf hg).
+  exact (L_map_class_R_map_class_lp hf hg).
 Qed.
 
 (* dual to above statement *)
@@ -216,7 +50,7 @@ Lemma nwfs_R_maps_subs_rlp_L_maps {C : category} (n : nwfs C) :
 Proof.
   intros c d g hg.
   intros a b f hf.
-  exact (L_map_R_map_lp hf hg).
+  exact (L_map_class_R_map_class_lp hf hg).
 Qed.
 
 Lemma nwfs_L_maps_cl_subs_llp_R_maps_cl {C : category} (n : nwfs C) :
