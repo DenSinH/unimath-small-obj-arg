@@ -6,6 +6,7 @@ Require Import UniMath.CategoryTheory.limits.Opp.
 
 Require Import CategoryTheory.ModelCategories.Retract.
 Require Import CategoryTheory.ModelCategories.MorphismClass.
+Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 
 Local Open Scope cat.
 Local Open Scope morcls.
@@ -15,22 +16,21 @@ Local Open Scope retract.
 (* in a category, we know that homs are sets, so equality must be a prop *)
 (* Lean: lp @ https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L14 *)
 (* Normal ∑-type is not a proposition, we need it to be to use it to create morphism classes *)
-Definition lp {M : category} {a x e b : M} (i : a --> x) (p : e --> b) : UU := 
-  ∏ (g : a --> e) (f : x --> b), 
-      p ∘ g = f ∘ i -> ∃ l : x --> e, (l ∘ i = g) × (p ∘ l = f).
+Definition filler {M : category} {a x e b : M} {i : a --> x} {p : e --> b}
+    {g : a --> e} {f : x --> b} (H : p ∘ g = f ∘ i) := 
+  ∑ l : x --> e, (l ∘ i = g) × (p ∘ l = f).
 
-Definition isaprop_lp {M : category} {a b x y : M} (f : a --> b) (g : x --> y) : isaprop (lp f g).
-Proof.
-  do 3 (apply impred_isaprop; intro).
-  apply propproperty.
-Defined.
+Definition filler_map {M : category} {a x e b : M} {i : a --> x} {p : e --> b}
+    {g : a --> e} {f : x --> b} {H : p ∘ g = f ∘ i} (l : filler H) := pr1 l.
+Definition filler_comm {M : category} {a x e b : M} {i : a --> x} {p : e --> b}
+    {g : a --> e} {f : x --> b} {H : p ∘ g = f ∘ i} (l : filler H) := pr2 l.
 
-Definition lp_hProp {M : category} {a b x y : M} (f : a --> b) (g : x --> y) : hProp :=
-    make_hProp (lp f g) (isaprop_lp f g).
+Definition lp {M : category} {a x e b : M} (i : a --> x) (p : e --> b) : hProp := 
+  ∀ (g : a --> e) (f : x --> b) (H : p ∘ g = f ∘ i), ∥filler H∥.
 
+(* "existential" lifting property *)
 Definition elp {M : category} {a x e b : M} (i : a --> x) (p : e --> b) : UU := 
-  ∏ (g : a --> e) (f : x --> b), 
-      p ∘ g = f ∘ i -> ∑ l : x --> e, (l ∘ i = g) × (p ∘ l = f).
+  ∏ (g : a --> e) (f : x --> b) (H : p ∘ g = f ∘ i), filler H.
 
 Lemma hinh_elp_impl_lp {M : category} {a x e b : M} (i : a --> x) (p : e --> b) :
     ∥elp i p∥ -> lp i p.
@@ -52,10 +52,10 @@ Qed.
        f 
 *)
 Definition llp {M : category} (R : morphism_class M) : (morphism_class M) :=
-    λ {a x : M} (i : a --> x), ∀ (e b : M) (p : e --> b), ((R _ _) p ⇒ lp_hProp i p)%logic.
+    λ {a x : M} (i : a --> x), ∀ (e b : M) (p : e --> b), ((R _ _) p ⇒ lp i p)%logic.
 
 Definition rlp {M : category} (L : morphism_class M) : (morphism_class M) :=
-    λ {e b : M} (p : e --> b), ∀ (a x : M) (i : a --> x), ((L _ _) i ⇒ lp_hProp i p)%logic.
+    λ {e b : M} (p : e --> b), ∀ (a x : M) (i : a --> x), ((L _ _) i ⇒ lp i p)%logic.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L24 *)
 (* MCAT: Lemma 14.1.9 *)

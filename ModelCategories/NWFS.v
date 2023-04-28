@@ -498,10 +498,10 @@ Proof.
   f |  Lf  |       |
     v      v  Khk  v   p
     B ---> Kf ---> Kg ---> C
-        s   |       |       |
-            |       |  Rg   | g
-            v       |       v
-            B ----> D ===== D
+        s  |       |       |
+           |       |  Rg   | g
+           v       |       v
+           B ----> D ===== D
                 k
   *)
 

@@ -27,7 +27,7 @@ Definition nwfs_L_maps_class {C : category} (n : nwfs C) : morphism_class C :=
 
 Lemma L_map_class_R_map_class_lp {C : category} {n : nwfs C} {a b c d : C}
     {f : a --> b} {g : c --> d} (hf : nwfs_L_maps_class n _ _ f)
-    (hg : nwfs_R_maps_class n _ _ g) : lp_hProp f g.
+    (hg : nwfs_R_maps_class n _ _ g) : lp f g.
 Proof.
   use (hf); clear hf; intro hf.
   use (hg); clear hg; intro hg.
@@ -460,7 +460,6 @@ Proof.
       + exact (nwfs_R_maps_cl_subs_rlp_L_maps_cl _).
       + exact (nwfs_rlp_L_maps_cl_subs_R_maps_cl _).
     * intros x y f.
-      apply hinhpr.
 
       set (fact := n f).
       set (f01 := three_mor01 fact).
