@@ -100,6 +100,16 @@ Definition morphism_class_retract_closure {C : category} (S : morphism_class C) 
 
 Notation "S ^cl" := (morphism_class_retract_closure S) (at level 70) : morcls.
 
+Definition morphism_class_retract_closed {C : category} (S : morphism_class C) :=
+    ∏ x y (f : x --> y) x' y' (f' : x' --> y'), (S _ _ f') × (retract f' f) -> (S _ _ f).
+
+Lemma isaprop_morphism_class_retract_closed {C : category} (S : morphism_class C) :
+  isaprop (morphism_class_retract_closed S).
+Proof.
+  do 7 (apply impred; intro).
+  apply propproperty.
+Qed.
+
 Lemma in_morcls_retc_if_in_morcls {C : category} (S : morphism_class C) 
     {a b} (f : a --> b) :
   (S _ _ f) -> (S^cl _ _ f).
@@ -110,3 +120,28 @@ Proof.
   exists _, _, f.
   exact (make_dirprod H (retract_self f)).
 Defined.
+
+Lemma morphism_class_retract_closed_impl_eq_cl {C : category} (S : morphism_class C) :
+  morphism_class_retract_closed S -> S^cl = S.
+Proof.
+  intro H.
+  apply morphism_class_subset_antisymm.
+  - intros x y f Hf.
+    simpl in Hf.
+    use (hinhuniv _ Hf).
+    clear Hf; intro Hf; destruct Hf as [x' [y' [f' Hf']]].
+    apply (H _ _ f _ _ f' Hf').
+  - intros x y f Hf.
+    apply in_morcls_retc_if_in_morcls.
+    exact Hf.
+Qed.
+
+Lemma morcls_eq_impl_morcls_cl_eq {C : category} {S T : morphism_class C} 
+    (HT : morphism_class_retract_closed T) : 
+  S = T -> S^cl = T.
+Proof.
+  intro H.
+  rewrite H.
+  apply morphism_class_retract_closed_impl_eq_cl.
+  exact HT.
+Qed.
