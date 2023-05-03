@@ -58,3 +58,10 @@ Proof.
   - exact (make_dirprod h k).
   - exact H.
 Defined.
+(* 
+Definition top_square {C D : category} {F F' : functor (arrow C) (arrow D)}
+    (nt : nat_trans F F') (f f' : arrow C) (mor : f --> f') := 
+  dirprod_pr1 (pathsdirprodweq (base_paths _ _ (nat_trans_ax nt f f' mor))).
+Definition bottom_square {C D : category} {F F' : functor (arrow C) (arrow D)}
+    (nt : nat_trans F F') (f f' : arrow C) (mor : f --> f') := 
+  dirprod_pr2 (pathsdirprodweq (base_paths _ _ (nat_trans_ax nt f f' mor))). *)

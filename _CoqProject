@@ -1,4 +1,5 @@
 -Q . CategoryTheory
+limits/coproducts.v
 DisplayedCats/Examples/Arrow.v
 DisplayedCats/Examples/Three.v
 DisplayedCats/natural_transformation.v
