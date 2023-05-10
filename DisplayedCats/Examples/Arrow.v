@@ -63,6 +63,14 @@ Defined.
 Definition opp_arrow {C : category} (g : arrow C) : arrow (op_cat C) :=
     (make_dirprod (arrow_cod g) (arrow_dom g),, arrow_mor g).
 
+(* Lemma arrow_eq {C : category} {g g' : arrow C} {f f' : g --> g'} :
+    pr1 f = pr1 f' -> f = f'.
+Proof.
+  intro H.
+  apply subtypePath; [intro; apply homset_property|].
+  exact H.
+Qed. *)
+
 (* 
 Definition top_square {C D : category} {F F' : functor (arrow C) (arrow D)}
     (nt : nat_trans F F') (f f' : arrow C) (mor : f --> f') := 
