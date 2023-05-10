@@ -1,6 +1,7 @@
 Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.CategoryTheory.Core.Prelude.
 Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
+Require Import UniMath.CategoryTheory.opp_precat.
 
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 (* The Structure Identity Principle (HoTT book, chapter 9.8) *)
@@ -58,6 +59,10 @@ Proof.
   - exact (make_dirprod h k).
   - exact H.
 Defined.
+
+Definition opp_arrow {C : category} (g : arrow C) : arrow (op_cat C) :=
+    (make_dirprod (arrow_cod g) (arrow_dom g),, arrow_mor g).
+
 (* 
 Definition top_square {C D : category} {F F' : functor (arrow C) (arrow D)}
     (nt : nat_trans F F') (f f' : arrow C) (mor : f --> f') := 

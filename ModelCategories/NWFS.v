@@ -22,7 +22,7 @@ Require Import CategoryTheory.ModelCategories.Retract.
 Require Import CategoryTheory.ModelCategories.Lifting.
 
 Require Import CategoryTheory.DisplayedCats.natural_transformation.
-Require Import CategoryTheory.DisplayedCats.algebras.
+Require Import CategoryTheory.DisplayedCats.Examples.MonadAlgebras.
 
 Local Open Scope cat.
 Local Open Scope mor_disp.

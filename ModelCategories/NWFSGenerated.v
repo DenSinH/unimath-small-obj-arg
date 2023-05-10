@@ -28,7 +28,7 @@ Require Import CategoryTheory.ModelCategories.Lifting.
 Require Import CategoryTheory.ModelCategories.NWFS.
 Require Import CategoryTheory.ModelCategories.NWFSisWFS.
 
-Require Import CategoryTheory.DisplayedCats.algebras.
+Require Import CategoryTheory.DisplayedCats.Examples.MonadAlgebras.
 Require Import CategoryTheory.limits.coproducts.
 
 Local Open Scope cat.
@@ -36,7 +36,9 @@ Local Open Scope mor_disp.
 Local Open Scope Cat.
 Local Open Scope morcls.
 
-Context {C : category}.
+Arguments CoproductArrow {_} {_} {_} _ {_}.
+Arguments CoproductIn {_} {_} {_} _.
+Arguments CoproductInCommutes {_} {_} {_} _ {_}.
 
 (* 
 Definition morcls_disp : disp_cat (arrow C).
@@ -59,6 +61,9 @@ Proof.
     exact tt.
 Defined.
 *)
+Section preliminaries.
+
+Context {C : category}.
 
 Definition morcls_disp (J : morphism_class C) : disp_cat (arrow C) :=
     disp_full_sub (arrow C) (λ g, J _ _ g).
@@ -291,7 +296,7 @@ apply morphism_class_subset_antisymm;
   set (ftot := (mor_to_arrow_ob f,, Hf) : total_category (rlp_morcls_disp J)).
   set (θinvf := (inv_catiso θ) ftot).
   (* set (test := fully_faithful_inv_hom (pr12 θ) ). *)
-
+  (* todo: inverse does not necessarily lie over identity *)
   assert (Hθinvf : mor_to_arrow_ob f = pr1 θinvf).
   {
     apply isotoid.
@@ -307,10 +312,13 @@ apply morphism_class_subset_antisymm;
   exact (pr2 θinvf).
 Admitted.
 
+End preliminaries.
+
 
 (* Garner 2007, p19 *)
 
 Section lifting_with_J.
+Context {C : category} (n : nwfs C) (J : morphism_class C).
 Context (g : arrow C) (CC : Coproducts (morcls_lp J g) C) (POs : Pushouts C).
 
 Definition morcls_lp_dom_coprod :=
@@ -328,8 +336,8 @@ Definition morcls_lp_coprod_diagram : morcls_lp_coprod --> g.
 Proof.
   use tpair.
   - split.
-    * exact (CoproductArrow _ _ (morcls_lp_dom_coprod) (λ j, arrow_mor00 (pr2 j))).
-    * exact (CoproductArrow _ _ (morcls_lp_cod_coprod) (λ j, arrow_mor11 (pr2 j))).
+    * exact (CoproductArrow (morcls_lp_dom_coprod) (λ j, arrow_mor00 (pr2 j))).
+    * exact (CoproductArrow (morcls_lp_cod_coprod) (λ j, arrow_mor11 (pr2 j))).
   - abstract (
       unfold morcls_lp_coprod;
       simpl;
@@ -355,8 +363,8 @@ Proof.
   intro rldJg.
   intros h k S.
 
-  set (hj := λ (j : morcls_lp J g), (CoproductIn _ _ _ j) · h).
-  set (kj := λ (j : morcls_lp J g), (CoproductIn _ _ _ j) · k).
+  set (hj := λ (j : morcls_lp J g), (CoproductIn _ j) · h).
+  set (kj := λ (j : morcls_lp J g), (CoproductIn _ j) · k).
 
   (* fill-in for each square *)
   assert (∏ (j : morcls_lp J g), ∑ lj, ((pr11 j) · lj = hj j) × (lj · g = kj j)) as jlift.
@@ -390,13 +398,13 @@ Proof.
 
     (* now we can reason in separate diagrams again *)
     intro j.
-    rewrite (CoproductInCommutes _ _ _ (morcls_lp_dom_coprod)).
+    rewrite (CoproductInCommutes (morcls_lp_dom_coprod)).
 
     (* this is basically exactly the relation we want to prove: *)
     destruct (hlj j) as [hljcomm _].
 
     (* by definition *)
-    change (CoproductIn _ _ _ _ · h) with (hj j).
+    change (CoproductIn _ _ · h) with (hj j).
     rewrite (hl j).
     exact hljcomm.
   - (* factor through coproduct object *)
@@ -405,13 +413,13 @@ Proof.
     (* reason about separate diagrams again *)
     intro j.
     rewrite assoc.
-    rewrite (CoproductInCommutes _ _ _ (morcls_lp_cod_coprod)).
+    rewrite (CoproductInCommutes (morcls_lp_cod_coprod)).
 
     (* the relation we want to prove *)
     destruct (hlj j) as [_ kljcomm].
 
     (* by definition *)
-    change (CoproductIn _ _ _ _ · k) with (kj j).
+    change (CoproductIn _ _ · k) with (kj j).
     rewrite (hl j).
     exact kljcomm.
 Qed.
@@ -438,8 +446,8 @@ Proof.
     (* H as lifting problem J --> g *)
   set (Hlp := (f',, (make_dirprod h k,, H)) : morcls_lp J g).
     (* inclusion of arrow_cod/dom f into coproduct of all domains *)
-  set (codf_in := (CoproductIn _ _ (morcls_lp_cod_coprod) Hlp)).
-  set (domf_in := (CoproductIn _ _ (morcls_lp_dom_coprod) Hlp)).
+  set (codf_in := (CoproductIn (morcls_lp_cod_coprod) Hlp)).
+  set (domf_in := (CoproductIn (morcls_lp_dom_coprod) Hlp)).
 
   exists (codf_in · ltot).
   split.
@@ -449,11 +457,7 @@ Proof.
       unfold domf_in.
       symmetry.
       
-      exact (
-          CoproductInCommutes _ _ _ 
-          (morcls_lp_dom_coprod) 
-          _ _ Hlp
-      ).
+      exact (CoproductInCommutes (morcls_lp_dom_coprod) _ Hlp).
     }
     rewrite Hh.
 
@@ -478,22 +482,18 @@ Proof.
     (* k = codf_in · kj *)
     unfold codf_in.
     symmetry.
-    exact (
-        CoproductInCommutes _ _ _ 
-        (morcls_lp_cod_coprod) 
-        _ _ Hlp
-    ).
+    exact (CoproductInCommutes (morcls_lp_cod_coprod) _ Hlp).
 Qed.
 
 Lemma lifting_data_Jg_iff_lifting_coprod_lp : 
-    filler (arrow_mor_comm (morcls_lp_coprod_diagram)) <->
-      right_lifting_data J g.
+  right_lifting_data J g <->
+    filler (arrow_mor_comm (morcls_lp_coprod_diagram)).
 Proof.
   split.
-  - apply lifting_coprod_lp_impl_lifting_data.
   - intro rldJg.
     apply lifting_data_impl_lifting_coprod_lp.
     exact rldJg.
+  - apply lifting_coprod_lp_impl_lifting_data.
 Qed.
 
 (*
@@ -561,6 +561,25 @@ Proof.
     ).
 Defined.
 
+(*
+    λ1g
+  C ---> E1g
+  |       |
+ g|       | ρ1g
+  v       v
+  D ===== D
+*)
+Definition morcls_lp_coprod_diagram_red_flipped : g --> ρ1.
+Proof.
+  use mors_to_arrow_mor.
+  - exact λ1.
+  - exact (identity _).
+  - abstract (
+      rewrite id_right, <- id_left;
+      exact (pathsinv0 (arrow_mor_comm morcls_lp_coprod_diagram_red))
+    ).
+Defined.
+
 (* Lifting w.r.t. the coproduct diagram of J is the same as lifting
    w.r.t. this reduced diagram (follows from pushout properties) *)
 Lemma lifting_coprod_lp_red_impl_lifting_coprod_lp :
@@ -618,12 +637,12 @@ Proof.
     * (* PushoutIn1 · (lred · g) = ∑kx*)
       rewrite assoc.
       etrans. apply maponpaths_2.
-      exact (PushoutArrow_PushoutIn1 _ _ _ _ _).
+      apply PushoutArrow_PushoutIn1.
       exact Hl2.
     * (* PushoutIn2 · (lred · g) = g*)
       rewrite assoc.
       etrans. apply maponpaths_2.
-      exact (PushoutArrow_PushoutIn2 _ _ _ _ _).
+      apply PushoutArrow_PushoutIn2.
       now rewrite id_left.
 Qed.
 
@@ -637,10 +656,55 @@ Proof.
   - exact lifting_coprod_lp_red_impl_lifting_coprod_lp.
 Qed.
 
+Definition Λ1 : g --> ρ1.
+Proof.
+  use mors_to_arrow_mor.
+  - exact λ1.
+  - exact (identity _).
+  - abstract (
+      rewrite id_right, <- id_left;
+      apply pathsinv0;
+      exact (arrow_mor_comm morcls_lp_coprod_diagram_red)
+    ).
+Defined.
+
+(* Proposition 12 *)
+Lemma lifting_data_Jg_iff_maps :
+    right_lifting_data J g <->
+      ∑ (γ : ρ1 --> g), Λ1 · γ = identity _.
+Proof.
+  apply (logeq_trans lifting_data_Jg_iff_lifting_coprod_lp).
+  apply (logeq_trans lifting_coprod_lp_iff_lifting_coprod_lp_red).
+
+  split; intro H.
+  - destruct H as [l [lcomm1 lcomm2]].
+    use tpair.
+    * use mors_to_arrow_mor.
+      + exact l.
+      + exact (identity _).
+      + rewrite id_right.
+        exact lcomm2.
+    * simpl.
+      apply subtypePath; [intro; apply homset_property|].
+      apply pathsdirprod.
+      + exact lcomm1.
+      + now rewrite id_left.
+  - destruct H as [γ γcomm].
+    exists (arrow_mor00 γ).
+    destruct (pathsdirprodweq (base_paths _ _ γcomm)) as [γcomm1 γcomm2].
+    simpl in γcomm1, γcomm2.
+    split.
+    * exact γcomm1.
+    * etrans. exact (arrow_mor_comm γ).
+      rewrite id_left in γcomm2.
+      now rewrite γcomm2, id_right.
+Qed.
+
 End lifting_with_J.
 
 Section one_step_monad.
 
+Context {C : category} (J : morphism_class C).
 Context (CC : ∏ (g : arrow C), Coproducts (morcls_lp J g) C) (POs : Pushouts C).
 
 (* Garner 2008, section 5.2 (functor K) *)
@@ -649,7 +713,7 @@ Proof.
   use make_functor_data.
   - (* sending g to ∑_{x ∈ S_g} f_x*)
     intro g.
-    exact (morcls_lp_coprod g (CC g)).
+    exact (morcls_lp_coprod J g (CC g)).
   - (* map γ: g --> g' gives map of lifting problems *)
     intros g g' γ.
     use mors_to_arrow_mor.
@@ -700,7 +764,7 @@ Proof.
     apply subtypePath; [intro; apply homset_property|].
     apply pathsdirprod; simpl; apply pathsinv0, Coproduct_endo_is_identity; intro.
     * etrans.
-      apply (CoproductOfArrowsInclusionIn _ (morcls_lp_dom_coprod g (CC g))).
+      apply (CoproductOfArrowsInclusionIn _ (morcls_lp_dom_coprod J g (CC g))).
       simpl.
       etrans. apply id_left.
       assert (H : (pr1 i,, (pr2 i · identity _)) = i).
@@ -712,10 +776,10 @@ Proof.
       apply pathsinv0.
       rewrite <- (id_left _).
       apply cancel_postcomposition.
-      (* todo: need univalence requirement here? *)
+      (* todo: need setcategory_refl_idtoiso here? *)
       admit.
     * etrans.
-      apply (CoproductOfArrowsInclusionIn _ (morcls_lp_cod_coprod  g (CC g))).
+      apply (CoproductOfArrowsInclusionIn _ (morcls_lp_cod_coprod J g (CC g))).
       simpl.
       etrans. apply id_left.
       (* todo: why does maponpaths not work here? *)
@@ -770,7 +834,7 @@ Definition morcls_coprod_functor : functor (arrow C) (arrow C) :=
 Definition morcls_coprod_nat_trans_data : nat_trans_data morcls_coprod_functor (functor_identity _).
 Proof.
   intro g.
-  exact (morcls_lp_coprod_diagram g (CC g)).
+  exact (morcls_lp_coprod_diagram J g (CC g)).
 Defined.
 
 Definition morcls_coprod_nat_trans_is_nat_trans : is_nat_trans _ _ morcls_coprod_nat_trans_data.
@@ -804,15 +868,15 @@ Definition morcls_coprod_nat_trans : nat_trans morcls_coprod_functor (functor_id
 
 Arguments CoproductObject {_} {_} {_}.
 Lemma commuting_cube_construction {g g' : arrow C}
-    {aa : CoproductObject (morcls_lp_dom_coprod _ (CC g)) 
-          --> CoproductObject (morcls_lp_dom_coprod _ (CC g'))}
-    {bb : CoproductObject (morcls_lp_cod_coprod _ (CC g)) 
-          --> CoproductObject (morcls_lp_cod_coprod _ (CC g'))}
+    {aa : CoproductObject (morcls_lp_dom_coprod J _ (CC g)) 
+          --> CoproductObject (morcls_lp_dom_coprod J _ (CC g'))}
+    {bb : CoproductObject (morcls_lp_cod_coprod J _ (CC g)) 
+          --> CoproductObject (morcls_lp_cod_coprod J _ (CC g'))}
     {cc : arrow_dom g --> arrow_dom g'}
     (leftface : (morcls_coprod_functor g) · bb = aa · (morcls_coprod_functor g'))
-    (topface  : arrow_mor00 (morcls_lp_coprod_diagram g (CC _)) · cc = 
-                aa · arrow_mor00 (morcls_lp_coprod_diagram g' (CC _))) :
-  E1 g (CC _) POs --> E1 g' (CC _) POs.
+    (topface  : arrow_mor00 (morcls_lp_coprod_diagram J g (CC _)) · cc = 
+                aa · arrow_mor00 (morcls_lp_coprod_diagram J g' (CC _))) :
+  E1 J g (CC _) POs --> E1 J g' (CC _) POs.
 Proof.
   (* The map induced by pushouts on the front and back face
      (only the front face is drawn)
@@ -827,11 +891,11 @@ Proof.
       bb  \ v∑f'       v
            ∑B' - - - > E1g'
   *)
-  set (CE1g' := cc · (λ1 g' (CC g') POs)).
-  set (BE1g' := bb · (PushoutIn1 (morcls_lp_coprod_diagram_pushout g' (CC g') POs))).
+  set (CE1g' := cc · (λ1 J g' (CC g') POs)).
+  set (BE1g' := bb · (PushoutIn1 (morcls_lp_coprod_diagram_pushout J g' (CC g') POs))).
 
   use (PushoutArrow 
-       (morcls_lp_coprod_diagram_pushout g (CC g) POs)
+       (morcls_lp_coprod_diagram_pushout J g (CC g) POs)
        _ BE1g' CE1g').
   
   abstract (
@@ -853,7 +917,7 @@ Proof.
 
     (* all that's left is commutativity in the pushout square of g' *)
     apply pathsinv0;
-    exact (PushoutSqrCommutes (morcls_lp_coprod_diagram_pushout g' (CC g') POs))
+    exact (PushoutSqrCommutes (morcls_lp_coprod_diagram_pushout J g' (CC g') POs))
   ).
 Defined.
 
@@ -863,7 +927,7 @@ Definition one_step_comonad_functor_data : functor_data (arrow C) (arrow C).
 Proof.
   use make_functor_data.
   - intro g.
-    exact (λ1 g (CC g) POs).
+    exact (λ1 J g (CC g) POs).
   - intros g g' γ.
     (* The map on morphisms becomes the right face from the cube induced by
           ∑h
@@ -918,8 +982,7 @@ Proof.
     apply pathsdirprod.
     * reflexivity.
     * apply pathsinv0, PushoutArrowUnique.
-      (* simplifying gives big ugly terms
-         Gotta keep in mind that (# one_step_comonad_functor_data) S 
+      (* Gotta keep in mind that (# one_step_comonad_functor_data) S 
          is a PushoutArrow and we can then use pushout properties. *)
       + rewrite functor_comp.
         (* PushoutIn1 · (PushoutArrow · PushoutArrow) = arrow_mor11 · PushoutIn *)
@@ -945,12 +1008,152 @@ Qed.
 Definition one_step_comonad_functor : functor (arrow C) (arrow C) :=
     (_,, one_step_comonad_functor_is_functor).
 
+(* Lemma E1_compat (g : arrow C) : E1 J g (CC _) POs = E1 J (opp_mor g) (CC _) POs.
+Proof.
+  reflexivity.
+Qed.
+
+Context (CCopp : ∏ (g : arrow (op_cat C)), Coproducts (morcls_lp (morphism_class_opp J) g) (op_cat C)) (POsopp : Pushouts (op_cat C)).
+
+Lemma λ1_ρ1_compat (g : arrow C) :
+    arrow_cod (λ1 J g (CC _) POs) = arrow_dom (ρ1 (morphism_class_opp J) (opp_arrow g) (CCopp _) POsopp).
+Proof.
+  cbn.
+Defined. *)
+ 
+
+Definition one_step_monad_functor_data : functor_data (arrow C) (arrow C).
+Proof.
+  use make_functor_data.
+  - intro g.
+    exact (ρ1 J g (CC _) POs).
+  - intros g g' γ.
+    
+    set (Kγ := (#morcls_coprod_functor)%cat γ).
+    set (φγ := nat_trans_ax morcls_coprod_nat_trans g g' γ).
+    set (φγ00 := dirprod_pr1 (pathsdirprodweq (base_paths _ _ φγ))).
+
+    use mors_to_arrow_mor.
+    * use commuting_cube_construction.
+      + exact (arrow_mor00 Kγ).
+      + exact (arrow_mor11 Kγ).
+      + exact (arrow_mor00 γ).
+      + abstract (exact (pathsinv0 (arrow_mor_comm Kγ))).
+      + abstract (exact (pathsinv0 φγ00)).
+    * exact (arrow_mor11 γ).
+    * use (MorphismsOutofPushoutEqual 
+        (isPushout_Pushout (morcls_lp_coprod_diagram_pushout J g (CC g) POs))).
+      + rewrite assoc.
+        etrans. apply maponpaths_2.
+                apply PushoutArrow_PushoutIn1.
+        rewrite assoc'.
+        etrans. apply maponpaths.
+                apply PushoutArrow_PushoutIn1.
+        etrans. apply precompWithCoproductArrowInclusion.
+        
+        apply pathsinv0.
+        rewrite assoc.
+        etrans. apply maponpaths_2.
+                apply PushoutArrow_PushoutIn1. 
+        etrans. apply postcompWithCoproductArrow.
+        
+        apply maponpaths.
+        apply funextsec.
+        intro.
+        now rewrite id_left.
+      + rewrite assoc.
+        etrans. apply maponpaths_2.
+                apply PushoutArrow_PushoutIn2.
+        rewrite assoc'.
+        etrans. apply maponpaths.
+                apply PushoutArrow_PushoutIn2.
+        
+        apply pathsinv0.
+        rewrite assoc.
+        etrans. apply maponpaths_2.
+                apply PushoutArrow_PushoutIn2. 
+
+        apply pathsinv0.
+        exact (arrow_mor_comm γ).
+Defined.
+
+Definition one_step_monad_functor_is_functor : is_functor one_step_monad_functor_data.
+Proof.
+  split.
+  - intro g.
+    apply subtypePath; [intro; apply homset_property|].
+    apply pathsdirprod.
+    * (* bottom map is identity because the pushout arrow is unique *)
+      apply pathsinv0, PushoutArrowUnique.
+      + now rewrite id_right, functor_id, id_left.
+      + now rewrite id_right, id_left.
+    * (* bottom map is identity simply because it comes from a functor *)
+      reflexivity.
+  - intros f g h S T.
+    apply subtypePath; [intro; apply homset_property|].
+    apply pathsdirprod.
+    * apply pathsinv0, PushoutArrowUnique.
+      (* Gotta keep in mind that (# one_step_comonad_functor_data) S 
+        is a PushoutArrow and we can then use pushout properties. *)
+      + rewrite functor_comp.
+        (* PushoutIn1 · (PushoutArrow · PushoutArrow) = arrow_mor11 · PushoutIn *)
+        rewrite assoc.
+        etrans. apply maponpaths_2.
+        use PushoutArrow_PushoutIn1.
+        rewrite <- assoc.
+        etrans. apply maponpaths.
+        use PushoutArrow_PushoutIn1.
+        rewrite assoc.
+        reflexivity.
+      + (* PushoutIn2 (PushoutArrow · PushoutArrow) = arrow_mor00 (S T) · PushoutIn *)
+        rewrite assoc.
+        etrans. apply maponpaths_2.
+        use PushoutArrow_PushoutIn2.
+        rewrite <- assoc.
+        etrans. apply maponpaths.
+        use PushoutArrow_PushoutIn2.
+        rewrite assoc.
+        reflexivity.
+    * reflexivity.
+Qed.
+
+Definition one_step_monad_functor : functor (arrow C) (arrow C) :=
+    (_,, one_step_monad_functor_is_functor).
+
+(* 
+todo: can we use this definition?
+      If we do this, I think E1 arising from 
+      one_step_monad_functor is not the same
+      definitionally as that arising from 
+      one_step_comonad_functor, so it might
+      not be a good idea...
+
+Definition one_step_monad_functor_data : functor_data (arrow C) (arrow C).
+Proof.
+  use make_functor_data.
+  - intro g.
+    exact (opp_mor (one_step_comonad_functor (opp_mor g))).
+  - intros ? ? γ.
+    exact (opp_mor (#one_step_comonad_functor (opp_mor γ))%cat).
+Defined.
+
+Definition one_step_monad_functor_is_functor : is_functor one_step_monad_functor_data.
+Proof.
+  split.
+  - exact (functor_id one_step_comonad_functor).
+  - intros f g h S T.
+    apply (functor_comp one_step_comonad_functor).
+Qed.
+
+Definition one_step_monad_functor : functor (arrow C) (arrow C) :=
+    (_,, one_step_monad_functor_is_functor). *)
+
 Definition one_step_comonad_counit_data : nat_trans_data (one_step_comonad_functor) (functor_identity _).
 Proof.
   (* Send λ1 g --> g along
       C ====== C
       |        |
-  λ1g |        | g
+  λ1g |   L1   | g
       v        v
     E1g ----> D
           ρ1g
@@ -958,8 +1161,8 @@ Proof.
   intro g.
   use mors_to_arrow_mor.
   - exact (identity _).
-  - exact (ρ1 g (CC g) POs).
-  - abstract (exact (arrow_mor_comm (morcls_lp_coprod_diagram_red g (CC g) POs))).
+  - exact (ρ1 J g (CC g) POs).
+  - abstract (exact (arrow_mor_comm (morcls_lp_coprod_diagram_red J g (CC g) POs))).
 Defined.
 
 Definition one_step_comonad_counit_is_nat_trans : is_nat_trans _ _ one_step_comonad_counit_data.
@@ -973,7 +1176,7 @@ Proof.
        · ρ1g' = ρ1g · γ11 *)
     (* We are trying to prove an equality of maps E1g --> arrow_cod g' *)
     use (MorphismsOutofPushoutEqual 
-          (isPushout_Pushout (morcls_lp_coprod_diagram_pushout g (CC g) POs))).
+          (isPushout_Pushout (morcls_lp_coprod_diagram_pushout J g (CC g) POs))).
     * (* todo: see exactly what's going on here *)
       rewrite assoc.
       etrans. apply maponpaths_2.
@@ -1012,9 +1215,40 @@ Qed.
 Definition one_step_comonad_counit : nat_trans (one_step_comonad_functor) (functor_identity _) :=
     (_,, one_step_comonad_counit_is_nat_trans).
 
+Definition one_step_monad_unit_data : nat_trans_data (functor_identity _) (one_step_monad_functor).
+Proof.
+  (* Send g --> ρ1 g along
+         λ1g
+      C ----> E1g
+      |        |
+  g   |   R1   | ρ1g
+      v        v
+      D ====== D
+  *)
+  intro g.
+  use mors_to_arrow_mor.
+  - exact (λ1 J g (CC g) POs).
+  - exact (identity _). 
+  - abstract (exact (arrow_mor_comm (morcls_lp_coprod_diagram_red_flipped J g (CC g) POs))).
+Defined.
+
+Definition one_step_monad_unit_is_nat_trans : is_nat_trans _ _ one_step_monad_unit_data.
+Proof.
+  intros g g' γ.
+  apply subtypePath; [intro; apply homset_property|].
+  apply pathsdirprod; simpl.
+  - apply pathsinv0.
+    etrans. apply PushoutArrow_PushoutIn2.
+    reflexivity.
+  - now rewrite id_left, id_right.
+Qed.
+
+Definition one_step_monad_unit : nat_trans (functor_identity _) (one_step_monad_functor) :=
+    (_,, one_step_monad_unit_is_nat_trans).
+
 (* ψg in Garner *)
 Definition morcls_lp_coprod_L1_inclusion (g : arrow C) :
-    morcls_lp J g → morcls_lp J (λ1 g (CC g) POs).
+    morcls_lp J g -> morcls_lp J (λ1 J g (CC g) POs).
 Proof.
   (* The inclusion of lifting problems is induced by
     S_g → S_{L1g} : x ↦ (f_x -- in_x -> Kg = ∑f -- ϵg -> L1g)
@@ -1029,20 +1263,20 @@ Proof.
   intro S.
   exists (pr1 S).
   (* right hand square *)
-  set (rhs := PushoutSqrCommutes (morcls_lp_coprod_diagram_pushout g (CC g) POs)).
-  set (rhs_mor := mors_to_arrow_mor (morcls_lp_coprod g (CC g)) (λ1 _ (CC g) POs) _ _ (pathsinv0 rhs)).
+  set (rhs := PushoutSqrCommutes (morcls_lp_coprod_diagram_pushout J g (CC g) POs)).
+  set (rhs_mor := mors_to_arrow_mor (morcls_lp_coprod J g (CC g)) (λ1 _ _ (CC g) POs) _ _ (pathsinv0 rhs)).
   use (λ inx, inx · rhs_mor).
 
   (* left hand square *)
   use mors_to_arrow_mor.
-  - exact (CoproductIn _ _ (morcls_lp_dom_coprod g (CC g)) S).
-  - exact (CoproductIn _ _ (morcls_lp_cod_coprod g (CC g)) S).
-  - abstract (exact (CoproductInCommutes _ _ _ _ _ _ S)).
+  - exact (CoproductIn (morcls_lp_dom_coprod J _ (CC g)) S).
+  - exact (CoproductIn (morcls_lp_cod_coprod J _ (CC g)) S).
+  - abstract (exact (CoproductInCommutes _ _ S)).
 Defined.
 
 (* δg in Garner *)
 Definition morcls_lp_coprod_L1_map (g : arrow C) :
-    (morcls_lp_coprod _ (CC g)) --> (morcls_lp_coprod _ (CC (λ1 g (CC g) POs))).
+    (morcls_lp_coprod J _ (CC g)) --> (morcls_lp_coprod J _ (CC (λ1 J g (CC g) POs))).
 Proof.
   (* the inclusion of the objects are just identity on themselves *)
   use mors_to_arrow_mor;
@@ -1107,7 +1341,7 @@ Proof.
         rewrite id_left;
         cbn;
         apply pathsinv0;
-        etrans; [exact (CoproductInCommutes _ _ _ _ _ _ S)|];
+        etrans; [exact (CoproductInCommutes _ _ S)|];
         reflexivity
       ).
   - (* commutativity in right face *)
@@ -1133,7 +1367,7 @@ Proof.
   - simpl.
     (* equality of arrows E1 g --> E1 (λ1g) *)
     use (MorphismsOutofPushoutEqual 
-      (isPushout_Pushout (morcls_lp_coprod_diagram_pushout g (CC _) POs))).
+      (isPushout_Pushout (morcls_lp_coprod_diagram_pushout J g (CC _) POs))).
     * etrans. apply assoc.
       etrans. apply maponpaths_2.
               use PushoutArrow_PushoutIn1.
@@ -1156,7 +1390,18 @@ Proof.
       etrans. use CoproductOfArrowsInclusion_comp.
       apply pathsinv0.
       etrans. use CoproductOfArrowsInclusion_comp.
-      (* apply maponpaths_1234. *)
+
+      unfold CoproductOfArrowsInclusion.
+      use CoproductArrowUnique.
+      intro.
+      simpl.
+      etrans. apply (CoproductInCommutes (morcls_lp_cod_coprod J g (CC _))).
+      do 2 rewrite assoc'.
+      do 2 (etrans; [apply id_left|]).
+      apply pathsinv0.
+      do 2 (etrans; [apply id_left|]).
+      (* again CoproductIn_idtoiso... *)
+      Search (idtoiso _ · _ = _).
       
       admit.
     * etrans. apply assoc.
@@ -1185,6 +1430,128 @@ Definition one_step_comonad_mul :
       (functor_composite one_step_comonad_functor one_step_comonad_functor) :=
   (_,, one_step_comonad_mul_is_nat_trans).
 
+(* 
+todo: I don't think this is needed, as Garner only considers
+the pointed endofunctor (R1, Λ1)
+
+(* analogue to ψg in Garner *)
+Definition morcls_lp_coprod_R1_inclusion (g : arrow C) :
+    morcls_lp J g -> morcls_lp J (ρ1 J g (CC g) POs).
+Proof.
+  (* The inclusion of lifting problems is induced by
+    S_{R1g} → S_g : x ↦ (f_x -- in_x -> Kρ1g -- ηg -> L1g)
+    where ηg is morcls_lp_coprod_diagram_red_flipped:
+              ∑h
+    A ---> ∑A ---> C
+    |      |       |
+  f |    ∑f|       | g
+    v      v       v
+    B ---> ∑B ---> D
+               ∑k
+    *)
+    
+  intro S.
+  exists (pr1 S).
+  (* right hand square *)
+  set (rhs := PushoutSqrCommutes (morcls_lp_coprod_diagram_pushout J g (CC g) POs)).
+  set (rhs_mor := mors_to_arrow_mor (morcls_lp_coprod J g (CC g)) (ρ1 _ _ (CC g) POs) _ _ (pathsinv0 rhs)).
+  use (λ inx, inx · rhs_mor).
+
+  (* left hand square *)
+  use mors_to_arrow_mor.
+  - exact (CoproductIn (morcls_lp_dom_coprod J _ (CC g)) S).
+  - exact (CoproductIn (morcls_lp_cod_coprod J _ (CC g)) S).
+  - abstract (exact (CoproductInCommutes _ _ S)).
+  (* intro S.
+  exists (pr1 S).
+
+  (* right hand square *)
+  set (rhs := PushoutSqrCommutes (morcls_lp_coprod_diagram_pushout J g (CC g) POs)).
+  set (rhs_mor := mors_to_arrow_mor (morcls_lp_coprod J (ρ1 J g (CC _) POs) (CC _)) g).
+  use (λ h k hkcomm inx, inx · (rhs_mor h k hkcomm)).
+  - use CoproductArrow.
+    intro Sx.
+    simpl.
+
+    admit. (* exact (arrow_mor00 (morcls_lp_coprod_diagram J g (CC _)) · λ1 J g (CC _) POs). *)
+  - exact (arrow_mor11 (morcls_lp_coprod_diagram J _ (CC _))).
+  - admit.
+  - (* left hand square *)
+    use mors_to_arrow_mor.
+    * exact (CoproductIn (morcls_lp_dom_coprod J _ (CC _)) S).
+    * exact (CoproductIn (morcls_lp_cod_coprod J _ (CC _)) S).
+    * abstract (exact (CoproductInCommutes _ _ S)). *)
+Defined.
+
+(* analogue to δg in Garner *)
+Definition morcls_lp_coprod_R1_map (g : arrow C) :
+    (morcls_lp_coprod J _ (CC g)) --> (morcls_lp_coprod J _ (CC (ρ1 J g (CC g) POs))).
+Proof.
+  (* the inclusion of the objects are just identity on themselves *)
+  use mors_to_arrow_mor;
+    try exact (CoproductOfArrowsInclusion 
+              (morcls_lp_coprod_R1_inclusion g) _ _ 
+              (λ _, (identity _))).
+  
+  (* commutativity *)
+  abstract (
+    etrans; [use precompWithCoproductArrowInclusion|];
+    simpl;
+    apply pathsinv0;
+    etrans; [use postcompWithCoproductArrow|];
+    simpl;
+    apply maponpaths;
+    apply funextsec;
+    intro S;
+    rewrite id_left;
+    rewrite <- assoc;
+    etrans; [apply maponpaths; exact (CoproductOfArrowsInclusionIn _ _ _ _ S)|];
+    etrans; [apply maponpaths; apply id_left|];
+    reflexivity
+  ).
+Defined.
+
+Definition one_step_monad_mul_data : 
+  nat_trans_data
+    (functor_composite one_step_monad_functor one_step_monad_functor)
+    (one_step_monad_functor).
+Proof.
+  intro g.
+
+  set (δg := morcls_lp_coprod_R1_map g).
+  
+  use mors_to_arrow_mor.
+  - exact (identity _).
+  - use commuting_cube_construction.
+    * (* aa *) exact (arrow_mor00 δg).
+    * (* bb *) exact (arrow_mor11 δg).
+    * (* cc *) exact (identity _).
+    * (* left face *)
+      exact (pathsinv0 (arrow_mor_comm δg)).
+    * (* top face *)
+      abstract (
+        rewrite id_right;
+        cbn;
+        rewrite precompWithCoproductArrowInclusion;
+        apply maponpaths;
+        apply funextsec;
+        intro S;
+        rewrite id_left;
+        cbn;
+        apply pathsinv0;
+        etrans; [exact (CoproductInCommutes _ _ S)|];
+        reflexivity
+      ).
+  - (* commutativity in right face *)
+    abstract (
+      etrans; [apply id_left|];
+      (* commuting cube construction is a pushout arrow *)
+      apply pathsinv0;
+      etrans; [apply PushoutArrow_PushoutIn2|];
+      now rewrite id_left
+    ).
+Defined. *)
+
 Definition one_step_comonad_functor_with_μ : functor_with_μ (op_cat (arrow C)) :=
     (functor_opp one_step_comonad_functor,, op_nt one_step_comonad_mul).
 
@@ -1194,15 +1561,3 @@ Definition one_step_comonad_data : Monad_data (op_cat (arrow C)) :=
     op_nt one_step_comonad_counit).
 
 End one_step_monad.
-
-(* Section lifting_with_J_continued.
-
-Lemma lifting_coprod_lp_red_iff_maps :
-    filler (arrow_mor_comm (morcls_lp_coprod_diagram_red)) <->
-  let Λ1g := mors_to_arrow_mor g ρ1g λ1g (identity _) test in
-  ∑ (γ : ρ1g --> g), γ · Λ1g = identity _.
-
-Lemma lifting_with_J_iff_one_step_monad_unit :
-    right_lifting_data J g <->
-
-End lifting_with_J_continued. *)

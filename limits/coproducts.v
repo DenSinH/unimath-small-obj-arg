@@ -16,7 +16,7 @@ Definition CoproductOfArrows' (I : UU) (C : category)
     {a : I -> C} (CCab : Coproduct _ _ a) {c : I -> C}
     (CCcd : Coproduct _ _ c) (f : ∏ i, a i --> c i) :
         CoproductObject _ _ CCab --> CoproductObject _ _ CCcd :=
-  CoproductOfArrowsInclusion (I:=I) (J:=I) (idfun _) CCab CCcd f.
+  CoproductOfArrowsInclusion (idfun I) CCab CCcd f.
 
 Lemma CoproductOfArrowsInclusionIn {I J : UU} {C : category} 
     (incl : I -> J) {a : I -> C} (CCab : Coproduct _ _ a) {c : J -> C}
