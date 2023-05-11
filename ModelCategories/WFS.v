@@ -69,7 +69,7 @@ Proof.
     * exact (isasetmorphism_class _ _).
     * do 3 (apply impred_isaprop; intro).
       apply propproperty.
-Defined.
+Qed.
 *)
 
 (* Can't do dot notation like in lean (is_wfs.lp)*)
@@ -136,7 +136,7 @@ Defined.
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L55 *)
 (* No counterpart in MCAT, (□(I□), I□) is a WFS *)
 Lemma wfs_of_factorization {M : category} (I : morphism_class M) 
-  (h : ∏ {x y} (f : x --> y), ∑ z (g : x --> z) (h : z --> y), (llp (rlp I) _ _ g) × (rlp I _ _ h) × (h ∘ g = f)) :
+  (h : ∏ (x y : M) (f : x --> y), ∑ z (g : x --> z) (h : z --> y), (llp (rlp I) _ _ g) × (rlp I _ _ h) × (h ∘ g = f)) :
   is_wfs (llp (rlp I)) (rlp I).
 Proof.
   use make_is_wfs.

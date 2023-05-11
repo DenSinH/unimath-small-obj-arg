@@ -1,6 +1,7 @@
 Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.CategoryTheory.Core.Prelude.
 
+Require Import CategoryTheory.ModelCategories.Lifting.
 Require Import CategoryTheory.ModelCategories.Retract.
 Require Import CategoryTheory.ModelCategories.MorphismClass.
 Require Import CategoryTheory.ModelCategories.WFS.
@@ -22,12 +23,12 @@ Definition make_is_model_category {M : category} (W C F : morphism_class M)
 Definition model_category (M : category) :=
   ∑ (W C F : morphism_class M), is_model_category W C F.
 
-Lemma isprop_is_model_category {M : category} (W C F : morphism_class M) : isaprop (is_model_category W C F).
+(* Lemma isprop_is_model_category {M : category} (W C F : morphism_class M) : isaprop (is_model_category W C F).
 Proof.
   apply isapropdirprod.
   apply isaprop_is_weak_equivalences.
   apply isapropdirprod; apply isaprop_is_wfs.
-Defined.
+Defined. *)
 
 Lemma is_model_category_mk' {M : category} {W C AF AC F : morphism_class M}
     (weq : is_weak_equivalences W)
@@ -76,9 +77,7 @@ Proof.
       destruct hf as [f_c f_w].
 
       (* factorize f through c, g : a --> c ∈ AC, h : c --> b ∈ F *)
-      use ((is_wfs_fact acf) _ _ f).
-      intro H.
-      destruct H as [c [g [h [g_ac [h_f gh]]]]].
+      destruct ((is_wfs_fact acf) _ _ f) as [c [g [h [g_ac [h_f gh]]]]].
 
       (* h ∈ W by 2 out of 3 property (h ∘ g = f) *)
       assert (h_w : (W _ _) h).

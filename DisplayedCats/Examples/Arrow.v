@@ -24,17 +24,22 @@ Proof.
   - simpl.
     intros xx' yy' g h ff'.
     exact (pr1 ff' · h = g · pr2 ff').
-  - simpl.
-    intros.
-    use homset_property.
-  - simpl. 
-    intros.
-    now rewrite id_left, id_right.
-  - simpl.
-    intros.
-    rewrite assoc, <- X.
-    symmetry.
-    now rewrite <- assoc, <- X0, assoc.
+  - abstract (
+      intros;
+      use homset_property
+    ).
+  - abstract (
+      simpl;
+      intros;
+      now rewrite id_left, id_right
+    ).
+  - abstract (
+      simpl;
+      intros;
+      rewrite assoc, <- X;
+      symmetry;
+      now rewrite <- assoc, <- X0, assoc
+    ).
 Defined.
 
 Definition arrow : category := total_category arrow_disp.
@@ -71,10 +76,12 @@ Proof.
   exact H.
 Qed. *)
 
-(* 
-Definition top_square {C D : category} {F F' : functor (arrow C) (arrow D)}
-    (nt : nat_trans F F') (f f' : arrow C) (mor : f --> f') := 
-  dirprod_pr1 (pathsdirprodweq (base_paths _ _ (nat_trans_ax nt f f' mor))).
-Definition bottom_square {C D : category} {F F' : functor (arrow C) (arrow D)}
-    (nt : nat_trans F F') (f f' : arrow C) (mor : f --> f') := 
-  dirprod_pr2 (pathsdirprodweq (base_paths _ _ (nat_trans_ax nt f f' mor))). *)
+(* base_paths : equality in pr1 of ∑-type (paths in base category)
+    pathsdirprodweq : _ × _ = _ × _ -> equality of terms
+*)
+Definition top_square {C : category}
+    {f f' : arrow C} {mor mor1' : f --> f'} (H : mor = mor1') := 
+  dirprod_pr1 (pathsdirprodweq (base_paths _ _ H)).
+Definition bottom_square {C : category}
+    {f f' : arrow C} {mor mor1' : f --> f'} (H : mor = mor1') := 
+  dirprod_pr2 (pathsdirprodweq (base_paths _ _ H)).

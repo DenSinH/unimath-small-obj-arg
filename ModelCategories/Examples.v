@@ -9,6 +9,7 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 
 Require Import CategoryTheory.ModelCategories.NWFS.
+Require Import CategoryTheory.ModelCategories.MorphismClass.
 Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
 
@@ -70,3 +71,23 @@ Definition hset_functorial_factorization : functorial_factorization HSET :=
     (_,, hset_functorial_factorization_axioms).
 
 
+(* Definition emptyset : hSet := make_hSet empty isasetempty.
+
+Definition hset_01_J : morphism_class HSET.
+Proof.
+  intros x y f.
+  use make_hProp.
+  - set (test := InitialHSET).
+    simpl in test.
+    exact (x = emptyset × y = unitset).
+  - apply isapropdirprod.
+    simpl in x, y.
+    * apply isaproppathstoisolated.
+      intro x'.
+      simpl in x'.
+      
+      Search (isaprop ((_,, _) = (_,, _))).
+      apply isaproptotal2.
+    Search isaprop (_ = _).
+    * set (test := eqset x emptyset).
+Defined. *)

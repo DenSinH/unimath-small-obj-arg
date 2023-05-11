@@ -310,7 +310,7 @@ Lemma nwfs_Σ_top_map_id {C : category} (n : nwfs C) (f : arrow C) :
     arrow_mor00 (nwfs_Σ n f) = identity _.
 Proof.
   set (law1 := Monad_law1 (T:=nwfs_L_monad n) f).
-  specialize (dirprod_pr1 (pathsdirprodweq (base_paths _ _ law1))) as top.
+  set (top := top_square law1).
   apply pathsinv0.
   etrans.
   exact (pathsinv0 top).
@@ -322,7 +322,7 @@ Lemma nwfs_Σ_bottom_map_inv {C : category} (n : nwfs C) (f : arrow C) :
     arrow_mor11 (nwfs_Σ n f) · arrow_mor (fact_R n (fact_L n f)) = identity _.
 Proof.
   set (law1 := Monad_law1 (T:=nwfs_L_monad n) f).
-  specialize (dirprod_pr2 (pathsdirprodweq (base_paths _ _ law1))) as bottom.
+  set (bottom := bottom_square law1).
   exact bottom.
 Qed.
 
@@ -335,7 +335,7 @@ Lemma nwfs_Σ_bottom_map_L_is_middle_map_of_Σ {C : category} (n : nwfs C) (f : 
     (arrow_mor11 (nwfs_Σ n f)) · three_mor11 (functor_on_morphisms n (nwfs_Σ n f)).
 Proof.
   set (law3 := Monad_law3 (T:=nwfs_L_monad n) f).
-  specialize (dirprod_pr2 (pathsdirprodweq (base_paths _ _ law3))) as bottom.
+  set (bottom := bottom_square law3).
   apply pathsinv0.
   exact bottom.
 Qed.
@@ -345,7 +345,7 @@ Lemma nwfs_Π_bottom_map_id {C : category} (n : nwfs C) (f : arrow C) :
     arrow_mor11 (nwfs_Π n f) = identity _.
 Proof.
   set (law1 := Monad_law1 (T:=nwfs_R_monad n) f).
-  specialize (dirprod_pr2 (pathsdirprodweq (base_paths _ _ law1))) as bottom.
+  set (bottom := bottom_square law1).
   apply pathsinv0.
   etrans.
   exact (pathsinv0 bottom).
@@ -357,7 +357,7 @@ Lemma nwfs_Π_top_map_inv {C : category} (n : nwfs C) (f : arrow C) :
     arrow_mor (fact_L n (fact_R n f)) · arrow_mor00 (nwfs_Π n f) = identity _.
 Proof.
   set (law1 := Monad_law1 (T:=nwfs_R_monad n) f).
-  specialize (dirprod_pr1 (pathsdirprodweq (base_paths _ _ law1))) as top.
+  set (top := top_square law1).
   exact top.
 Qed.
 
@@ -370,7 +370,7 @@ Lemma nwfs_Π_bottom_map_R_is_middle_map_of_Π {C : category} (n : nwfs C) (f : 
     three_mor11 (functor_on_morphisms n (nwfs_Π n f)) · arrow_mor00 (nwfs_Π n f).
 Proof.
   set (law3 := Monad_law3 (T:=nwfs_R_monad n) f).
-  specialize (dirprod_pr1 (pathsdirprodweq (base_paths _ _ law3))) as top.
+  set (top := top_square law3).
   apply pathsinv0.
   exact top.
 Qed.
