@@ -5,11 +5,14 @@ Require Import UniMath.CategoryTheory.categories.HSET.All.
 Require Import UniMath.CategoryTheory.Monics.
 Require Import UniMath.CategoryTheory.Epis.
 Require Import UniMath.CategoryTheory.limits.bincoproducts.
+Require Import UniMath.CategoryTheory.limits.coproducts.
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 
-Require Import CategoryTheory.ModelCategories.NWFS.
 Require Import CategoryTheory.ModelCategories.MorphismClass.
+Require Import CategoryTheory.ModelCategories.NWFS.
+Require Import CategoryTheory.ModelCategories.Generated.LiftingWithClass.
+Require Import CategoryTheory.ModelCategories.Generated.OneStepMonad.
 Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
 
@@ -71,23 +74,37 @@ Definition hset_functorial_factorization : functorial_factorization HSET :=
     (_,, hset_functorial_factorization_axioms).
 
 
-(* Definition emptyset : hSet := make_hSet empty isasetempty.
+Definition emptyset : hSet := make_hSet empty isasetempty.
 
 Definition hset_01_J : morphism_class HSET.
 Proof.
   intros x y f.
   use make_hProp.
-  - set (test := InitialHSET).
-    simpl in test.
-    exact (x = emptyset × y = unitset).
-  - apply isapropdirprod.
-    simpl in x, y.
-    * apply isaproppathstoisolated.
-      intro x'.
-      simpl in x'.
-      
-      Search (isaprop ((_,, _) = (_,, _))).
-      apply isaproptotal2.
-    Search isaprop (_ = _).
-    * set (test := eqset x emptyset).
-Defined. *)
+  - exact (∥x = emptyset∥ × ∥y = unitset∥).
+  - apply isapropdirprod; apply propproperty.
+Defined.
+
+Lemma CoproductsHSET_morcls_lp (J : morphism_class HSET) : 
+  ∏ g : arrow SET, Coproducts (morcls_lp hset_01_J g) SET.
+Proof.
+  intro g.
+  use CoproductsHSET.
+  apply isaset_total2.
+  - simpl.
+    apply isaset_total2.
+    * apply isaset_total2.
+      + apply isaset_dirprod; admit.
+      + intro.
+        apply isaset_set_fun_space.
+    * intro.
+      apply isasetaprop.
+      apply isapropdirprod; apply isapropishinh.
+  - intro.
+    apply homset_property.
+Admitted.
+
+Definition hset_01_J_one_step_comonad :=
+    one_step_comonad hset_01_J (CoproductsHSET_morcls_lp hset_01_J).
+
+Check hset_01_J_one_step_comonad.
+
