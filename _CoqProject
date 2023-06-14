@@ -1,4 +1,7 @@
 -Q . CategoryTheory
+FoundationsSets.v
+Cardinals.v
+Ordinals.v
 limits/coproducts.v
 DisplayedCats/Examples/Arrow.v
 DisplayedCats/Examples/Three.v

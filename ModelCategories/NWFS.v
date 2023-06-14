@@ -283,7 +283,7 @@ Definition L_monad {C : category} (F : functorial_factorization C)
   (L_monad_data F Σ,, L).
 
 Definition nwfs_over {C : category} (F : functorial_factorization C) :=
-    ∑ (Σ : (fact_L F) ⟹ (fact_L F) ∙ (fact_L F)) (Π : (fact_R F) ∙ (fact_R F) ⟹ (fact_R F)) ,
+    ∑ (Σ : (fact_L F) ⟹ (fact_L F) ∙ (fact_L F)) (Π : (fact_R F) ∙ (fact_R F) ⟹ (fact_R F)),
     (Monad_laws (L_monad_data F Σ)) × (Monad_laws (R_monad_data F Π)).
 
 Definition nwfs (C : category) :=
