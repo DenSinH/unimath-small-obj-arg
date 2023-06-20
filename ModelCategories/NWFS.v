@@ -448,7 +448,7 @@ g |   η   |ρg  α  | g
   v       v       v
   D ===== D ===== D  ~~> id_D
 *)
-Lemma R_map_section {C : category} {n : nwfs C} {c d : C} {g : c --> d} (hg : nwfs_R_maps n g) :
+Lemma R_map_retraction {C : category} {n : nwfs C} {c d : C} {g : c --> d} (hg : nwfs_R_maps n g) :
     ∑ p, p · g = arrow_mor (fact_R n g) × 
          arrow_mor (fact_L n g) · p = identity _.
 Proof.
@@ -490,7 +490,7 @@ Proof.
   intros h k H.
 
   destruct (L_map_section hf) as [s [Hs0 Hs1]].
-  destruct (R_map_section hg) as [p [Hp0 Hp1]].
+  destruct (R_map_retraction hg) as [p [Hp0 Hp1]].
 
   set (hk := mors_to_arrow_mor f g h k H).
   set (Fhk := functor_on_morphisms (fact_functor n) hk).

@@ -156,7 +156,7 @@ Notation "eluinv_{ TMD }" := (tf_monoidal_extleftunitorinvdata TMD).
    Would it matter?
    
    I feel like it might complicate things a bit... *)
-Definition 
+(* Definition  *)
 
 
 Definition twofold_monoidal_laws (C : twofold_monoidal_data) :=
