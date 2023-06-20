@@ -6,7 +6,10 @@ Declare Scope cardinal_scope.
 Local Open Scope cardinal_scope.
 Local Open Scope type_scope.
 
-Definition cardinal : hSet := ∥hSet∥_0.
+(* We just view cardinals as hSets, that way it is easier to work with
+   The only time we really need the set trunctation is when regarding
+   the equality of cardinals. For this we can *)
+Definition cardinal : UU := hSet.
 Definition cardinalpr (A : hSet) : cardinal := settruncpr A.
 
 Definition cardinal_add (A B : cardinal) : cardinal.
@@ -72,8 +75,11 @@ Defined.
 
 Notation "A ≤ B" := (cardinal_leq A B) : cardinal_scope.
 
+
 Lemma cardinal_leq_refl : isrefl cardinal_leq.
 Proof.
+  intro.
+  unfold cardinal_leq.
 
 Admitted.
 

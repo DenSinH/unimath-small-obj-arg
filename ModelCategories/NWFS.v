@@ -337,7 +337,7 @@ Proof.
   exact bottom.
 Qed.
 
-(* σ_{λf} · σ_f = F(1_A, σ_f) · σ_f
+(* σ_f · σ_{λf} = σ_f · F(1_A, σ_f)
   where F(1_a, σ_f) is the map on middle objects of F(Σ_f)
   if we see Σ_f as a morphism in the arrow category
    (9, top right + cancel_postcomposition) *)

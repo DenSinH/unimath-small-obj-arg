@@ -97,7 +97,6 @@ Proof.
   (* unfold nwfs_L_maps_class, isCoAlgebra. *)
   apply hinhpr.
   exists (nwfs_Σ n f).
-
   split; use subtypePath; try (intro; apply homset_property); cbn.
   - apply pathsdirprod.
     * etrans.
