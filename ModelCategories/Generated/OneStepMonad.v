@@ -698,6 +698,7 @@ Proof.
   use (λ inx, inx · rhs_mor).
 
   (* left hand square *)
+  (* todo: generalize this *)
   use mors_to_arrow_mor.
   - exact (CoproductIn (morcls_lp_dom_coprod J _ (CC g)) S).
   - exact (CoproductIn (morcls_lp_cod_coprod J _ (CC g)) S).
@@ -954,15 +955,15 @@ Proof.
   - apply pathsinv0.
     use PushoutEndo_is_identity.
     * 
-      (* etrans. apply assoc.
+      etrans. apply assoc.
       etrans. apply maponpaths_2.
               apply PushoutArrow_PushoutIn1.
       rewrite assoc'.
       etrans. apply maponpaths.
               apply PushoutArrow_PushoutIn1.
-      etrans. apply assoc. *)
-      pushout_dragthrough.
       etrans. apply assoc.
+      (* pushout_dragthrough.
+      etrans. apply assoc. *)
 
       apply pathsinv0.
       etrans. { apply pathsinv0. rewrite <- id_left. reflexivity. }
@@ -989,23 +990,23 @@ Proof.
         cbn.
         etrans. apply (CoproductInCommutes (morcls_lp_dom_coprod J g (CC _)) _ (f,, S)).
         reflexivity.
-      + 
-        (* rewrite assoc'.
+      + simpl.
+        rewrite assoc'.
         etrans. apply maponpaths.
                 apply PushoutArrow_PushoutIn1.
-        cbn. *)
-        pushout_dragthrough.
+        cbn.
+        (* pushout_dragthrough. *)
         etrans. apply (CoproductInCommutes (morcls_lp_cod_coprod J g (CC _)) _ (f,, S)).
         reflexivity.
     * 
-      (* etrans. apply assoc.
+      etrans. apply assoc.
       etrans. apply maponpaths_2.
               apply PushoutArrow_PushoutIn2.
       rewrite assoc'.
       etrans. apply maponpaths.
               apply PushoutArrow_PushoutIn2.
-      etrans. apply assoc. *)
-      pushout_dragthrough.
+      etrans. apply assoc.
+      (* pushout_dragthrough. *)
       rewrite id_left, id_left.
       reflexivity.
   - now rewrite id_left, id_left.
@@ -1231,7 +1232,78 @@ between morphisms L1 → L of Comon⊙(FfC) and morphisms
           
  morcls_L_map_structure: J -->[id] L-Map.
 *)
-    
+
+(* todo: move this *)
+Definition id_lp {g : arrow C} (Jg : J _ _ g) : morcls_lp J g.
+Proof.
+  use tpair.
+  - exact (g,, Jg).
+  - exact (identity _).
+Defined.
+
+Definition natural_bijections_osc_disp_functor_data 
+    {n : nwfs C}
+    (α : Monad_Mor (nwfs_L_monad n) (one_step_comonad J CC POs)) :
+  disp_functor_data (functor_identity _) (op_disp_cat (morcls_disp J)) (nwfs_L_maps n).
+Proof.
+  use tpair.
+  - intros g Jg.
+    (* Jg is just witnesses that g ∈ J *)
+    change (nwfs_L_maps n g).
+    use tpair.
+    * (* need map g -> λg (from n) *)
+      (* α gives natural transformation L1 ==> L
+          i.e., maps λ1g --> λg *)
+      (* use monad morphism α to reduce to problem 
+                    α
+        g ---> λ1g ---> λg *)
+      apply opp_mor.
+      use (postcompose (rm_opp_mor (α g))).
+      use (postcompose (morcls_lp_coprod_diagram J (λ1 J g (CC _) POs) (CC _))).
+      use (postcompose (morcls_lp_coprod_L1_map J CC POs g)).
+
+      (* todo: generalize CoproductIn (morcls_lp_coprod J _ _) *)
+      use mors_to_arrow_mor.
+      + exact (CoproductIn (morcls_lp_dom_coprod J _ (CC g)) (id_lp Jg)).
+      + exact (CoproductIn (morcls_lp_cod_coprod J _ (CC g)) (id_lp Jg)).
+      + abstract (exact (CoproductInCommutes _ _ (id_lp Jg))).
+    * (* show that the morphism is an algebra morphism *)
+      simpl.
+      split; (apply subtypePath; [intro; apply homset_property|]).
+      + use pathsdirprod.
+        -- cbn.
+           rewrite id_right.
+           etrans. do 2 apply maponpaths_2.
+                   exact (CoproductOfArrowsInclusionIn _ (morcls_lp_dom_coprod J g (CC _)) _ _ (id_lp Jg)).
+           rewrite id_left.
+           etrans. apply maponpaths_2.
+                   exact (CoproductInCommutes (morcls_lp_dom_coprod J (λ1 J g (CC _) POs) (CC _)) _ (morcls_lp_coprod_L1_inclusion J CC POs _ (id_lp Jg))).
+           (* cbn. *)
+           admit.
+        -- cbn.
+           etrans. do 3 apply maponpaths_2.
+                   exact (CoproductOfArrowsInclusionIn _ (morcls_lp_cod_coprod J g (CC _)) _ _ (id_lp Jg)).
+           rewrite id_left.    
+           etrans. do 2 apply maponpaths_2.
+                   exact (CoproductInCommutes (morcls_lp_cod_coprod J (λ1 J g (CC _) POs) (CC _)) _ (morcls_lp_coprod_L1_inclusion J CC POs _ (id_lp Jg))).
+           cbn.
+           admit.
+      + use pathsdirprod; cbn; apply cancel_precomposition.
+        -- etrans. apply nwfs_Σ_top_map_id.
+           apply pathsinv0.
+           (* same scenario as before *)
+           etrans. do 2 apply maponpaths_2.
+                   exact (CoproductOfArrowsInclusionIn _ (morcls_lp_dom_coprod J g (CC _)) _ _ (id_lp Jg)).
+           rewrite id_left.
+           etrans. apply maponpaths_2.
+                   exact (CoproductInCommutes (morcls_lp_dom_coprod J (λ1 J g (CC _) POs) (CC _)) _ (morcls_lp_coprod_L1_inclusion J CC POs _ (id_lp Jg))).
+           (* cbn.  *)
+           admit.
+        -- admit.
+  - cbn.
+Defined.
+
+(* osc = one step comonad *)
 Definition natural_bijections_osc (n : nwfs C) :
     Monad_Mor (nwfs_L_monad n) (one_step_comonad J CC POs) -> (morcls_L_map_structure n J).
 Proof.
@@ -1240,34 +1312,66 @@ Proof.
   intro α.
   use tpair.
   - (* functor data *)
+    (* todo: split this *)
     use tpair.
-    * intros g f.
-      (* f lies over g in op_disp_cat (morcls_disp J) g,
-         i.e., f is just g but witnesses that g ∈ J *)
+    * intros g Jg.
+      (* Jg is just witnesses that g ∈ J *)
       change (nwfs_L_maps n g).
       use tpair.
       + (* need map g -> λg (from n) *)
         (* α gives natural transformation L1 ==> L
            i.e., maps λ1g --> λg *)
+        (* use monad morphism α to reduce to problem 
+                      α
+          g ---> λ1g ---> λg *)
         apply opp_mor.
+        use (postcompose (rm_opp_mor (α g))).
+        use (postcompose (morcls_lp_coprod_diagram J (λ1 J g (CC _) POs) (CC _))).
+        use (postcompose (morcls_lp_coprod_L1_map J CC POs g)).
+
         use mors_to_arrow_mor.
-        -- exact (identity _).
-        -- (* need section (cod g) --> Eg (from n) *)
-           (* use monad morphism to reduce to problem 
-                               α
-              (cod g) --> E1g --> Eg *)
-           use (λ f, f · (arrow_mor11 (α g))).
-           set (test := ρ1 J g (CC _) POs).
-           set (u := arrow_mor11 (η osc g)).
-           simpl in u. 
-           set (t := one_step_monad_unit J CC POs g).
-           set (abc := arrow_mor00 t).
-           (* todo: we only have this map if g is an L1-algebra? *)
-           admit.
-        -- rewrite id_left.
-           admit.
+        -- exact (CoproductIn (morcls_lp_dom_coprod J _ (CC g)) (id_lp Jg)).
+        -- exact (CoproductIn (morcls_lp_cod_coprod J _ (CC g)) (id_lp Jg)).
+        -- abstract (exact (CoproductInCommutes _ _ (id_lp Jg))).
       + simpl.
-        split.
+        split; (apply subtypePath; [intro; apply homset_property|]).
+        -- apply pathsdirprod; cbn.
+           ** rewrite id_right.
+              admit.
+           ** admit.
+        -- apply pathsdirprod; cbn.
+           ** apply cancel_precomposition.
+              admit.
+           ** apply cancel_precomposition.
+              admit.
+(*               
+    * is algebra map
+      admit.
+  - (* disp_functor_axioms *)
+    simpl. *)
 Admitted.
+
+
+Definition natural_bijections_osc_inv (n : nwfs C) :
+    (morcls_L_map_structure n J) -> Monad_Mor (nwfs_L_monad n) (one_step_comonad J CC POs).
+Proof.
+  set (osc := one_step_comonad J CC POs).
+  
+  intro ηJ.
+  use tpair.
+  - (* natural transformation L ⟹ L1 *)
+    use make_nat_trans.
+    * intro g.
+      (* need morphism λ1g -> λg (in op_cat) *)
+      (* use unit of osc to reduce to problem
+              ηosc
+         λ1g -----> g --> λg *)
+      use (λ f, f · (η osc g)).
+      set (nwfsL := nwfs_L_monad n).
+      (* so we need g to be an L-map, which we can if g is in J,
+         but can't otherwise... *)
+      
+Admitted.
+
 
 End natural_bijections.
