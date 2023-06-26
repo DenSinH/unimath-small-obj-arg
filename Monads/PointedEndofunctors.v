@@ -15,7 +15,7 @@ Section pointed_endofunctor_def.
 Definition pointed_endofunctor (C : category) : UU :=
     ∑ F : functor C C, functor_identity _ ⟹ F.
 
-Coercion functor_from_pointed_endofunctor
+Coercion ptd_endo_functor
     {C : category} (F : pointed_endofunctor C) := pr1 F.
 
 Definition ptd_endo_unit 
