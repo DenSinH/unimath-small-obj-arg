@@ -14,6 +14,7 @@ Require Import UniMath.CategoryTheory.FunctorCategory.
 Require Import UniMath.CategoryTheory.whiskering.
 
 Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
+Require Import UniMath.CategoryTheory.Monads.Monads.
 Require Import CategoryTheory.Monads.PointedEndofunctors.
 
 Local Open Scope Cat.
@@ -57,6 +58,7 @@ Local Notation "F □ G" := (functor_composite F G) (at level 35).
                 v
   Xβ --------> Xβ1
      τXβ · xβ
+  where τ is the unit of our pointed endofunctor (T, τ).
 *)
 Local Definition pair_diagram : UU :=
     ∑ (x0 x1 : (functor_category C C)), ([C, C]⟦ T □ x0, x1 ⟧).
@@ -142,4 +144,129 @@ Definition ptd_endo_coeq_sequence_colim :
   ColimCocone ptd_endo_coeq_sequence_diagram :=
     CLF _ ptd_endo_coeq_sequence_diagram.
 
+(* using Proposition 23 in Garner, 2007 (long), can construct
+   free monoid from T-Mod that is left adjoint to forgetful functor.
+   
+   using Proposition*)
+
+
+(* 
+The rest of the construction:
+  - Want to create "T-module on A", in our case, we only care if
+    A = I (= id_C), since that is the sequence we are going to use
+    with R1.
+    This can be done with Proposition 27 in Garner, 2007 (long).
+    However, we need to construct a map T □ T∞ --> T∞. In 
+    Proposition 27, we assume that the module sequence converges
+    for some α (as we assume the limit ordinal is α-small).
+    I guess in our case, this would boil down to only having a 
+    finite number of steps? As ω is not ω-small.
+    Garner gives the construction of the required map as 
+               θα       Xαα+^{-1}
+      T ⊗ Xα ----> Xα+ ---------> Xα
+    Where I am assuming the first map is one of the two branches
+    for the equalizer in the successor ordinal case, and the second
+    map exists because the sequence converges. Just using the 
+    colimits as they are in UniMath would give me T∞, but then I 
+    cannot use it as if it was an element in this sequence so to say...
+
+    One thing I thought might be possible, but is not what we want to do,
+    is that for any β : ℕ, we have this cocone
+          Xβ ---> Xβ+1
+          |  \     / |
+          |   \   /  |
+          |    T∞    |
+           \    |   /
+             \  |  /
+               Xβ+1
+    which we can apply T to, to obtain a transformation
+    T □ T∞ --> T □ Xβ+1
+    which we can compose with xβ+1 and the inclusion of Xβ+2 into
+    T∞ to obtain a map, but this would factor though a chosen
+    Xβ, which seems odd, and not what we want.
+
+    He constructs the universal map from A (so I) to T∞ as X0α,
+    which is just the inclusion into the colimit, so that is 
+    easy to define.
+  - I'm guessing the next step is using Proposition 24, which says
+    that if the sequence on I (which is precisely the one we want) exists,
+    and we have some condition on the module action, then
+    we get an adjoint to the forgetful functor T-alg --> [C, C],
+    which I think gives us the fact that T∞-Alg = T-Alg?
+    
+  - Then the last step is giving the multiplication on (T∞, τ∞).
+    This should follow from the proof of Proposition 23, where we 
+    get a unit (which I guess should be the same as the one
+    we would find from the first point, the universal map from 
+    A (so I) to T∞).
+    
+    The multiplication comes from the adjunction, 
+    in combination with the action ⋆ described
+    before. To define this action, I may need to first add some 
+    more tools to work with whiskering. I can see how (X, x) ⋆ X
+    would give the map for the multiplication, and I guess the
+    adjunction gives us functorality of the map, but I am not 
+    entirely sure why the adjunction even works:
+
+    For (X, x) the free T-monoid over I (which is actually the one we
+    want), we define [C, C] --> T-Alg as (X, x) ⋆ (-): A ↦ (X ⊗ A, x ⊗ A)
+    Applying the forgetful functor would yield X ⊗ A, which is not the same
+    as A, unless X = I, which is not the case, since X would be T∞ in
+    our case. Okay, maybe these objects are isomorphic, but why?
+
+  Like before with Garner's construction, using this construction
+  may be too "generic" again. It seems like
+  in our specific case, with our specific ω-sequence, we
+  might be able to construct the unit and multiplication
+  on T∞ more directly, and show that the Algebra's are preserved.
+  I guess we'd still need to use the idea of the adjunction we obtain,
+  but thinking about it, I don't really see how we would obtain the
+  map T∞ ⊗ T∞ --> T∞...
+
+*)
+
+(* Definition ptd_endo_coeq_sequence_monad_data : Monad_data C.
+Proof.
+  set (Tinf := colim ptd_endo_coeq_sequence_colim).
+  use tpair.
+  - exists Tinf.
+    
+  - (* unit is inclusion of 0 term (id) into colimit *)
+    exact (colimIn ptd_endo_coeq_sequence_colim 0).
+Defined. *)
+
+Definition ptd_endo_module : UU :=
+    ∑ (X : [C, C]) (x : [C, C]⟦ T □ X, X ⟧),
+      let τX := post_whisker (ptd_endo_unit T) X : [C, C]⟦ X, T □ X ⟧ in
+      x · τX = identity _.
+
+Coercion ptd_endo_module_functor (X : ptd_endo_module) := pr1 X.
+Definition ptd_endo_module_trans (X : ptd_endo_module) := pr12 X.
+Definition ptd_endo_module_rel (X : ptd_endo_module) := pr22 X.
+
+Definition ptd_endo_module_action (X : ptd_endo_module) (A : [C, C]) : ptd_endo_module.
+Proof.
+  exists ((ptd_endo_module_functor X) □ A).
+  exists (post_whisker (ptd_endo_module_trans X) A).
+  simpl.
+  set (rel := ptd_endo_module_rel X).
+  simpl in rel.
+  admit.
+Admitted.
+
+Definition ptd_endo_coeq_sequence_Tmod : ptd_endo_module.
+Proof.
+  set (Tinf := colim ptd_endo_coeq_sequence_colim).
+  exists Tinf.
+  set (uprop := colimUnivProp ptd_endo_coeq_sequence_colim).
+  set (cin := colimIn ptd_endo_coeq_sequence_colim).
+  use tpair.
+  - (* Can construct map T □ Tinf --> Xβ1 *)
+    admit.
+  - simpl.
+    admit.
+Admitted.
+
 End ptd_endo_colim.
+
+(* Kelly: chapte 23, see prop 23.2 *)
