@@ -913,6 +913,7 @@ Proof.
   (* etrans. apply test2.
   etrans. apply (CoproductInCommutes (morcls_lp_cod_coprod J (λ1 J g (CC g) POs) (CC _))). *)
   apply pathsinv0.
+  show_id_type.
   etrans. apply maponpaths.
           apply CoproductArrowEta.
   admit.

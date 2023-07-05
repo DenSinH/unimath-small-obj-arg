@@ -12,6 +12,7 @@ Require Import UniMath.CategoryTheory.limits.graphs.coequalizers.
 Require Import UniMath.CategoryTheory.limits.graphs.colimits.
 Require Import UniMath.CategoryTheory.FunctorCategory.
 Require Import UniMath.CategoryTheory.whiskering.
+Require Import CategoryTheory.whiskering.
 
 Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import UniMath.CategoryTheory.Monads.Monads.
@@ -28,6 +29,10 @@ Proof.
     (* only arrows m -> m + 1 *)
     exact (n = S m).
 Defined.
+
+(* todo: up to isomorphism? *)
+Definition ω_sequence_converges {C : category} {d : diagram ω_graph C} (CC : ColimCocone d) : UU :=
+    ∑ (a : vertex ω_graph), colim CC = dob d a.
 
 (*
   Inspired by lecture notes by Egbert Rijke linked at
@@ -78,15 +83,61 @@ Proof.
   exact (τX · xβ).
 Defined.
 
-Definition ptd_endo_coeq_sequence :
+Definition next_pair_diagram (xβ : pair_diagram) : pair_diagram.
+Proof.
+  destruct xβ as [Xβ [Xβ1 xβ]].
+  (* Part of the sequence that we are considering:
+    TXβ-1 --> TXβ ----> TXβ1
+      |        |         |
+      |     xβ |         | xβ1
+      v        v         v
+      Xβ ----> Xβ1 ----> Xβ2
+          fβ
+  *)
+  (* the next "left object" is Xβ1 *)
+  exists Xβ1.
+
+  set (TXβ := T □ Xβ).
+  set (TXβ1 := T □ Xβ1).
+
+  set (Tt := pre_whisker T (ptd_endo_unit T) :
+                [C, C]⟦_, (T □ T)⟧).
+  set (TtXβ := post_whisker Tt Xβ : 
+                [C, C]⟦T □ Xβ, (T □ T) □ Xβ⟧).
+  set (tT := post_whisker (ptd_endo_unit T) T : 
+                [C, C]⟦_, T □ T⟧).
+  set (tTXβ := post_whisker tT Xβ : 
+                [C, C]⟦T □ Xβ, (T □ T) □ Xβ⟧).
+  set (Txβ := pre_whisker T xβ : 
+                [C, C]⟦T □ (T □ Xβ), T □ Xβ1⟧).
+  (* 
+  We define xβ1: TXβ1 ---> Xβ2 by the coequalizer of the two
+  composites
+      tT        Txβ
+  TXβ ===> T2 Xβ --> TXβ1
+      Tt
+  *)
+  rewrite <- functor_assoc in Txβ.
+  set (coeq := CEF _ _ (tTXβ · Txβ) (TtXβ · Txβ)).
+  set (Xβ2 := CoequalizerObject _ coeq).
+  exists Xβ2.
+
+  set (xβ1 := CoequalizerArrow _ coeq).
+  exact xβ1.
+Defined.
+
+Definition ptd_endo_coeq_sequence_on (A : [C, C]) :
     nat -> pair_diagram.
 Proof.
   intro n.
   induction n as [|β xβ].
-  - (* initial arrow is I ⟹ T *)
-    exists (functor_identity _), (ptd_endo_functor T).
-    exact (nat_trans_id _).
-  - destruct xβ as [Xβ [Xβ1 xβ]].
+  - exists A, (T □ A).
+    exact (post_whisker (nat_trans_id _) A).
+    (* initial arrow is I ⟹ T *)
+    (* exists (functor_identity _), (ptd_endo_functor T).
+    exact (nat_trans_id _). *)
+  - exact (next_pair_diagram xβ).
+    (* destruct xβ as [Xβ [Xβ1 xβ]].
     (* Part of the sequence that we are considering:
        TXβ-1 --> TXβ ----> TXβ1
          |        |         |
@@ -124,13 +175,13 @@ Proof.
     exists Xβ2.
     
     set (xβ1 := CoequalizerArrow _ coeq).
-    exact xβ1.
+    exact xβ1. *)
 Defined.
 
-Definition ptd_endo_coeq_sequence_diagram :
+Definition ptd_endo_coeq_sequence_diagram_on (A : [C, C]) :
     diagram ω_graph (functor_category C C).
 Proof.
-  set (seq := ptd_endo_coeq_sequence).
+  set (seq := ptd_endo_coeq_sequence_on A).
   use tpair.
   - intro n.
     exact (pair_diagram_lob (seq n)).
@@ -140,9 +191,9 @@ Proof.
     exact (pair_diagram_horizontal_arrow (seq m)).
 Defined.
 
-Definition ptd_endo_coeq_sequence_colim : 
-  ColimCocone ptd_endo_coeq_sequence_diagram :=
-    CLF _ ptd_endo_coeq_sequence_diagram.
+Definition ptd_endo_coeq_sequence_colim_on (A : [C, C]) : 
+  ColimCocone (ptd_endo_coeq_sequence_diagram_on A) :=
+    CLF _ (ptd_endo_coeq_sequence_diagram_on A).
 
 (* using Proposition 23 in Garner, 2007 (long), can construct
    free monoid from T-Mod that is left adjoint to forgetful functor.
@@ -235,37 +286,102 @@ Proof.
     exact (colimIn ptd_endo_coeq_sequence_colim 0).
 Defined. *)
 
-Definition ptd_endo_module : UU :=
-    ∑ (X : [C, C]) (x : [C, C]⟦ T □ X, X ⟧),
-      let τX := post_whisker (ptd_endo_unit T) X : [C, C]⟦ X, T □ X ⟧ in
-      x · τX = identity _.
+Definition is_ptd_endo_module (X : [C, C]) (x : [C, C]⟦ T □ X, X ⟧) : UU :=
+  let τX := post_whisker (ptd_endo_unit T) X : [C, C]⟦ X, T □ X ⟧ in
+    x · τX = identity _.
 
-Coercion ptd_endo_module_functor (X : ptd_endo_module) := pr1 X.
+Definition ptd_endo_module : UU :=
+    ∑ (X : [C, C]) (x : [C, C]⟦ T □ X, X ⟧), is_ptd_endo_module X x.
+
+Coercion ptd_endo_module_functor (X : ptd_endo_module) : C ⟶ C := pr1 X.
 Definition ptd_endo_module_trans (X : ptd_endo_module) := pr12 X.
 Definition ptd_endo_module_rel (X : ptd_endo_module) := pr22 X.
 
-Definition ptd_endo_module_action (X : ptd_endo_module) (A : [C, C]) : ptd_endo_module.
+Lemma action_is_ptd_endo_module (X : ptd_endo_module) (A : [C, C]) :
+    is_ptd_endo_module ((ptd_endo_module_functor X) □ A) (post_whisker (ptd_endo_module_trans X) A).
 Proof.
-  exists ((ptd_endo_module_functor X) □ A).
-  exists (post_whisker (ptd_endo_module_trans X) A).
-  simpl.
-  set (rel := ptd_endo_module_rel X).
-  simpl in rel.
-  admit.
-Admitted.
+  unfold is_ptd_endo_module.
+  rewrite post_whisker_functor_comp.
+  etrans. apply pathsinv0.
+          exact (post_whisker_composition _ _ _ A _ _ _ (ptd_endo_module_trans X) (post_whisker (ptd_endo_unit T) (ptd_endo_module_functor X))).
+
+  etrans. exact (maponpaths (λ x : (T □ X ⟹ T □ X), post_whisker x A) (ptd_endo_module_rel X)).
+
+  apply nat_trans_eq; [apply homset_property|].
+  intro x.
+  cbn.
+  apply functor_id.
+Qed.
+
+Definition ptd_endo_module_action (X : ptd_endo_module) (A : [C, C]) : ptd_endo_module :=
+    ((ptd_endo_module_functor X) □ A,, (_,, action_is_ptd_endo_module X A)).
+
+Local Definition ptd_endo_coeq_sequence_colim_unit := 
+    ptd_endo_coeq_sequence_colim_on (functor_identity _).
+Local Definition Tinf := colim ptd_endo_coeq_sequence_colim_unit.
+
+(* todo: up to iso? *)
+Definition preserves_ω_sequences (A : [C, C]) :=
+    colim (ptd_endo_coeq_sequence_colim_on A) = 
+      Tinf □ A.
+
 
 Definition ptd_endo_coeq_sequence_Tmod : ptd_endo_module.
 Proof.
-  set (Tinf := colim ptd_endo_coeq_sequence_colim).
   exists Tinf.
-  set (uprop := colimUnivProp ptd_endo_coeq_sequence_colim).
-  set (cin := colimIn ptd_endo_coeq_sequence_colim).
+  assert (H : ω_sequence_converges ptd_endo_coeq_sequence_colim_unit). admit.
+  destruct H as [α H].
+  change (colim ptd_endo_coeq_sequence_colim_unit) with Tinf in H.
+  set (dα := ptd_endo_coeq_sequence_on (functor_identity _) α).
+  set (uprop := colimUnivProp ptd_endo_coeq_sequence_colim_unit).
+  set (cin := colimIn ptd_endo_coeq_sequence_colim_unit).
   use tpair.
-  - (* Can construct map T □ Tinf --> Xβ1 *)
-    admit.
+  - apply (postcompose (cin (S α))).
+    rewrite H.
+    exact (pair_diagram_arr dα).
   - simpl.
+    unfold is_ptd_endo_module.
+    
     admit.
 Admitted.
+
+
+Definition test (n : nat) : [C, C] ⟦ pair_diagram_rob (ptd_endo_coeq_sequence_on Tinf n), Tinf ⟧.
+Proof.
+  induction n.
+  - change ([C, C]⟦ T □ Tinf, Tinf ⟧).
+    (* exact (ptd_endo_module_trans ptd_endo_coeq_sequence_Tmod). *)
+    admit.
+  - use CoequalizerOut.
+    * 
+
+Defined.
+
+
+Definition test : [C, C]⟦Tinf □ Tinf, Tinf⟧.
+Proof.
+  assert (H : preserves_ω_sequences Tinf). admit.
+  
+  rewrite <- H.
+  use colimArrow.
+  use make_cocone.
+  - intro n.
+    induction n as [|n Hn].
+    * exact (nat_trans_id _).
+    * set (test := ptd_endo_module_trans ptd_endo_coeq_sequence_Tmod).
+      
+      set (Xn := pair_diagram_rob ((ptd_endo_coeq_sequence_on Tinf n))).
+      change ([C, C]⟦ Xn , Tinf ⟧).
+      unfold Xn.
+      admit.
+      (* use (CoequalizerOut). *)
+  - cbn.
+     
+  use colimOfArrows.
+  - intro n.
+    simpl.
+
+Defined.
 
 End ptd_endo_colim.
 
