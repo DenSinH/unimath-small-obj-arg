@@ -921,6 +921,31 @@ Admitted.
 
 Definition one_step_comonad_laws : Monad_laws one_step_comonad_data.
 Proof.
+  (* repeat split.
+  - admit.
+  - admit.
+  - intro g.
+    apply cancel_postcomposition.
+    apply subtypePath; [intro; apply homset_property|].
+    apply pathsdirprod; [trivial|].
+    cbn.
+    use commuting_cube_construction_eq; [|trivial].
+    use CoproductArrowUnique.
+    intro S.
+    cbn.
+    rewrite id_left.
+    etrans. use (CoproductOfArrowsInclusionIn _ _ _ _ S).
+    rewrite id_left.
+    morcls_lp_coproduct_in_eq.
+    apply subtypePath; [intro; apply homset_property|].
+    apply pathsdirprod.
+    + rewrite id_right.
+      cbn.
+      apply pathsinv0.
+      etrans. apply (CoproductInCommutes (morcls_lp_dom_coprod J (λ1 J g (CC _) POs) (CC _))).
+      reflexivity.
+    + cbn.
+      unfold commuting_cube_construction. *)
   repeat split; intro g; (apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod); simpl.
   - now rewrite id_left.
   - apply pathsinv0.

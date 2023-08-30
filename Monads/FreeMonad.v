@@ -191,9 +191,28 @@ Proof.
     exact (pair_diagram_horizontal_arrow (seq m)).
 Defined.
 
+Definition compose_ω_graph_with (P : [C, C]) (d : diagram ω_graph [C, C]) :
+    diagram ω_graph [C, C].
+Proof.
+  use tpair.
+  - intro n.
+    exact (P □ (dob d n)).
+  - intros ? ? e.
+    set (edge := dmor d e).
+    exact (pre_whisker (functor_data_from_functor _ _ P) edge).
+Defined.
+
 Definition ptd_endo_coeq_sequence_colim_on (A : [C, C]) : 
   ColimCocone (ptd_endo_coeq_sequence_diagram_on A) :=
-    CLF _ (ptd_endo_coeq_sequence_diagram_on A).
+    CLF _ _.
+    
+Local Definition ptd_endo_coeq_sequence_colim_unit := 
+ptd_endo_coeq_sequence_colim_on (functor_identity _).
+Local Definition Tinf := colim ptd_endo_coeq_sequence_colim_unit.
+
+Definition ptd_endo_coeq_sequence_comp_colim_on (A P : [C, C]) :
+  ColimCocone (compose_ω_graph_with P (ptd_endo_coeq_sequence_diagram_on A)) :=
+    CLF _ _.
 
 (* using Proposition 23 in Garner, 2007 (long), can construct
    free monoid from T-Mod that is left adjoint to forgetful functor.
@@ -316,19 +335,47 @@ Qed.
 Definition ptd_endo_module_action (X : ptd_endo_module) (A : [C, C]) : ptd_endo_module :=
     ((ptd_endo_module_functor X) □ A,, (_,, action_is_ptd_endo_module X A)).
 
-Local Definition ptd_endo_coeq_sequence_colim_unit := 
-    ptd_endo_coeq_sequence_colim_on (functor_identity _).
-Local Definition Tinf := colim ptd_endo_coeq_sequence_colim_unit.
-
 (* todo: up to iso? *)
 Definition preserves_ω_sequences (A : [C, C]) :=
     colim (ptd_endo_coeq_sequence_colim_on A) = 
       Tinf □ A.
 
+(* effectively: Tinf □ T = colim (X_β □ T) *)
+Lemma ptd_endo_coeq_sequence_compose_with_T (A : [C, C]):
+  colim (ptd_endo_coeq_sequence_comp_colim_on A (ptd_endo_functor T)) =
+    T □ (colim (ptd_endo_coeq_sequence_colim_on A)). 
+Proof.
+  use functor_eq; [apply homset_property|].
+  use functor_data_eq.
+  - cbn.
+    intro X.
+    unfold ColimFunctor_ob.
+    (* requires: T preserves colimits *)
+    admit.
+  - cbn.
+    intros.
+    show_id_type.
+    admit.
+Admitted.
 
 Definition ptd_endo_coeq_sequence_Tmod : ptd_endo_module.
 Proof.
   exists Tinf.
+  use tpair.
+  - set (test := ptd_endo_coeq_sequence_compose_with_T (functor_identity _)).
+    change (colim (ptd_endo_coeq_sequence_colim_on (functor_identity C))) with Tinf in test.
+    rewrite <- test.
+    unfold Tinf.
+    (* this needs to be "shifted" over one,
+       since we get maps TXβ --> Xβ+1, not TXβ --> Xβ *)
+    use colimOfArrows.
+    * intro n.
+      cbn.
+      admit.
+    * intros m n e.
+      admit.
+  - admit.
+  (* exists Tinf.
   assert (H : ω_sequence_converges ptd_endo_coeq_sequence_colim_unit). admit.
   destruct H as [α H].
   change (colim ptd_endo_coeq_sequence_colim_unit) with Tinf in H.
@@ -342,7 +389,7 @@ Proof.
   - simpl.
     unfold is_ptd_endo_module.
     
-    admit.
+    admit. *)
 Admitted.
 
 

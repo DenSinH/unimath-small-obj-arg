@@ -282,9 +282,14 @@ Definition L_monad {C : category} (F : functorial_factorization C)
     (L : Monad_laws (L_monad_data F Σ)) : Monad (op_cat (arrow C)) :=
   (L_monad_data F Σ,, L).
 
+Definition lnwfs_over {C : category} (F : functorial_factorization C) :=
+    ∑ (Σ : (fact_L F) ⟹ (fact_L F) ∙ (fact_L F)), Monad_laws (L_monad_data F Σ).
+
+Definition rnwfs_over {C : category} (F : functorial_factorization C) :=
+    ∑ (Π : (fact_R F) ∙ (fact_R F) ⟹ (fact_R F)), Monad_laws (R_monad_data F Π).
+
 Definition nwfs_over {C : category} (F : functorial_factorization C) :=
-    ∑ (Σ : (fact_L F) ⟹ (fact_L F) ∙ (fact_L F)) (Π : (fact_R F) ∙ (fact_R F) ⟹ (fact_R F)),
-    (Monad_laws (L_monad_data F Σ)) × (Monad_laws (R_monad_data F Π)).
+    (lnwfs_over F) × (rnwfs_over F).
 
 Definition nwfs (C : category) :=
     ∑ (F : functorial_factorization C), nwfs_over F.
@@ -301,18 +306,26 @@ Definition make_nwfs {C : category} (F : functorial_factorization C)
     (Π : (fact_R F) ∙ (fact_R F) ⟹ (fact_R F)) (R : Monad_laws (R_monad_data F Π))
         : nwfs C.
 Proof.
-  exists F, Σ, Π.
-  exact (make_dirprod L R).
+  exists F.
+  split.
+  - exists Σ. exact L.
+  - exists Π. exact R.
 Defined.
 
 Definition nwfs_fact {C : category} (n : nwfs C) := pr1 n.
 Coercion nwfs_fact : nwfs >-> functorial_factorization.
-Definition nwfs_Σ {C : category} (n : nwfs C) := pr12 n.
-Definition nwfs_Π {C : category} (n : nwfs C) := pr122 n.
-Definition nwfs_Σ_laws {C : category} (n : nwfs C) := pr1 (pr222 n).
-Definition nwfs_Π_laws {C : category} (n : nwfs C) := pr2 (pr222 n).
-Definition nwfs_R_monad {C : category} (n : nwfs C) := R_monad (nwfs_fact n) (nwfs_Π n) (nwfs_Π_laws n).
-Definition nwfs_L_monad {C : category} (n : nwfs C) := L_monad (nwfs_fact n) (nwfs_Σ n) (nwfs_Σ_laws n).
+Definition nwfs_lnwfs {C : category} (n : nwfs C) := pr12 n.
+Coercion nwfs_lnwfs : nwfs >-> lnwfs_over.
+Definition nwfs_rnwfs {C : category} (n : nwfs C) := pr22 n.
+Coercion nwfs_rnwfs : nwfs >-> rnwfs_over.
+Definition nwfs_Σ {C : category} (n : nwfs C) := pr1 (nwfs_lnwfs n).
+Definition nwfs_Π {C : category} (n : nwfs C) := pr1 (nwfs_rnwfs n).
+Definition nwfs_Σ_laws {C : category} (n : nwfs C) := pr2 (nwfs_lnwfs n).
+Definition nwfs_Π_laws {C : category} (n : nwfs C) := pr2 (nwfs_rnwfs n).
+Definition rnwfs_R_monad {C : category} {F : functorial_factorization C} (n : rnwfs_over F) := R_monad F (pr1 n) (pr2 n).
+Definition lnwfs_L_monad {C : category} {F : functorial_factorization C} (n : lnwfs_over F) := L_monad F (pr1 n) (pr2 n).
+Definition nwfs_R_monad {C : category} (n : nwfs C) := rnwfs_R_monad (nwfs_rnwfs n).
+Definition nwfs_L_monad {C : category} (n : nwfs C) := lnwfs_L_monad (nwfs_lnwfs n).
 
 (* the following lemmas about Σ and Π are from
    Grandis, Tholen, (6), (7), diagram after (7), (8), (9) *)
@@ -627,198 +640,209 @@ Qed.
 
 Definition Ff (C : category) : category := (Ff_precategory C,, has_homsets_Ff C).
 
-Definition nwfs_L_mor {C : category} (n n' : nwfs C)
-    (α : fact_mor n n') : (nwfs_L_monad n') ⟹ (nwfs_L_monad n) :=
+Definition lnwfs_mor {C : category} {F F' : functorial_factorization C}
+    (n : lnwfs_over F) (n' : lnwfs_over F')
+    (α : fact_mor F F') : (lnwfs_L_monad n') ⟹ (lnwfs_L_monad n) :=
   post_whisker (op_nt α) (functor_opp face_map_2).
-Definition nwfs_R_mor {C : category} (n n' : nwfs C)
-    (α : fact_mor n n') : (nwfs_R_monad n) ⟹ (nwfs_R_monad n') :=
+Definition rnwfs_mor {C : category} {F F' : functorial_factorization C}
+    (n : rnwfs_over F) (n' : rnwfs_over F')
+    (α : fact_mor F F') : (rnwfs_R_monad n) ⟹ (rnwfs_R_monad n') :=
   post_whisker α face_map_0.
 
+Definition lnwfs_mor_axioms {C : category} {F F' : functorial_factorization C}
+    (n : lnwfs_over F) (n' : lnwfs_over F')
+    (α : fact_mor F F') :=
+  Monad_Mor_laws (lnwfs_mor n n' α).
+
+Lemma isaprop_lnwfs_mor_axioms {C : category} {F F' : functorial_factorization C}
+    (n : lnwfs_over F) (n' : lnwfs_over F')
+    (α : fact_mor F F') : 
+  isaprop (lnwfs_mor_axioms n n' α).
+Proof.
+  apply isaprop_Monad_Mor_laws, homset_property.
+Qed.
+
+Definition rnwfs_mor_axioms {C : category} {F F' : functorial_factorization C}
+    (n : rnwfs_over F) (n' : rnwfs_over F')
+    (α : fact_mor F F') :=
+  Monad_Mor_laws (rnwfs_mor n n' α).
+
+Lemma isaprop_rnwfs_mor_axioms {C : category} {F F' : functorial_factorization C}
+    (n : rnwfs_over F) (n' : rnwfs_over F')
+    (α : fact_mor F F') : 
+  isaprop (rnwfs_mor_axioms n n' α).
+Proof.
+  apply isaprop_Monad_Mor_laws, homset_property.
+Qed.
+  
 Definition nwfs_mor_axioms {C : category} (n n' : nwfs C) (α : fact_mor n n') :=
-    Monad_Mor_laws (nwfs_L_mor _ _ α) × Monad_Mor_laws (nwfs_R_mor _ _ α).
+    lnwfs_mor_axioms n n' α × rnwfs_mor_axioms n n' α.
 
 Lemma isaprop_nwfs_mor_axioms {C : category} (n n' : nwfs C) (α : fact_mor n n') :
   isaprop (nwfs_mor_axioms n n' α).
 Proof.
-  apply isapropdirprod; apply isaprop_Monad_Mor_laws, homset_property.
+  apply isapropdirprod.
+  - apply isaprop_lnwfs_mor_axioms.
+  - apply isaprop_rnwfs_mor_axioms.
 Qed.
 
-(* Definition nwfs_mor {C : category} (n n' : nwfs C) :=
-    ∑ α : fact_mor n n', nwfs_mor_axioms n n' α.
-
-Lemma isaset_nwfs_mor {C : category} (n n' : nwfs C) : isaset (nwfs_mor n n').
-Proof.
-  apply isaset_total2.
-  - apply isaset_section_nat_trans_disp.
-  - intro. apply isasetaprop, isaprop_nwfs_mor_axioms.
-Defined.
-
-Definition fact_mor_from_nwfs_mor {C : category} {n n' : nwfs C}
-    (α : nwfs_mor n n') := pr1 α.
-Coercion fact_mor_from_nwfs_mor : nwfs_mor >-> fact_mor. *)
-
-Definition nwfs_L_monad_mor {C : category}
+Definition lnwfs_L_monad_mor {C : category}
     {F F' : functorial_factorization C}
-    {n : nwfs_over F}
-    {n' : nwfs_over F'}
+    {n : lnwfs_over F}
+    {n' : lnwfs_over F'}
     (α : fact_mor F F')
-    (ax : nwfs_mor_axioms n n' α) : 
-      Monad_Mor (nwfs_L_monad (_,, n')) (nwfs_L_monad (_,, n)) :=
-  (nwfs_L_mor n n' α,, dirprod_pr1 ax).
-Definition nwfs_R_monad_mor {C : category}
+    (ax : lnwfs_mor_axioms n n' α) : 
+      Monad_Mor (lnwfs_L_monad n') (lnwfs_L_monad n) :=
+  (lnwfs_mor n n' α,, ax).
+  
+Definition rnwfs_R_monad_mor {C : category}
     {F F' : functorial_factorization C}
-    {n : nwfs_over F}
-    {n' : nwfs_over F'}
+    {n : rnwfs_over F}
+    {n' : rnwfs_over F'}
     (α : fact_mor F F')
-    (ax : nwfs_mor_axioms n n' α) :
-      Monad_Mor (nwfs_R_monad n) (nwfs_R_monad n') :=
-  (nwfs_R_mor n n' α,, dirprod_pr2 ax).
+    (ax : rnwfs_mor_axioms n n' α) :
+      Monad_Mor (rnwfs_R_monad n) (rnwfs_R_monad n') :=
+  (rnwfs_mor n n' α,, ax).
 
 Context (C : category).
 
-Lemma fact_id_is_nwfs_mor (n : nwfs C) : nwfs_mor_axioms n n (Ff_precategory_id (nwfs_fact n)).
+(* We just show that fact_id corresponds with the identity monad morphisms
+   on L and R. *)
+Lemma fact_id_is_lnwfs_mor {F : functorial_factorization C} (n : lnwfs_over F) : lnwfs_mor_axioms n n (Ff_precategory_id F).
 Proof.
-  (* We just show that fact_id corresponds with the identity monad morphisms
-     on L and R. *)
-  split.
-  - assert (H : nwfs_L_mor _ _ (Ff_precategory_id (nwfs_fact n)) = nat_trans_id (nwfs_L_monad n)).
-    {
-      use nat_trans_eq; [apply homset_property|].
-      intro.
-      apply subtypePath; [intro; apply homset_property|].
-      apply pathsdirprod; cbn; trivial.
-    }
-    rewrite H.
-    exact (Monad_identity_laws _).
-  - assert (H : nwfs_R_mor _ _ (Ff_precategory_id (nwfs_fact n)) = nat_trans_id (nwfs_R_monad n)).
-    {
-      use nat_trans_eq; [apply homset_property|].
-      intro.
-      apply subtypePath; [intro; apply homset_property|].
-      apply pathsdirprod; cbn; trivial.
-    }
-    rewrite H.
-    exact (Monad_identity_laws _).
+  assert (H : lnwfs_mor _ _ (Ff_precategory_id F) = nat_trans_id (lnwfs_L_monad n)).
+  {
+    use nat_trans_eq; [apply homset_property|].
+    intro.
+    apply subtypePath; [intro; apply homset_property|].
+    apply pathsdirprod; cbn; trivial.
+  }
+  unfold lnwfs_mor_axioms.
+  rewrite H.
+  exact (Monad_identity_laws _).
 Qed.
 
-Lemma nwfs_mor_comp {F F' F'' : Ff C}
-    {n : nwfs_over F}
-    {n' : nwfs_over F'}
-    {n'' : nwfs_over F''}
+Lemma fact_id_is_rnwfs_mor {F : functorial_factorization C} (n : rnwfs_over F) : rnwfs_mor_axioms n n (Ff_precategory_id F).
+Proof.
+  assert (H : rnwfs_mor _ _ (Ff_precategory_id F) = nat_trans_id (rnwfs_R_monad n)).
+  {
+    use nat_trans_eq; [apply homset_property|].
+    intro.
+    apply subtypePath; [intro; apply homset_property|].
+    apply pathsdirprod; cbn; trivial.
+  }
+  unfold rnwfs_mor_axioms.
+  rewrite H.
+  exact (Monad_identity_laws _).
+Qed.
+
+(* Lemma fact_id_is_nwfs_mor (n : nwfs C) : nwfs_mor_axioms n n (Ff_precategory_id (nwfs_fact n)).
+Proof.
+  split.
+  - apply fact_id_is_lnwfs_mor.
+  - apply fact_id_is_rnwfs_mor.
+Qed. *)
+
+Lemma lnwfs_mor_comp {F F' F'' : Ff C}
+    {n : lnwfs_over F}
+    {n' : lnwfs_over F'}
+    {n'' : lnwfs_over F''}
     {α : F --> F'}
     {α' : F' --> F''}
-    (ax : nwfs_mor_axioms n n' α)
-    (ax' : nwfs_mor_axioms n' n'' α') :
-  nwfs_mor_axioms (_,, n) (_,, n'') (α · α').
+    (ax : lnwfs_mor_axioms n n' α)
+    (ax' : lnwfs_mor_axioms n' n'' α') :
+  lnwfs_mor_axioms n n'' (α · α').
 Proof.
   (* Like for identity, we just show that the composition of the morphisms
      corresponds with the composition of the corresponding L and R monad
      morphisms. *)
-  split.
-  - assert (nwfs_L_mor (_,, n) (_,, n'') (α · α') =
-            nat_trans_comp _ _ _ (nwfs_L_monad_mor α' ax') (nwfs_L_monad_mor α ax)) as H.
-    {
+  assert (lnwfs_mor n n'' (α · α') =
+          nat_trans_comp _ _ _ (lnwfs_L_monad_mor α' ax') (lnwfs_L_monad_mor α ax)) as H.
+  {
+    simpl.
+    use nat_trans_eq.
+    - (* for some reason this definition is completely unfolded *)
+      exact (homset_property (op_cat (arrow C))).
+    - intro x; simpl in x.
+      apply subtypePath; [intro; apply homset_property|].
       simpl.
-      use nat_trans_eq.
-      - (* for some reason this definition is completely unfolded *)
-        exact (homset_property (op_cat (arrow C))).
-      - intro x; simpl in x.
-        apply subtypePath; [intro; apply homset_property|].
+      apply pathsdirprod; cbn.
+      * now rewrite id_left.
+      * unfold three_mor11.
         simpl.
-        apply pathsdirprod; cbn.
-        * now rewrite id_left.
-        * unfold three_mor11.
-          simpl.
-          unfold mor_disp; simpl.
-          (* todo: understand what I have done here *)
-          rewrite pr1_transportf.
-          (* transport along constant function -> just idfun *)
-          rewrite transportf_const.
-          trivial.
-    }
-    (* unfold fact_mor_from_nwfs_mor. *)
-    rewrite H.
-    exact (Monad_composition_laws (nwfs_L_monad_mor α' ax') (nwfs_L_monad_mor α ax)).
-  - assert (nwfs_R_mor (_,, n) (_,, n'') (α · α') =
-            nat_trans_comp _ _ _ (nwfs_R_monad_mor α ax) (nwfs_R_monad_mor α' ax')) as H.
-    {
-      simpl.
-      use nat_trans_eq.
-      - (* for some reason this definition is completely unfolded *)
-        exact (homset_property (arrow C)).
-      - intro x; simpl in x.
-        apply subtypePath; [intro; apply homset_property|].
-        simpl.
-        apply pathsdirprod; cbn.
-        * unfold three_mor11.
-          simpl.
-          unfold mor_disp; simpl.
-          rewrite pr1_transportf.
-          rewrite transportf_const.
-          trivial.
-        * now rewrite id_left.
-    }
-    rewrite H.
-    exact (Monad_composition_laws (nwfs_R_monad_mor α ax) (nwfs_R_monad_mor α' ax')).
+        unfold mor_disp; simpl.
+        (* todo: understand what I have done here *)
+        rewrite pr1_transportf.
+        (* transport along constant function -> just idfun *)
+        rewrite transportf_const.
+        trivial.
+  }
+  unfold lnwfs_mor_axioms.
+  rewrite H.
+  exact (Monad_composition_laws (lnwfs_L_monad_mor α' ax') (lnwfs_L_monad_mor α ax)).
 Qed.
 
-Definition NWFS : disp_cat (Ff C).
+Lemma rnwfs_mor_comp {F F' F'' : Ff C}
+    {n : rnwfs_over F}
+    {n' : rnwfs_over F'}
+    {n'' : rnwfs_over F''}
+    {α : F --> F'}
+    {α' : F' --> F''}
+    (ax : rnwfs_mor_axioms n n' α)
+    (ax' : rnwfs_mor_axioms n' n'' α') :
+  rnwfs_mor_axioms n n'' (α · α').
+Proof.
+  assert (rnwfs_mor n n'' (α · α') =
+          nat_trans_comp _ _ _ (rnwfs_R_monad_mor α ax) (rnwfs_R_monad_mor α' ax')) as H.
+  {
+    simpl.
+    use nat_trans_eq.
+    - (* for some reason this definition is completely unfolded *)
+      exact (homset_property (arrow C)).
+    - intro x; simpl in x.
+      apply subtypePath; [intro; apply homset_property|].
+      simpl.
+      apply pathsdirprod; cbn.
+      * unfold three_mor11.
+        simpl.
+        unfold mor_disp; simpl.
+        rewrite pr1_transportf.
+        rewrite transportf_const.
+        trivial.
+      * now rewrite id_left.
+  }
+  unfold rnwfs_mor_axioms.
+  rewrite H.
+  exact (Monad_composition_laws (rnwfs_R_monad_mor α ax) (rnwfs_R_monad_mor α' ax')).
+Qed.
+
+Definition LNWFS : disp_cat (Ff C).
 Proof.
   use disp_cat_from_SIP_data.
-  - exact nwfs_over.
-  - intros F F' n n' α.
-    exact (nwfs_mor_axioms (_,, n) (_,, n') α).
+  - exact lnwfs_over.
+  - exact (@lnwfs_mor_axioms C).
   - intros.
-    apply isaprop_nwfs_mor_axioms.
-  - intros F n.
-    exact (fact_id_is_nwfs_mor (_,, n)).
+    apply isaprop_lnwfs_mor_axioms.
+  - intros.
+    apply fact_id_is_lnwfs_mor.
   - intros F F' F'' n n' n'' α α' ax ax'.
-    exact (nwfs_mor_comp ax ax').
+    apply (lnwfs_mor_comp ax ax').
 Defined.
 
-(* Definition nwfs_precategory_ob_mor : precategory_ob_mor.
+Definition RNWFS : disp_cat (Ff C).
 Proof.
-  use make_precategory_ob_mor.
-  - exact (nwfs C).
-  - intros n n'.
-    exact (nwfs_mor n n').
+  use disp_cat_from_SIP_data.
+  - exact rnwfs_over.
+  - exact (@rnwfs_mor_axioms C).
+  - intros.
+    apply isaprop_rnwfs_mor_axioms.
+  - intros.
+    apply fact_id_is_rnwfs_mor.
+  - intros F F' F'' n n' n'' α α' ax ax'.
+    apply (rnwfs_mor_comp ax ax').
 Defined.
 
-Definition nwfs_mor_id (n : nwfs C) : nwfs_mor n n.
-Proof.
-  use tpair.
-  - exact (Ff_precategory_id (nwfs_fact n)).
-  - exact (fact_id_is_nwfs_mor n).
-Defined. *)
-
-(* Definition nwfs_precategory_data : precategory_data.
-Proof.
-  use make_precategory_data.
-  - exact nwfs_precategory_ob_mor.
-  - exact nwfs_mor_id.
-  - exact nwfs_mor_comp.
-Defined.
-
-Definition nwfs_is_precategory : is_precategory nwfs_precategory_data.
-Proof.
-  use make_is_precategory_one_assoc; intros.
-  - apply subtypePath; [intro; apply isaprop_nwfs_mor_axioms|cbn].
-    apply section_nat_trans_id_left.
-  - apply subtypePath; [intro; apply isaprop_nwfs_mor_axioms|cbn].
-    apply section_nat_trans_id_right.
-  - apply subtypePath; [intro; apply isaprop_nwfs_mor_axioms|cbn].
-    apply section_nat_trans_assoc.
-Qed.
-
-Definition NWFS_precat : precategory :=
-    (nwfs_precategory_data,, nwfs_is_precategory).
-
-Lemma has_homsets_NWFS : has_homsets NWFS_precat.
-Proof.
-  intros n n' .
-  use isaset_nwfs_mor.
-Qed. *)
-(* 
-Definition NWFS : category := (NWFS_precat,, has_homsets_NWFS). *)
+Definition NWFS : disp_cat (Ff C) :=
+    dirprod_disp_cat LNWFS RNWFS.
 
 End NWFS_cat.

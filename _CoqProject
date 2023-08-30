@@ -16,3 +16,4 @@ ModelCategories/WeakEquivalences.v
 ModelCategories/ModelCategory.v
 ModelCategories/Generated/LiftingWithClass.v
 ModelCategories/Generated/OneStepMonad.v
+ModelCategories/Generated/MonoidalStructure.v
