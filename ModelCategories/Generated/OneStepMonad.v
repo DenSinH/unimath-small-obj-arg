@@ -1327,7 +1327,7 @@ Proof.
            admit.
         -- admit.
   - cbn.
-Defined.
+Admitted.
 
 (* osc = one step comonad *)
 Definition natural_bijections_osc (n : nwfs C) :
