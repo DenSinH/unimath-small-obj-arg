@@ -447,6 +447,28 @@ Definition Ff_l_assoc (F F' F'' : Ff C) :
     ((F ⊗ F') ⊗ F'') --> (F ⊗ (F' ⊗ F'')) :=
   (_,, Ff_l_assoc_axioms F F' F'').
 
+
+Definition Ff_l_assoc_rev_data (F F' F'' : Ff C) :
+    section_nat_trans_disp_data (F ⊗ (F' ⊗ F'')) ((F ⊗ F') ⊗ F'').
+Proof.
+  intro f.
+  exists (identity _).
+  abstract (
+    split; rewrite id_left, id_right;
+      [cbn; now rewrite assoc|reflexivity]
+  ).
+Defined.
+
+Definition Ff_l_assoc_rev_axioms (F F' F'' : Ff C) :
+    section_nat_trans_disp_axioms (Ff_l_assoc_rev_data F F' F'').
+Proof.
+  
+Admitted.
+
+Definition Ff_l_assoc_rev (F F' F'' : Ff C) :
+    (F ⊗ (F' ⊗ F'')) --> ((F ⊗ F') ⊗ F'') :=
+  (_,, Ff_l_assoc_rev_axioms F F' F'').
+
 (* todo: is this defined correctly? *)
 Definition Ff_l_mor_comp {F F' G G' : Ff C} 
     (τ : F --> F') (ρ : G --> G') :
