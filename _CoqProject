@@ -17,8 +17,9 @@ ModelCategories/NWFS.v
 ModelCategories/NWFSisWFS.v
 ModelCategories/WeakEquivalences.v
 ModelCategories/ModelCategory.v
+ModelCategories/Generated/Helpers.v
 ModelCategories/Generated/LiftingWithClass.v
 ModelCategories/Generated/OneStepMonad.v
 ModelCategories/Generated/FFMonoidalStructure.v
 ModelCategories/Generated/LNWFSMonoidalStructure.v
-ModelCategories/Generated/FreeMonoid.v
+ModelCategories/Generated/LNWFSFreeMonoid.v

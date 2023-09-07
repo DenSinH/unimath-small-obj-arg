@@ -23,7 +23,7 @@ Proof.
   apply impred; intro x.
   apply impred; intro t.
   exact (isasethsubtype _).
-Defined.
+Qed.
 
 Definition morphism_class_set (C : category) : hSet := 
     make_hSet (morphism_class C) (isasetmorphism_class (C := C)).
@@ -45,7 +45,7 @@ Proof.
   (* in the statement we wish to prove that two hProps are equal,
      this boils down to univalence on hProps *)
   exact (hPropUnivalence _ _ impl conv).
-Defined.
+Qed.
 
 Lemma morphism_class_subset_antisymm {C : category} {I J : morphism_class C} (h : I ⊆ J) (h' : J ⊆ I) : I = J.
 Proof.
@@ -71,7 +71,7 @@ Definition morphism_class_isos (C : category) : (morphism_class C) :=
 Lemma iso_in_morphism_class_isos {C : category} {a b : C} (f : iso a b) : (morphism_class_isos C _ _ f).
 Proof.
   exact (iso_is_iso f).
-Defined.
+Qed.
 
 (* No longer in lean files *)
 
@@ -85,7 +85,7 @@ Lemma morphism_class_opp_opp {C : category} (S : morphism_class C) :
     morphism_class_opp (morphism_class_opp S) = S.
 Proof.
   trivial.
-Defined.
+Qed.
 
 Definition morphism_class_opp_equal {C : category} {S T : morphism_class C} (e : morphism_class_opp S = morphism_class_opp T) : 
   S = T.
@@ -93,7 +93,7 @@ Proof.
   rewrite <- (morphism_class_opp_opp S).
   rewrite <- (morphism_class_opp_opp T).
   now rewrite e.
-Defined.
+Qed.
 
 Definition morphism_class_retract_closure {C : category} (S : morphism_class C) :=
     λ x y (f : x --> y), ∃ x y (f' : x --> y), (S _ _ f') × (retract f' f).
@@ -119,7 +119,7 @@ Proof.
   apply hinhpr.
   exists _, _, f.
   exact (make_dirprod H (retract_self f)).
-Defined.
+Qed.
 
 Lemma morphism_class_retract_closed_impl_eq_cl {C : category} (S : morphism_class C) :
   morphism_class_retract_closed S -> S^cl = S.

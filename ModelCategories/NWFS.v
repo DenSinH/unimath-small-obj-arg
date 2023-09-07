@@ -45,37 +45,36 @@ Proof.
   - intro xxx.
     use tpair.
     * exact (make_dirprod (three_ob1 xxx) (three_ob2 xxx)).
-    * simpl.
-      exact (three_mor12 xxx).
+    * exact (three_mor12 xxx).
   - intros xxx yyy fff.
-    simpl.
+    (* simpl. *)
     (* for morphisms we simply forget the 0th morphism *)
-    use tpair.
-    * split; simpl.
-      + exact (three_mor11 fff).
-      + exact (three_mor22 fff).
-    * simpl.
-      (* commutativity is just commutativity in the lower diagram *)
-      symmetry.
-      exact (pr2 (three_mor_comm fff)).
+    use mors_to_arrow_mor.
+    * exact (three_mor11 fff).
+    * exact (three_mor22 fff).
+    * (* commutativity is just commutativity in the lower diagram *)
+      abstract (
+        apply pathsinv0;
+        exact (pr2 (three_mor_comm fff))
+      ).
 Defined.
 
-Definition face_map_0 : three C ⟶ arrow C.
+Definition face_map_0_axioms : is_functor face_map_0_data.
 Proof.
-  use make_functor.
-  - exact face_map_0_data.
-  - split.
-    * (* unfold functor_idax. *)
-      intro.
-      apply subtypePath.
-      + intro; apply homset_property.
-      + trivial.
-    * (* unfold functor_compax. *)
-      intros a b c f g.
-      apply subtypePath.
-      + intro; apply homset_property.
-      + trivial.
-Defined.
+  split.
+  - (* unfold functor_idax. *)
+    intro.
+    apply subtypePath; [intro; apply homset_property|].
+    + trivial.
+  - (* unfold functor_compax. *)
+    intros a b c f g.
+    apply subtypePath.
+    + intro; apply homset_property.
+    + trivial.
+Qed.
+
+Definition face_map_0 : three C ⟶ arrow C :=
+    (_,, face_map_0_axioms).
 
 Definition face_map_2_data : functor_data (three C) (arrow C).
 Proof.
@@ -86,32 +85,29 @@ Proof.
     * simpl.
       exact (three_mor01 xxx).
   - intros xxx yyy fff.
-    simpl.
-    use tpair.
-    * split; simpl.
-      + exact (three_mor00 fff).
-      + exact (three_mor11 fff).
-    * simpl.
-      symmetry.
-      exact (pr1 (three_mor_comm fff)).
+    use mors_to_arrow_mor.
+    * exact (three_mor00 fff).
+    * exact (three_mor11 fff).
+    * abstract (
+        exact (pathsinv0 (pr1 (three_mor_comm fff)))
+      ).
 Defined.
 
-Definition face_map_2 : three C ⟶ arrow C.
+Definition face_map_2_axioms : is_functor face_map_2_data.
 Proof.
-  use make_functor.
-  - exact face_map_2_data.
-  - split.
-    * (* unfold functor_idax. *)
-      intro.
-      apply subtypePath.
-      + intro; apply homset_property.
-      + trivial.
-    * (* unfold functor_compax. *)
-      intros a b c f g.
-      apply subtypePath.
-      + intro; apply homset_property.
-      + trivial.
-Defined.
+  split.
+  - (* unfold functor_idax. *)
+    intro.
+    apply subtypePath; [intro; apply homset_property|].
+    trivial.
+  - (* unfold functor_compax. *)
+    intros a b c f g.
+    apply subtypePath; [intro; apply homset_property|].
+    trivial.
+Qed.
+
+Definition face_map_2 : three C ⟶ arrow C :=
+    (_,, face_map_2_axioms).
 
 (* verify that they are indeed compatible *)
 Lemma face_compatibility (fg : three C) : arrow_mor (face_map_0 fg) ∘ arrow_mor (face_map_2 fg) = arrow_mor (face_map_1 fg).
@@ -130,48 +126,51 @@ Proof.
   intro xxx.
   simpl.
   exists (make_dirprod (identity _) (three_mor12 xxx)).
-  simpl.
-  rewrite id_left.
-  symmetry.
-  exact (three_comp xxx).
+  abstract (
+    simpl;
+    rewrite id_left;
+    apply pathsinv0;
+    exact (three_comp xxx)
+  ).
 Defined.
 
-Definition c_21 : face_map_2 ⟹ face_map_1.
+Definition c_21_axioms : is_nat_trans _ _ c_21_data.
 Proof.
-  use make_nat_trans.
-  - exact c_21_data.
-  - (* natural transformation commutativity axiom *)
-    intros xxx yyy ff.
+  (* natural transformation commutativity axiom *)
+  intros xxx yyy ff.
 
-    (* use displayed properties to turn path in total category
-    into path in base category, given our displayed properties
+  (* use displayed properties to turn path in total category
+  into path in base category, given our displayed properties
 
-    subtypePath: equality on ∑ x : X, P x is the same as equality
-    on X if P is a predicate (maps to a prop).
-    In the total category, objects are ∑ c : C, D c
-    i.e., objects with displayed data. Morphisms are morphisms
-    with displayed data. Our morphisms displayed data is indeed
-    propositional: commutative diagram.
-    *)
-    apply subtypePath.
-    * (* For any map in the base category, the induced map
-      on the displayed category is a property.
+  subtypePath: equality on ∑ x : X, P x is the same as equality
+  on X if P is a predicate (maps to a prop).
+  In the total category, objects are ∑ c : C, D c
+  i.e., objects with displayed data. Morphisms are morphisms
+  with displayed data. Our morphisms displayed data is indeed
+  propositional: commutative diagram.
+  *)
+  apply subtypePath.
+  * (* For any map in the base category, the induced map
+    on the displayed category is a property.
 
-      This is because the induced map is a commuting square,
-      so an equality between maps. Therefore, the homset property
-      says this is a property. *)
-      intro f.
-      simpl.
-      apply homset_property.
-    * (* We are left to prove the commutativity in the base category,
-      given our displayed properties. This is effectively just commutativity
-      in the bottom square. *)
-      cbn.
-      rewrite id_left, id_right.
-      apply pathsdirprod; trivial.
-      symmetry.
-      exact (pr2 (three_mor_comm ff)).
-Defined.
+    This is because the induced map is a commuting square,
+    so an equality between maps. Therefore, the homset property
+    says this is a property. *)
+    intro f.
+    simpl.
+    apply homset_property.
+  * (* We are left to prove the commutativity in the base category,
+    given our displayed properties. This is effectively just commutativity
+    in the bottom square. *)
+    cbn.
+    rewrite id_left, id_right.
+    apply pathsdirprod; trivial.
+    symmetry.
+    exact (pr2 (three_mor_comm ff)).
+Qed.
+
+Definition c_21 : face_map_2 ⟹ face_map_1 :=
+    (_,, c_21_axioms).
 
 Definition c_10_data : nat_trans_data face_map_1 face_map_0.
 Proof.
@@ -184,25 +183,28 @@ Proof.
   intro xxx.
   simpl.
   exists (make_dirprod (three_mor01 xxx) (identity _)).
-  simpl.
-  rewrite id_right.
-  exact (three_comp xxx).
+  abstract (
+    simpl;
+    rewrite id_right;
+    exact (three_comp xxx)
+  ).
 Defined.
 
-Definition c_10 : face_map_1 ⟹ face_map_0.
+Definition c_10_axioms : is_nat_trans _ _ c_10_data.
 Proof.
-  use make_nat_trans.
-  - exact c_10_data.
-  - intros xxx yyy ff.
-    apply subtypePath.
-    * intro x.
-      apply homset_property.
-    * cbn.
-      rewrite id_left, id_right.
-      apply pathsdirprod; trivial.
-      symmetry.
-      exact (pr1 (three_mor_comm ff)).
-Defined.
+  intros xxx yyy ff.
+  apply subtypePath.
+  - intro x.
+    apply homset_property.
+  - cbn.
+    rewrite id_left, id_right.
+    apply pathsdirprod; trivial.
+    symmetry.
+    exact (pr1 (three_mor_comm ff)).
+Qed.
+
+Definition c_10 : face_map_1 ⟹ face_map_0 :=
+    (_,, c_10_axioms).
 
 End Face_maps.
 
@@ -241,7 +243,7 @@ Lemma functorial_factorization_splits_face_map_1 {C : category} (F : functorial_
 Proof.
   apply functor_eq; trivial.
   apply homset_property.
-Defined.
+Qed.
 
 Definition fact_L {C : category} (F : functorial_factorization C) : arrow C ⟶ arrow C :=
     F ∙ face_map_2.
@@ -254,7 +256,7 @@ Lemma LR_compatibility {C : category} (F : functorial_factorization C) :
 Proof.
   intro.
   exact (three_comp _).
-Defined.
+Qed.
 
 Definition Φ {C : category} (F : functorial_factorization C) :
     (fact_L F) ⟹ (functor_identity (arrow C)) :=
@@ -418,15 +420,17 @@ f |   α   |λf  η  | f
   B ---> Kf ----> B  ~~> id_B
      s       ρ_f
 *)
-Lemma L_map_section {C : category} {n : nwfs C} {a b : C} {f : a --> b} (hf : nwfs_L_maps n f) :
-    ∑ s, f · s = arrow_mor (fact_L n f) × 
-         s · arrow_mor (fact_R n f) = identity _.
+Lemma L_map_section_comm {C : category} {n : nwfs C} {a b : C} {f : a --> b} 
+    (hf : nwfs_L_maps n f) (s := pr211 hf) :
+  f · s = arrow_mor (fact_L n f) × 
+     s · arrow_mor (fact_R n f) = identity _.
 Proof.
-  destruct hf as [[[ida s] αfcomm] [hαfη _]].
+  set (ida := pr111 hf).
+  set (αfcomm := pr21 hf).
+  set (hαfη := pr12 hf).
+  
   cbn in ida, s, αfcomm.
   simpl in hαfη.
-
-  exists s.
 
   (* top line of hαfη: *)
   assert (ida = identity a) as Hida.
@@ -443,6 +447,7 @@ Proof.
   - (* f ⋅ s = λ_f *)
     (* commutativity and ida = identity a *)
     specialize (αfcomm) as αfcomm'. 
+    unfold ida in Hida.
     rewrite Hida, id_left in αfcomm'.
     apply pathsinv0.
     exact αfcomm'.
@@ -450,6 +455,14 @@ Proof.
     (* bottom line of hαfη *)
     set (bottom_line := dirprod_pr2 (pathsdirprodweq (base_paths _ _ hαfη))).
     exact bottom_line.
+Qed.
+
+Lemma L_map_section {C : category} {n : nwfs C} {a b : C} {f : a --> b} (hf : nwfs_L_maps n f) :
+    ∑ s, f · s = arrow_mor (fact_L n f) × 
+         s · arrow_mor (fact_R n f) = identity _.
+Proof.
+  exists (pr211 hf).
+  apply L_map_section_comm.
 Defined.
 
 (*
@@ -461,15 +474,17 @@ g |   η   |ρg  α  | g
   v       v       v
   D ===== D ===== D  ~~> id_D
 *)
-Lemma R_map_section {C : category} {n : nwfs C} {c d : C} {g : c --> d} (hg : nwfs_R_maps n g) :
-    ∑ p, p · g = arrow_mor (fact_R n g) × 
-         arrow_mor (fact_L n g) · p = identity _.
+Lemma R_map_section_comm {C : category} {n : nwfs C} {c d : C} {g : c --> d} 
+    (hg : nwfs_R_maps n g) (p := pr111 hg) :
+  p · g = arrow_mor (fact_R n g) × 
+      arrow_mor (fact_L n g) · p = identity _.
 Proof.
-  destruct hg as [[[p idd] αgcomm] [hαgη _]].
+  set (idd := pr211 hg).
+  set (αgcomm := pr21 hg).
+  set (hαgη := pr12 hg).
+  
   cbn in p, idd, αgcomm.
   simpl in hαgη.
-
-  exists p.
 
   (* bottom line of hαgη: *)
   assert (idd = identity d) as Hidd.
@@ -486,12 +501,21 @@ Proof.
   - (* p ⋅ g = ρ_g *)
     (* commutativity and ida = identity a *)
     specialize (αgcomm) as αgcomm'. 
+    unfold idd in Hidd.
     rewrite Hidd, id_right in αgcomm'.
     exact αgcomm'.
   - (* λg · p = id_c *)
     (* top line of hαfη *)
     set (top_line := dirprod_pr1 (pathsdirprodweq (base_paths _ _ hαgη))).
     exact top_line.
+Qed.
+
+Lemma R_map_section {C : category} {n : nwfs C} {c d : C} {g : c --> d} (hg : nwfs_R_maps n g) :
+    ∑ p, p · g = arrow_mor (fact_R n g) × 
+         arrow_mor (fact_L n g) · p = identity _.
+Proof.
+  exists (pr111 hg).
+  apply R_map_section_comm.
 Defined.
 
 Lemma L_map_R_map_elp {C : category} {n : nwfs C} {a b c d : C}
@@ -530,40 +554,40 @@ Proof.
   *)
 
   exists (s · Khk · p).
-  split.
-  - (* f · (s · Khk · p) = h *)
-    rewrite assoc, assoc.
-    rewrite Hs0.
-    (* λ_f · Khk · p = h *)
-    (* rewrite Hhk0 : (λ_f · Hhk = h · λ_g) *)
-    etrans.
-    apply maponpaths_2.
-    exact Hhk0.
-    (* h · λ_g · p = h *)
-    (* rewrite Hp1 : (λ_g · p = id_C) *)
-    rewrite <- assoc.
-    etrans.
-    apply maponpaths.
-    exact Hp1.
-    (* h · id_C = h *)
-    now rewrite id_right.
-  - (* s · Khk · p · g = k *)
-    rewrite <- (assoc _ p g).
-    rewrite Hp0.
-    (* s · Khk · ρ_g = k *)
-    (* rewrite Hhk1 : ρ_f · k = Khk · ρ_g *)
-    rewrite <- assoc.
-    etrans.
-    apply maponpaths.
-    exact (pathsinv0 Hhk1).
-    (* s · ρ_f · k = k *)
-    (* rewrite Hs1 : s · ρ_f = id_B *)
-    rewrite assoc.
-    etrans.
-    apply maponpaths_2.
-    exact Hs1.
-    (* id_B · k = k *)
-    now rewrite id_left.
+  
+  abstract (
+    split; [
+      (* f · (s · Khk · p) = h *)
+      rewrite assoc, assoc;
+      rewrite Hs0;
+      (* λ_f · Khk · p = h *)
+      (* rewrite Hhk0 : (λ_f · Hhk = h · λ_g) *)
+      etrans; [apply maponpaths_2;
+               exact Hhk0|];
+      (* h · λ_g · p = h *)
+      (* rewrite Hp1 : (λ_g · p = id_C) *)
+      rewrite <- assoc;
+      etrans; [apply maponpaths;
+               exact Hp1|];
+      (* h · id_C = h *)
+      now rewrite id_right
+    | (* s · Khk · p · g = k *)
+      rewrite <- (assoc _ p g);
+      rewrite Hp0;
+      (* s · Khk · ρ_g = k *)
+      (* rewrite Hhk1 : ρ_f · k = Khk · ρ_g *)
+      rewrite <- assoc;
+      etrans; [apply maponpaths;
+               exact (pathsinv0 Hhk1)|];
+      (* s · ρ_f · k = k *)
+      (* rewrite Hs1 : s · ρ_f = id_B *)
+      rewrite assoc;
+      etrans; [apply maponpaths_2;
+               exact Hs1|];
+      (* id_B · k = k *)
+      now rewrite id_left
+    ]
+  ).
 Defined.
 
 
@@ -594,7 +618,7 @@ Proof.
   - apply homset_property.
   - intro. (* ~~> identity x = identity x *)
     trivial.
-Defined.
+Qed.
 
 Definition Ff_precategory_ob_mor (C : category) : precategory_ob_mor.
 Proof.

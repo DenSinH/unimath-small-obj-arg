@@ -62,7 +62,7 @@ Definition mors_to_arrow_mor {C : category} {a b x y : C} (f : a --> b) (g : x -
 Proof.
   use tpair.
   - exact (make_dirprod h k).
-  - exact H.
+  - abstract (exact H).
 Defined.
 
 Definition opp_arrow {C : category} (g : arrow C) : arrow (op_cat C) :=

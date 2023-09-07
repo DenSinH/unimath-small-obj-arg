@@ -794,7 +794,7 @@ Proof.
     use (MorphismsOutofPushoutEqual 
       (isPushout_Pushout (morcls_lp_coprod_diagram_pushout J g (CC _) POs))).
     * 
-      (* etrans. apply assoc.
+      etrans. apply assoc.
       etrans. apply maponpaths_2.
               use PushoutArrow_PushoutIn1.
       etrans. apply assoc'.
@@ -809,11 +809,11 @@ Proof.
       etrans. apply assoc'.
       etrans. apply maponpaths.
               apply PushoutArrow_PushoutIn1.
-      etrans. apply assoc. *)
-      pushout_dragthrough.
+      etrans. apply assoc.
+      (* pushout_dragthrough.
       etrans. apply assoc.
       apply pathsinv0.
-      etrans. apply assoc.
+      etrans. apply assoc. *)
 
       apply cancel_postcomposition.
       cbn.
@@ -821,7 +821,7 @@ Proof.
       apply pathsinv0.
       etrans. use CoproductOfArrowsInclusion_comp.
 
-      unfold CoproductOfArrowsInclusion.
+      (* unfold CoproductOfArrowsInclusion. *)
       use CoproductArrowUnique.
       intro.
       simpl.
@@ -832,14 +832,6 @@ Proof.
       do 2 (etrans; [apply id_left|]).
 
       morcls_lp_coproduct_in_eq.
-      (* Ltac test := match goal with 
-        (* |- CoproductIn ?cc (?f,, ?S) = CoproductIn ?cc (?f,, ?S') *)
-        |- CoproductIn _ ?S = CoproductIn _ ?S'
-           => set (TYPES := S); set (TYPES' := S')
-        end.
-      test.
-      apply (CoproductInLiftingProblemsEqCod
-                (S' := pr2 TYPES')). *)
       
       apply subtypePath; [intro; apply homset_property|].
       apply pathsdirprod; cbn.
@@ -849,10 +841,10 @@ Proof.
         etrans. apply (CoproductInCommutes (morcls_lp_dom_coprod J g' (CC _)) _ (_,, _)).
         reflexivity.
       + 
-        (* etrans. apply assoc'.
+        etrans. apply assoc'.
         etrans. apply maponpaths.
-                apply PushoutArrow_PushoutIn1. *)
-        pushout_dragthrough.
+                apply PushoutArrow_PushoutIn1.
+        (* pushout_dragthrough. *)
         etrans. apply assoc.
         etrans. apply maponpaths_2.
                 apply  (CoproductInCommutes (morcls_lp_cod_coprod J g (CC _))).
@@ -860,24 +852,24 @@ Proof.
         etrans. apply id_left.
         reflexivity.
     * 
-      (* etrans. apply assoc.
+      etrans. apply assoc.
       etrans. apply maponpaths_2.
               use PushoutArrow_PushoutIn2.
       etrans. rewrite assoc'.
               apply maponpaths.
-              apply PushoutArrow_PushoutIn2.  *)
-      pushout_dragthrough.
+              apply PushoutArrow_PushoutIn2. 
+      (* pushout_dragthrough. *)
       etrans. now rewrite assoc, id_right.
 
       apply pathsinv0.
-      (* etrans. apply assoc.
+      etrans. apply assoc.
       etrans. apply maponpaths_2.
               apply PushoutArrow_PushoutIn2.
       etrans. rewrite assoc'.
               apply maponpaths.
-              apply PushoutArrow_PushoutIn2. *)
+              apply PushoutArrow_PushoutIn2.
       etrans. apply id_left.
-      pushout_dragthrough.
+      (* pushout_dragthrough. *)
 
       reflexivity.
 Qed.

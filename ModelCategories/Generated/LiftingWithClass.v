@@ -27,6 +27,7 @@ Require Import CategoryTheory.ModelCategories.Retract.
 Require Import CategoryTheory.ModelCategories.Lifting.
 Require Import CategoryTheory.ModelCategories.NWFS.
 Require Import CategoryTheory.ModelCategories.NWFSisWFS.
+Require Import CategoryTheory.ModelCategories.Generated.Helpers.
 
 Require Import CategoryTheory.DisplayedCats.Examples.MonadAlgebras.
 Require Import CategoryTheory.limits.coproducts.
@@ -115,9 +116,11 @@ Proof.
     {
       trivial.
     }
-    rewrite X, assoc.
-    rewrite mn, mn', assoc.
-    reflexivity.
+    abstract (
+      rewrite X, assoc;
+      rewrite mn, mn', assoc;
+      reflexivity
+    ).
 Defined.
 
 Definition rlp_morcls (J : morphism_class C) : category := 
@@ -164,7 +167,6 @@ Proof.
   intros f f' ff ff' S Sisalg g Jg Sgf.
   unfold morcls_L_map_structure in η.
   simpl.
-
   unfold three_mor11.
   simpl.
   (* cancel precomposition with  
@@ -174,7 +176,14 @@ Proof.
 
   (* cancel precomposition with 
     three_mor11 (#n Sgf)*)
+  (* first "fix" the morphisms, since the (propositional) 
+     commutativity is not equal *)
+  etrans. apply maponpaths_2.
+  use (section_disp_on_eq_morphisms' (nwfs_fact n) (γ := Sgf)).
+
   apply pathsinv0.
+  etrans. apply maponpaths_2.
+          use (section_disp_on_eq_morphisms' (nwfs_fact n) (γ := Sgf · S)).
   etrans. apply maponpaths_2, maponpaths.
           apply (section_disp_comp (nwfs_fact n)).
   simpl.
@@ -192,7 +201,7 @@ Proof.
     |      |      |
     |   λf |      |λf'
     |      v S11  v
-  ρf | αf    +++++> +++++++>
+ ρf | αf    +++++> +++++++>
     |      |      |        |
     |   ρf |      |ρf' αf' | f'
     v      v      v        v
@@ -300,10 +309,9 @@ Definition morcls_lp_coprod :=
 (* the canonical diagram capturing all lifting problems in J *)
 Definition morcls_lp_coprod_diagram : morcls_lp_coprod --> g.
 Proof.
-  use tpair.
-  - split.
-    * exact (CoproductArrow (morcls_lp_dom_coprod) (λ j, arrow_mor00 j)).
-    * exact (CoproductArrow (morcls_lp_cod_coprod) (λ j, arrow_mor11 j)).
+  use mors_to_arrow_mor.
+  - exact (CoproductArrow (morcls_lp_dom_coprod) (λ j, arrow_mor00 j)).
+  - exact (CoproductArrow (morcls_lp_cod_coprod) (λ j, arrow_mor11 j)).
   - abstract (
       unfold morcls_lp_coprod;
       simpl;

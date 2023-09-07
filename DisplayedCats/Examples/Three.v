@@ -37,28 +37,28 @@ Defined.
 Definition three_id_comp : disp_cat_id_comp _ three_disp_ob_mor.
 Proof.
   split.
-  - simpl.
-    intros.
+  - intros.
     (* middle morphism is also identity *)
     exists (identity _).
-    split; now rewrite id_left, id_right.
-  - simpl.
-    intros.
+    abstract (split; now rewrite id_left, id_right).
+  - intros.
     destruct X as [f0 [H0 H1]].
     destruct X0 as [g0 [K0 K1]].
+
     (* middle map of composite is composite of middle maps *)
     exists (f0 · g0).
-    split.
-    * abstract (
+    abstract (
+      simpl;
+      split; [
         rewrite assoc, H0, <- assoc;
         etrans; [apply maponpaths; exact K0|];
         now rewrite assoc
-      ).
-    * abstract (
+      |
         rewrite <- assoc, <- K1, assoc, assoc;
         apply cancel_postcomposition;
         exact H1
-      ).
+      ]
+    ).
 Defined.
 
 Definition three_data : disp_cat_data _ :=

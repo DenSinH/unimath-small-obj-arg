@@ -15,6 +15,7 @@ Require Import CategoryTheory.DisplayedCats.natural_transformation.
 Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
 Require Import CategoryTheory.ModelCategories.NWFS.
+Require Import CategoryTheory.ModelCategories.Generated.Helpers.
 Require Import CategoryTheory.ModelCategories.Generated.FFMonoidalStructure.
 
 Local Open Scope cat.
@@ -180,6 +181,30 @@ Definition LNWFS_tot_l_prewhisker (L : total_category (LNWFS C))
 Notation "l L⊗pre τ" := (LNWFS_l_prewhisker l τ) (at level 50).
 Notation "l Ltot⊗pre τ" := (LNWFS_tot_l_prewhisker l τ) (at level 50).
 
+(* todo: we _could_ do this for LNWFS (displayed) as well, but
+   it involves a bunch of transportf's, and I don't know if we
+   want to even use this *)
+Lemma LNWFS_tot_l_prewhisker_id
+    (L Λ : total_category (LNWFS C)) :
+  (L Ltot⊗pre identity Λ) = identity _.
+Proof.
+  apply subtypePath; [intro; apply isaprop_lnwfs_mor_axioms|].
+  cbn.
+  etrans. use Ff_l_prewhisker_id.
+  reflexivity.
+Qed.
+
+Lemma LNWFS_tot_l_prewhisker_comp
+    (L : total_category (LNWFS C)) 
+    {Λ Λ' Λ'': total_category (LNWFS C)} 
+    (τ : Λ --> Λ') (τ' : Λ' --> Λ''):
+  (L Ltot⊗pre (τ · τ')) = (L Ltot⊗pre τ) · (L Ltot⊗pre τ').
+Proof.
+  apply subtypePath; [intro; apply isaprop_lnwfs_mor_axioms|].
+  cbn.
+  etrans. use Ff_l_prewhisker_comp.
+  reflexivity.
+Qed.
 
 Definition LNWFS_l_postwhisker {F G G': Ff C}
     {Λ : LNWFS _ G} {Λ' : LNWFS _ G'} {τG : G --> G'} 
@@ -196,6 +221,28 @@ Definition LNWFS_tot_l_postwhisker {Λ Λ' : total_category (LNWFS C)}
 
 Notation "τ L⊗post l" := (LNWFS_l_postwhisker τ l) (at level 50).
 Notation "τ Ltot⊗post l" := (LNWFS_tot_l_postwhisker τ l) (at level 50).
+
+Lemma LNWFS_tot_l_postwhisker_id
+    (Λ L : total_category (LNWFS C)) :
+  ((identity Λ) Ltot⊗post L) = identity _.
+Proof.
+  apply subtypePath; [intro; apply isaprop_lnwfs_mor_axioms|].
+  cbn.
+  etrans. use Ff_l_postwhisker_id.
+  reflexivity.
+Qed.
+
+Lemma LNWFS_tot_l_postwhisker_comp
+    {Λ Λ' Λ'': total_category (LNWFS C)} 
+    (τ : Λ --> Λ') (τ' : Λ' --> Λ'')
+    (L : total_category (LNWFS C)) :
+  ((τ · τ') Ltot⊗post L) = (τ Ltot⊗post L) · (τ' Ltot⊗post L).
+Proof.
+  apply subtypePath; [intro; apply isaprop_lnwfs_mor_axioms|].
+  cbn.
+  etrans. use Ff_l_postwhisker_comp.
+  reflexivity.
+Qed.
 
 Definition LNWFS_l_assoc {F F' F'' : Ff C} 
     (L : LNWFS _ F) (L' : LNWFS _ F') (L'' : LNWFS _ F'') :
@@ -233,6 +280,48 @@ Definition LNWFS_tot_l_mor_comp {L L' Λ Λ' : total_category (LNWFS C)}
     (τ : L --> L') (ρ : Λ --> Λ') :
   (L Ltot⊗ Λ) --> (L' Ltot⊗ Λ') :=
     (_,, LNWFS_l_mor_comp (pr2 τ) (pr2 ρ)).
+
+Definition LNWFS_l_point {F : Ff C} (L : LNWFS _ F) :
+    LNWFS_lcomp_unit -->[Ff_l_point F] L.
+Proof.
+
+Admitted.  (* Qed. *)
+
+Definition LNWFS_tot_l_point (L : total_category (LNWFS C)) :
+    LNWFS_tot_lcomp_unit --> L :=
+  (_,, LNWFS_l_point (pr2 L)).
+
+Lemma LNWFS_tot_mor_eq {L L' : total_category (LNWFS C)} 
+    (τ τ' : L --> L') :
+  (∏ (f : arrow C), pr1 (pr11 τ f) = pr1 (pr11 τ' f)) -> 
+      τ = τ'.
+Proof.
+  intro H.
+  apply subtypePath; [intro; apply isaprop_lnwfs_mor_axioms|].
+  apply subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|].
+  apply funextsec.
+  intro f.
+  apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
+  exact (H f).
+Qed.
+
+
+Lemma LNWFS_tot_l_id_left_rev_comp (X A : total_category (LNWFS C)) :
+    LNWFS_tot_l_id_left_rev (X Ltot⊗ A) = 
+    (LNWFS_tot_l_id_left_rev X Ltot⊗post A) · LNWFS_tot_l_assoc _ _ _.
+Proof.
+  apply LNWFS_tot_mor_eq.
+  intro f.
+  cbn.
+  apply pathsinv0.
+  etrans. apply pr1_transportf_const.
+  cbn.
+  rewrite id_right.
+  etrans. use (section_disp_on_eq_morphisms' (pr1 A) (γ := identity _)).
+  etrans. apply maponpaths. use (section_disp_id (pr1 A)).
+  reflexivity.
+Qed. 
+
 
 End LNWFS_composition.
 
