@@ -88,26 +88,15 @@ Proof.
     reflexivity.
   - intros f f' f'' γ γ'.
     apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
-    simpl.
+    (* simpl.
     unfold arrow_mor00, three_mor11.
-    simpl.
-    etrans.
-    {
-      rewrite (section_disp_comp F _ _ _).
-      reflexivity.
-    }
-    (* cbn.
-    unfold three_mor11.
-    cbn. *)
+    simpl. *)
 
-    set (Fγ := #(fact_R F) γ).
-    set (Fγ' := #(fact_R F) γ').
-    
-    etrans. use (section_disp_on_eq_morphisms' _ (γ := Fγ · Fγ')).
-    etrans. apply maponpaths.
-            apply (section_disp_comp F' _ _ _). 
-    (* cbn. *)
-    reflexivity.
+    apply pathsinv0.
+    etrans. apply pr1_section_disp_on_morphisms_comp.
+    use section_disp_on_eq_morphisms.
+    * apply pr1_section_disp_on_morphisms_comp.
+    * reflexivity.
 Qed.
 
 Definition Ff_lcomp (F F' : Ff C) : Ff C :=
@@ -212,12 +201,17 @@ Proof.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
   
   etrans. use pr1_transportf_const.
-  simpl.
-  rewrite id_right, id_left.
-  unfold three_mor11.
-  cbn.
-  unfold three_mor22.
-  use section_disp_on_eq_morphisms'.
+
+  (* simpl makes it very slow *)
+  (* simpl. *)
+  etrans. apply id_right.
+  apply pathsinv0.
+  etrans. apply id_left.
+    
+  (* unfold three_mor11.
+  cbn. *)
+  
+  use (section_disp_on_eq_morphisms F (γ := γ)); reflexivity.
 Qed.
 
 Definition Ff_l_id_left (F : Ff C) : (Ff_lcomp_unit ⊗ F) --> F :=
@@ -241,10 +235,14 @@ Proof.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
   
   etrans. use pr1_transportf_const.
-  simpl.
-  rewrite id_right, id_left.
+  
+  (* simpl makes it very slow *)
+  (* simpl. *)
+  etrans. apply id_right.
   apply pathsinv0.
-  use section_disp_on_eq_morphisms'.
+  etrans. apply id_left.
+
+  use section_disp_on_eq_morphisms; reflexivity.
 Qed.
 
 Definition Ff_l_id_left_rev (F : Ff C) : F --> (Ff_lcomp_unit ⊗ F) :=
@@ -276,24 +274,17 @@ Definition Ff_l_prewhisker_axioms (F : Ff C) {G G'} (τ : section_nat_trans_disp
     section_nat_trans_disp_axioms (Ff_l_prewhisker_data F τ).
 Proof.
   intros f f' γ.
-  
-  destruct τ as [τ τax].
-  unfold section_nat_trans_disp_axioms in τax.
-  (* it should just be this... *)
-  set (test := τax _ _ (#(fact_R F) γ)).
-
-
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
   
   etrans. use pr1_transportf_const.
-  simpl.
-  unfold three_mor11.
-  cbn.
+
+  destruct τ as [τ τax].
+  set (τcommf := base_paths _ _ (τax _ _ (#(fact_R F) γ))).
   apply pathsinv0.
-  (* τ (ρf) · (G' (Fγ)) *)
-  (* this is effectively the naturality of τ *)
-  admit.
-Admitted.
+  etrans. exact (pathsinv0 τcommf).
+  etrans. use pr1_transportf_const.
+  reflexivity.
+Qed.
 
 Definition Ff_l_prewhisker (F : Ff C) {G G'} (τ : G --> G') :
     (F ⊗ G) --> (F ⊗ G') :=
@@ -316,9 +307,9 @@ Lemma Ff_l_prewhisker_comp (F : Ff C) {G G' G'' : Ff C}
 Proof.
   use section_nat_trans_eq; intro f.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
-  cbn.
+  (* cbn makes it very slow *)
+  (* cbn. *)
 
-  (* todo: capture this in a lemma *)
   etrans. use (pr1_transportf_const).
   apply pathsinv0.
   etrans. use (pr1_transportf_const).
@@ -379,18 +370,31 @@ Proof.
   intros f f' γ.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
   
-  etrans. use (pr1_transportf (id_right γ @ ! id_left γ) _).
-  cbn; rewrite transportf_const.
-  simpl.
+  etrans. use pr1_transportf_const.
+  (* simpl.
   unfold three_mor11.
-  cbn.
-  (* destruct τ as [τ τax].
-  unfold section_nat_trans_disp_axioms in τax.
-  set (test := τax _ _ (#(fact_R F) γ)).
-  apply pathsinv0. *)
-  (* this is effectively the naturality of τ *)
-  admit.
-Admitted.
+  cbn. *)
+
+  etrans. use pr1_section_disp_on_morphisms_comp.
+  apply pathsinv0.
+  etrans. use pr1_section_disp_on_morphisms_comp.
+
+  (* destruct τ as [τ τax]. *)
+  (* unfold section_nat_trans_disp_axioms in τax. *)
+  set (τcommf := base_paths _ _ 
+                  ((section_nt_disp_axioms_from_section_nt_disp τ) _ _ γ)).
+
+  use section_disp_on_eq_morphisms.
+  - (* cbn makes it very slow *)
+    (* cbn. *)
+    etrans. exact (pathsinv0 τcommf).
+    etrans. use pr1_transportf_const.
+    reflexivity.
+  - etrans. apply id_left.
+    apply pathsinv0.
+    etrans. apply id_right.
+    reflexivity.
+Qed.
 
 Definition Ff_l_postwhisker {G G'} (τ : G --> G') (F : Ff C) :
     (G ⊗ F) --> (G' ⊗ F) :=
@@ -403,14 +407,15 @@ Lemma Ff_l_postwhisker_id (G F : Ff C) :
 Proof.
   use section_nat_trans_eq; intro f.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
-  cbn.
+  (* cbn makes it very slow *)
+  (* cbn. *)
   etrans. use (section_disp_on_eq_morphisms' F (γ := identity _)).
   etrans. apply maponpaths.
           use (section_disp_id F _).
   reflexivity.
 Qed.
 
-Lemma three_disp11_comp {x x' x'' : arrow C} {γ : x --> x'} (γ' : x' --> x'')
+Local Lemma three_disp11_comp {x x' x'' : arrow C} {γ : x --> x'} (γ' : x' --> x'')
     {f : three_disp _ x} {f' : three_disp _ x'} {f'' : three_disp _ x''}
     (Γ : f -->[γ] f') (Γ' : f' -->[γ'] f'') :
   pr1 Γ · pr1 Γ' = pr1 (comp_disp Γ Γ').
@@ -428,10 +433,9 @@ Proof.
   apply pathsinv0.
   etrans. use (pr1_transportf_const).
   
-  cbn.
+  (* cbn. *)
   etrans. apply three_disp11_comp.
-  etrans. apply maponpaths.
-          exact (pathsinv0 (section_disp_comp F _ _ _ _ _)).
+  etrans. use (pr1_section_disp_on_morphisms_comp F).
   
   use (section_disp_on_eq_morphisms F).
   - apply pathsinv0.
@@ -457,20 +461,18 @@ Proof.
   intros f f' γ.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
   
-  (* for some reason this becomes insanely slow *)
-  (* etrans. use (pr1_transportf (id_right γ @ ! id_left γ) _).
-  etrans.
-  {
-    rewrite transportf_const.
-    reflexivity.
-  }
-  cbn.
-  rewrite id_left.
-  rewrite id_right.
-  unfold three_mor11.
-  cbn. *)
-  admit.
-Admitted.
+  etrans. use pr1_transportf_const.
+  (* cbn makes it very slow *)
+  (* cbn. *)
+  etrans. apply id_right.
+  apply pathsinv0.
+  etrans. apply id_left.
+  
+  (* unfold three_mor11.
+  simpl. *)
+
+  use (section_disp_on_eq_morphisms F''); reflexivity.
+Qed.
 
 Definition Ff_l_assoc (F F' F'' : Ff C) :
     ((F ⊗ F') ⊗ F'') --> (F ⊗ (F' ⊗ F'')) :=
@@ -491,8 +493,23 @@ Defined.
 Definition Ff_l_assoc_rev_axioms (F F' F'' : Ff C) :
     section_nat_trans_disp_axioms (Ff_l_assoc_rev_data F F' F'').
 Proof.
+  intros f f' γ.
+  apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
   
-Admitted.
+  etrans. use pr1_transportf_const.
+  (* cbn makes it very slow *)
+  (* cbn. *)
+  etrans. apply id_right.
+  apply pathsinv0.
+  etrans. apply id_left.
+  
+  (* unfold three_mor11.
+  simpl. *)
+  use section_disp_on_eq_morphisms.
+  - cbn.
+    reflexivity.
+  - reflexivity.
+Qed.
 
 Definition Ff_l_assoc_rev (F F' F'' : Ff C) :
     (F ⊗ (F' ⊗ F'')) --> ((F ⊗ F') ⊗ F'') :=

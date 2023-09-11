@@ -312,15 +312,15 @@ Lemma LNWFS_tot_l_id_left_rev_comp (X A : total_category (LNWFS C)) :
 Proof.
   apply LNWFS_tot_mor_eq.
   intro f.
-  cbn.
+  (* cbn. *)
   apply pathsinv0.
   etrans. apply pr1_transportf_const.
-  cbn.
-  rewrite id_right.
+  (* cbn. *)
+  etrans. apply id_right.
   etrans. use (section_disp_on_eq_morphisms' (pr1 A) (γ := identity _)).
   etrans. apply maponpaths. use (section_disp_id (pr1 A)).
   reflexivity.
-Qed. 
+Qed.
 
 
 End LNWFS_composition.

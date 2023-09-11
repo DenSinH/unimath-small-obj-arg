@@ -5,6 +5,7 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
+Require Import CategoryTheory.DisplayedCats.natural_transformation.
 
 Local Open Scope cat.
 
@@ -39,6 +40,36 @@ Proof.
   use section_disp_on_eq_morphisms.
   - reflexivity.
   - reflexivity.
+Qed.
+
+Lemma pr1_section_disp_on_morphisms_comp {C : category}
+    (F : section_disp (three_disp C))
+    {f f' f'' : arrow C}
+    (γ : f --> f') (γ' : f' --> f'') :
+  pr1 (section_disp_on_morphisms F γ) · pr1 (section_disp_on_morphisms F γ') =
+      pr1 (section_disp_on_morphisms F (γ · γ')).
+Proof.
+  apply pathsinv0.
+  etrans. apply maponpaths.
+          apply (section_disp_comp F).
+  reflexivity.
+Qed.
+
+Lemma eq_section_disp_on_morphism {C : category}
+    {F F' : section_disp (three_disp C)} :
+  F = F' -> ∏ f, F f = F' f.
+Proof.
+  intro H.
+  now rewrite H.
+Qed.
+
+Lemma eq_section_nat_trans_disp_on_morphism {C : category}
+    {F F' : section_disp (three_disp C)}
+    {γ γ' : section_nat_trans_disp F F'} :
+  γ = γ' -> ∏ f, γ f = γ' f. 
+Proof.
+  intro H.
+  now rewrite H.
 Qed.
 
 Lemma pr1_transportf_const {A : UU} {B : UU} {P : ∏ (a : A), B -> UU}
