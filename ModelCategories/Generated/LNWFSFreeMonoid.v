@@ -119,6 +119,7 @@ Proof.
      are identity, sadly the terms become a bit too big... *)
   use LNWFS_tot_mor_eq.
   intro f.
+  
   (* todo: make Ff_comp: (F · F') f = F f · F' f lemma *)
 Admitted.
 
@@ -241,27 +242,95 @@ Definition LNWFS_alg_forgetful_functor (T : LNWFSC) :
 Definition alg_forgetful_functor_right_action_is_adjoint {T : LNWFSC} (X : LNWFS_alg T) : UU :=
     are_adjoints (LNWFS_alg_right_action X) (LNWFS_alg_forgetful_functor T).  
 
+Definition alg_forgetful_functor_right_action_unit_for_limit_data
+    {T : LNWFSC} (X : LNWFS_alg T) :
+  nat_trans_data (functor_identity _) (LNWFS_alg_right_action X ∙ LNWFS_alg_forgetful_functor T).
+Proof.
+  intro L.
+  exact (LNWFS_tot_l_id_left_rev L · 
+        (LNWFS_tot_l_point (pr1 X) Ltot⊗post L)).
+Defined.
+
+Definition alg_forgetful_functor_right_action_unit_for_limit_ax
+    {T : LNWFSC} (X : LNWFS_alg T) :
+  is_nat_trans _ _ (alg_forgetful_functor_right_action_unit_for_limit_data X).
+Proof.
+  (* intros L L' γ.
+  use LNWFS_tot_mor_eq.
+  intro f.
+  simpl.
+  etrans. use pr1_transportf_const.
+  etrans. 
+  {
+    simpl.
+    apply maponpaths.
+    etrans. use pr1_transportf_const.
+    reflexivity.
+  }
+  apply pathsinv0.
+  etrans. use pr1_transportf_const.
+  etrans. 
+  {
+    simpl.
+    apply maponpaths_2.
+    use pr1_transportf_const.
+  }
+  simpl.
+  etrans. apply assoc'.
+  etrans. apply id_left. *)
+Admitted.
+
+Definition alg_forgetful_functor_right_action_counit_for_limit_data
+    {T : LNWFSC} (X : LNWFS_alg T) :
+  nat_trans_data (LNWFS_alg_forgetful_functor T ∙ LNWFS_alg_right_action X) (functor_identity _).
+Proof.
+  intro L.
+  (* X ⊗ L --> L *)
+  simpl.
+  (* I think the definition of free monoid says that there is a map
+     I --> X which induces an iso on the algebras. The inverse should induce
+     X ⊗ L --> I ⊗ L --> L *)
+Admitted.
+
+Definition alg_forgetful_functor_right_action_counit_for_limit_ax
+    {T : LNWFSC} (X : LNWFS_alg T) :
+  is_nat_trans _ _ (alg_forgetful_functor_right_action_counit_for_limit_data X).
+Proof.
+
+Admitted.
+
+Definition alg_forgetful_functor_right_action_form_adjunction
+    {T : LNWFSC} (X : LNWFS_alg T) :
+  form_adjunction (LNWFS_alg_right_action X) (LNWFS_alg_forgetful_functor T)
+    (_,, alg_forgetful_functor_right_action_unit_for_limit_ax X)
+    (_,, alg_forgetful_functor_right_action_counit_for_limit_ax X).
+Proof.
+
+Admitted.
+
+
+
+
 Lemma alg_forgetful_functor_right_action_is_adjoint_for_limit
     {T : LNWFSC} (X : LNWFS_alg T) (* seq on I --> X converges *) :
   alg_forgetful_functor_right_action_is_adjoint X.
 Proof.
   use make_are_adjoints.
-  - (* todo: define ..._left_adj *)
-    admit.
-  - (* todo: define ..._right_adj *)
-    admit.
-  - (* todo: lemma ..._form_adjunction Qed. *)
-    admit.
-Admitted.
+  - exact (_,, alg_forgetful_functor_right_action_unit_for_limit_ax X).
+  - exact (_,, alg_forgetful_functor_right_action_counit_for_limit_ax X).
+  - exact (alg_forgetful_functor_right_action_form_adjunction X).
+Defined.
 
-Definition alg_forgetful_functor_right_action_is_adjoint_induced_mul_data {T : LNWFSC} {X : LNWFS_alg T} 
-    (Adj : alg_forgetful_functor_right_action_is_adjoint X) :
+Definition alg_forgetful_functor_right_action_is_adjoint_induced_mul_data {T : LNWFSC} (X : LNWFS_alg T) 
+    (Adj := alg_forgetful_functor_right_action_is_adjoint_for_limit X) :
   nat_trans_data (functor_composite (fact_R (pr11 X)) (fact_R (pr11 X))) (fact_R (pr11 X)).
 Proof.
   intro f.
-  set (μ := pr11 (counit_from_are_adjoints Adj X)).
-  cbn in μ.
-  set (μf := μ f).
+  set (n := Monad_from_adjunction Adj).
+  set (μ := μ n LNWFS_tot_lcomp_unit).
+  simpl in μ.
+  set (μf := pr1 μ f).
+
   (* todo: make this into three -> arrow (select three_1212) *)
   use mors_to_arrow_mor.
   - exact (three_mor11 μf).
@@ -272,21 +341,25 @@ Proof.
     ).
 Defined.
 
-Definition alg_forgetful_functor_right_action_is_adjoint_induced_mul_ax {T : LNWFSC} {X : LNWFS_alg T} 
-    (Adj : alg_forgetful_functor_right_action_is_adjoint X) :
-  is_nat_trans _ _ (alg_forgetful_functor_right_action_is_adjoint_induced_mul_data Adj).
+Definition alg_forgetful_functor_right_action_is_adjoint_induced_mul_ax {T : LNWFSC} (X : LNWFS_alg T) 
+    (Adj := alg_forgetful_functor_right_action_is_adjoint_for_limit X) :
+  is_nat_trans _ _ (alg_forgetful_functor_right_action_is_adjoint_induced_mul_data X).
 Proof.
   intros f g γ.
+
+  set (n := Monad_from_adjunction Adj).
+  set (μ := μ n LNWFS_tot_lcomp_unit).
+  simpl in μ.
+  set (μf := pr1 μ f).
+  
   apply subtypePath; [intro; apply homset_property|].
   apply pathsdirprod.
-  + cbn.
-    (* nat_trans_ax from μ *)
+  + (* nat_trans_ax from μ *)
+    (* cbn.
     unfold three_mor11.
-    cbn.
-    set (μ := pr11 (counit_from_are_adjoints Adj X)).
-    cbn in μ.
-    set (μf := μ f).
-    set (μax := nat_trans_ax μ _ _ γ).
+    cbn. *)
+
+    set (μax := nat_trans_ax (pr1 μ) _ _ γ).
     set (μax11_path := base_paths _ _ (pathsinv0 (fiber_paths μax))).
     apply pathsinv0.
     etrans. exact μax11_path.
@@ -298,10 +371,10 @@ Proof.
     reflexivity.
 Qed.
 
-Definition alg_forgetful_functor_right_action_is_adjoint_induced_mul {T : LNWFSC} {X : LNWFS_alg T} 
-    (Adj : alg_forgetful_functor_right_action_is_adjoint X) :
+Definition alg_forgetful_functor_right_action_is_adjoint_induced_mul {T : LNWFSC} (X : LNWFS_alg T) 
+    (Adj := alg_forgetful_functor_right_action_is_adjoint_for_limit X) :
   (functor_composite (fact_R (pr11 X)) (fact_R (pr11 X))) ⟹ (fact_R (pr11 X)) :=
-    (_,, alg_forgetful_functor_right_action_is_adjoint_induced_mul_ax Adj).
+    (_,, alg_forgetful_functor_right_action_is_adjoint_induced_mul_ax X).
 
 Lemma eq_section_nat_trans_disp_on_morphism
     {F F' : section_disp (three_disp C)}
@@ -312,30 +385,235 @@ Proof.
   now rewrite H.
 Qed.
 
-Lemma alg_forgetful_functor_right_action_is_adjoint_monad_laws {T : LNWFSC} {X : LNWFS_alg T} 
-    (Adj : alg_forgetful_functor_right_action_is_adjoint X) :
-  Monad_laws (R_monad_data (pr11 X) (alg_forgetful_functor_right_action_is_adjoint_induced_mul Adj)).
+Definition pathscomp1 {X : UU} {a b x y : X} (e1 : a = b) (e2 : a = x) (e3 : b = y) : x = y.
 Proof.
+  induction e1. induction e2. apply e3.
+Qed.
+
+Lemma alg_forgetful_functor_right_action_is_adjoint_monad_laws {T : LNWFSC} (X : LNWFS_alg T) 
+    (Adj := alg_forgetful_functor_right_action_is_adjoint_for_limit X) :
+  Monad_laws (R_monad_data (pr11 X) (alg_forgetful_functor_right_action_is_adjoint_induced_mul X)).
+Proof.
+  set (n := Monad_from_adjunction Adj).
+  set (μ := μ n LNWFS_tot_lcomp_unit).
+  simpl in μ.
+
+  (* this assumption is pretty much in line with one of the axioms
+     in Grandis and Tholen. We need to know something about the adjunction for this though *)
+  assert (HAdj : ∏ f, three_mor11 (#(fact_functor (pr11 X)) (c_10 C (fact_functor (pr11 X) f))) = 
+                 (fact_L (pr11 X) (fact_R (pr11 X) f))).
+  {
+    admit.
+  }
+  (* transparent assert (frf : (∏ f, f --> fact_R (pr11 X) f)).
+  {
+    intro f.
+    use mors_to_arrow_mor.
+    - exact (fact_L (pr11 X) f).
+    - exact (identity _).
+    - abstract (
+        rewrite id_right;
+        exact (three_comp (fact_functor (pr11 X) f))
+    ).
+  } *)
+  
+  (* set (μax1 := @Monad_law1 _ n).
+  set (μax1 := @Monad_law1 _ n).
+  set (μax1 := @Monad_law1 _ n).
+   *)
+  repeat split; (intro f; apply subtypePath; [intro; apply homset_property|]).
+  - apply pathsdirprod; [|apply id_left].
+    set (μax1 := @Monad_law1 _ n LNWFS_tot_lcomp_unit).
+    set (base_μax1 := base_paths _ _ μax1).
+    set (μax1f := eq_section_nat_trans_disp_on_morphism base_μax1 f).
+    set (μax1f11 := base_paths _ _ μax1f).
+
+    apply pathsinv0.
+    etrans. exact (pathsinv0 μax1f11).
+    etrans. use pr1_transportf_const.
+    apply cancel_postcomposition.
+
+    etrans. use pr1_transportf_const.
+    etrans. apply id_left.
+    
+    cbn.
+    unfold three_mor01, three_mor11.
+    cbn.
+
+    apply pathsinv0.
+    etrans. exact (pathsinv0 (HAdj f)).
+    use section_disp_on_eq_morphisms; reflexivity.
+  - apply pathsdirprod; [|apply id_left].
+    set (μax2 := @Monad_law2 _ n LNWFS_tot_lcomp_unit).
+    set (base_μax2 := base_paths _ _ μax2).
+    set (μax2f := eq_section_nat_trans_disp_on_morphism base_μax2 f).
+    set (μax2f11 := base_paths _ _ μax2f).
+
+    apply pathsinv0.
+    etrans. exact (pathsinv0 μax2f11).
+    etrans. use pr1_transportf_const.
+    apply cancel_postcomposition.
+
+    (* cbn.
+    unfold three_mor11.
+    cbn. *)
+
+    etrans. use pr1_transportf_const.
+    etrans. apply id_left.
+    exact (pathsinv0 (HAdj f)).
+  - apply pathsdirprod; [|reflexivity].
+    set (μax3 := @Monad_law3 _ n LNWFS_tot_lcomp_unit).
+    set (base_μax3 := base_paths _ _ μax3).
+    set (μax3f := eq_section_nat_trans_disp_on_morphism base_μax3 f).
+    set (μax3f11 := base_paths _ _ μax3f).
+    
+    cbn.
+    (* cbn in μax3f11. *)
+
+    (* μax3f11 : pr1 (transportf ...) = pr1 (transportf ...) *)
+    (* I think the issue here is that the adjunction does not lie
+       over identity, so the functor in the monad is not actually 
+       (pr11 X), but rather (pr11X L⊗ I) ... *)
+    (* Search (transportf _ _ _ = _ -> _). *)
+    use (pathscomp1 μax3f11).
+    * etrans. use pr1_transportf_const.
+      apply cancel_postcomposition.
+      cbn.
+      unfold three_mor11.
+      simpl.
+      
+      admit.
+    * etrans. use pr1_transportf_const.
+      apply cancel_postcomposition.
+      cbn.
+      unfold three_mor11.
+      simpl.
+
+      admit.
+    apply (pathscomp0 μax3f11).
+    apply pr1_transportf_const in μax3f11.
+
+    
+    simpl in μax3f11.
+
+    cbn.
+    apply cancel_postcomposition.
+    unfold three_mor11.
+    cbn.
+
+    unfold alg_forgetful_functor_right_action_is_adjoint_induced_mul_data.
+    
+
+
+
+    unfold R_monad_data.
+    unfold alg_forgetful_functor_right_action_is_adjoint_induced_mul.
+    unfold alg_forgetful_functor_right_action_is_adjoint_induced_mul_data.
+    
+
+
+    cbn in μax3f11.
+    exact (μax3f11).
+    apply pathsinv0.
+    etrans. exact (pathsinv0 μax3f11).
+    etrans. use pr1_transportf_const.
+    apply cancel_postcomposition.
+
+    cbn.
+    unfold three_mor11.
+    cbn.
+
+
+
+
+
   set (μ := pr11 (counit_from_are_adjoints Adj X)).
   cbn in μ.
   (* triangle1 statement *)
   (* base_paths: T-Alg map -> LNWFS map -> FfC map *)
-  set (tr1 := base_paths _ _ (base_paths _ _ ((pr12 Adj) (pr1 X)))).
+  (* set (tr1 := base_paths _ _ (base_paths _ _ ((pr12 Adj) (pr1 X)))).
   simpl in tr1.
-  (* set (tr2 := base_paths _ _ (base_paths _ _ ((pr22 Adj) X))). *)
+   *)
+  (* base_paths: T-Alg map -> LNWFS map -> FfC map *)
+  set (tr2 := base_paths _ _ ((pr22 Adj) X)).
+  (* simpl in tr2. *)
+
+  assert (∏ f, pr1 (pr11 ((unit_from_are_adjoints Adj) (pr1 X)) f) =
+          pr1 (section_disp_on_morphisms (pr111 X) (c_10_data C (f,, (pr111 X) f)))) as HAdj.
+  {
+    admit.
+  }
 
   repeat split; (intro f; apply subtypePath; [intro; apply homset_property|]).
   - apply pathsdirprod; cbn.
     * unfold three_mor01.
       cbn.
-      set (t := eq_section_nat_trans_disp_on_morphism tr1 f).
-      set (t' := base_paths _ _ t).
-      unfold three_ob1.
-      simpl.
+      set (tr2f := eq_section_nat_trans_disp_on_morphism tr2 f).
+      set (tr2f11 := base_paths _ _ tr2f).
+
+      apply pathsinv0.
+      etrans. exact (pathsinv0 tr2f11).
+      etrans. use pr1_transportf_const.
+      
+      apply cancel_postcomposition.
+      etrans. exact (HAdj f).
+      
+      (* ??? *)
       admit.
     * apply id_left.
   - apply pathsdirprod; cbn.
     * 
+      set (tr2f := eq_section_nat_trans_disp_on_morphism tr2 f).
+      set (tr2f11 := base_paths _ _ tr2f).
+
+      apply pathsinv0.
+      etrans. exact (pathsinv0 tr2f11).
+      etrans. use pr1_transportf_const.
+
+      apply cancel_postcomposition.
+      cbn.
+      unfold three_mor11.
+      cbn.
+      (* unfold c_10_data, three_mor11.
+      cbn. *)
+
+      (* 
+        pr1 (pr11 ((unit_from_are_adjoints Adj) (pr1 X)) f)
+        (this works to replace)
+        pr1 (pr1 ((pr11 Adj) (pr1 X)) f)
+
+        pr1: project from disp_mor (three_disp -->[] three_disp)
+             to three_mor11
+             
+             pr1: select section_nat_trans_disp_data
+                  
+                  ((unit_from_are_adjoints Adj) (pr1 X))
+                  component of unit of the adjunction at pr1 X
+                  (this is a morphism of FfC, i.e. a natural transformation
+                   of sections)
+
+                      component at f
+
+        must be equal to 
+        pr1
+          (section_disp_on_morphisms (pr11 X)
+            (make_dirprod (three_mor01 (f,, (pr11 X) f)) (identity (pr21 f)),,
+              c_10_data_subproof C (f,, (pr11 X) f)))
+
+        pr1: idem
+
+            (underlying Ff C of X) applied to
+            (   λf
+               ---->
+              |     |
+            f |     | ρf 
+              v     v
+               =====
+            with λ and ρ corresponding to the 
+            functorial factorization underlying X
+            )
+      ) *)
+
       admit.
     * apply id_left.
   - apply pathsdirprod; cbn.
@@ -354,9 +632,10 @@ Lemma alg_free_monad_exists_if_alg_forgetful_functor_right_action_is_adjoint {T 
     alg_forgetful_functor_right_action_is_adjoint X -> (total_category (NWFS C)).
 Proof.
   intro Adj.
-
+  
   exists (pr11 X).
   split; [exact (pr21 X)|].
+
   exists (alg_forgetful_functor_right_action_is_adjoint_induced_mul Adj).
   exact (alg_forgetful_functor_right_action_is_adjoint_monad_laws Adj).
 Defined.

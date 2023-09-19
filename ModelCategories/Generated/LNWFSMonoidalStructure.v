@@ -14,6 +14,7 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 Require Import CategoryTheory.DisplayedCats.natural_transformation.
 Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
+Require Import CategoryTheory.ModelCategories.Lifting.
 Require Import CategoryTheory.ModelCategories.NWFS.
 Require Import CategoryTheory.ModelCategories.Generated.Helpers.
 Require Import CategoryTheory.ModelCategories.Generated.FFMonoidalStructure.
@@ -36,9 +37,80 @@ Context {C : category}.
 
 (* F ⊗ F' (compose left factors)
    we flip the terms in Garner to be closer to · notation *)
+
+(* first we need some helping definitions *)
+Local Definition arrow_comp_mor {a b c : C} (f : a --> b) (g : b --> c) :
+    arrow C ⟦ f, f · g ⟧.
+Proof.
+  use mors_to_arrow_mor.
+  - exact (identity _).
+  - exact g.
+  - abstract (apply id_left).
+Defined.
+
+Local Definition rho_arrow_comp_mor (F : Ff C) {a b c : C} (f : a --> b) (g : b --> c) :=
+    #(fact_R F) (arrow_comp_mor f g).
+
+Local Definition Ff_frf_lp (F : Ff C) (f : arrow C) : 
+    f --> (fact_R F f).
+Proof.
+  use mors_to_arrow_mor.
+  - exact (fact_L F f).
+  - exact (identity _).
+  - abstract (
+      rewrite id_right;
+      exact (three_comp (fact_functor F f))
+    ).
+Defined.
+
+Lemma lnwfs_Σ_top_map_id {F : Ff C} (L : lnwfs_over F) (f : arrow C) :
+    arrow_mor00 (pr1 L f) = identity _.
+Proof.
+  set (law1 := Monad_law1 (T:=lnwfs_L_monad L) f).
+  set (top := top_square law1).
+  apply pathsinv0.
+  etrans.
+  exact (pathsinv0 top).
+  apply id_right.
+Qed.
+
+Lemma lnwfs_Σ_bottom_map_inv {F : Ff C} (L : lnwfs_over F) (f : arrow C) :
+    arrow_mor11 (pr1 L f) · arrow_mor (fact_R F (fact_L F f)) = identity _.
+Proof.
+  set (law1 := Monad_law1 (T:=lnwfs_L_monad L) f).
+  set (bottom := bottom_square law1).
+  exact bottom.
+Qed.
+
+(* lift of λf w.r.t. ρ_{λf} *)
+Local Definition LNWFS_lrl_lift {F : Ff C} (L : lnwfs_over F) (f : arrow C) : 
+    filler (arrow_mor_comm (Ff_frf_lp F (fact_L F f))).
+Proof.
+  set (Lσ := arrow_mor_comm (pr1 L f)).
+  (* simpl in Lσ. *)
+
+  exists (arrow_mor11 (pr1 L f)).
+  abstract (
+    split; [
+      etrans; [exact (pathsinv0 Lσ)|];
+      etrans; [apply maponpaths_2; exact (lnwfs_Σ_top_map_id L f)|];
+      apply id_left|
+      exact (lnwfs_Σ_bottom_map_inv L f)
+    ]
+  ).
+Defined.
+
+
 Definition LNWFS_lcomp_comul_data {F F' : Ff C} (L : lnwfs_over F) (L' : lnwfs_over F') :
     nat_trans_data (fact_L (F ⊗ F')) ((fact_L (F ⊗ F')) ∙ (fact_L (F ⊗ F'))).
 Proof.
+  intro f.
+
+  set (λf := fact_L F f).
+  set (λ'ρf := fact_L F' (fact_R F f)).
+  set (first_lift := 
+        (filler_map (LNWFS_lrl_lift L f)) · 
+        arrow_mor00 (rho_arrow_comp_mor F λf λ'ρf)).
   
 Admitted.
 
@@ -124,10 +196,14 @@ Proof.
     (* hint for what comul should be *)
     admit.
   - rewrite id_left.
-    (* apply pathsinv0.
+    apply pathsinv0.
     etrans. apply maponpaths.
             apply id_right.
-    cbn. *)
+    cbn.
+    unfold three_mor11.
+    cbn.
+    etrans. apply maponpaths.
+            (* some sort of transportf term (this is just F on identity (three_mor01 F a)) *)
     admit.
 Admitted.  (* Qed *)
 
@@ -138,7 +214,21 @@ Definition LNWFS_tot_l_id_right (L : total_category (LNWFS C)) :
 Definition LNWFS_l_id_right_rev {F : Ff C} (L : LNWFS _ F) : 
     L -->[Ff_l_id_right_rev F] (L L⊗ LNWFS_lcomp_unit).
 Proof.
-  
+  split; (intro; apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod).
+  - rewrite id_left.
+    cbn.
+    apply pathsinv0.
+    etrans. apply maponpaths.
+            apply id_right.
+    etrans. apply id_right.
+    (* hint for what comul should be *)
+    admit.
+  - rewrite id_left.
+    (* apply pathsinv0.
+    etrans. apply maponpaths.
+            apply id_right.
+    cbn. *)
+    admit.
 Admitted.  (* Qed *)
 
 Definition LNWFS_tot_l_id_right_rev (L : total_category (LNWFS C)) :
@@ -149,7 +239,23 @@ Definition LNWFS_tot_l_id_right_rev (L : total_category (LNWFS C)) :
 Definition LNWFS_l_id_left {F : Ff C} (L : LNWFS _ F) : 
     (LNWFS_lcomp_unit L⊗ L) -->[Ff_l_id_left F] L.
 Proof.
-
+  split; (intro; apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod).
+  - etrans. apply id_left.
+    apply pathsinv0.
+    cbn.
+    etrans. apply maponpaths.
+            apply id_left.
+    etrans. apply id_right.
+    admit.
+  - etrans. apply id_left.
+    apply pathsinv0.
+    etrans. apply maponpaths.
+            apply id_right.
+    
+    (* cbn.
+    unfold three_mor11.
+    cbn. *)
+    (* another transportf thing (lhs is _ · (F "identity") *)
 Admitted.  (* Qed *)
 
 Definition LNWFS_tot_l_id_left (L : total_category (LNWFS C)) :
