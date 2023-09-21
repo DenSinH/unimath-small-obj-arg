@@ -108,6 +108,32 @@ Definition LNWFS_alg_disp (T : LNWFSC) :
 Definition LNWFS_alg (T : LNWFSC) : 
     category := total_category (LNWFS_alg_disp T).
 
+
+Local Definition Ff_frf_lp (F : Ff C) (f : arrow C) : 
+    f --> (fact_R F f).
+Proof.
+  use mors_to_arrow_mor.
+  - exact (fact_L F f).
+  - exact (identity _).
+  - abstract (
+      rewrite id_right;
+      exact (three_comp (fact_functor F f))
+    ).
+Defined.
+
+Local Definition Ff_lff_lp (F : Ff C) (f : arrow C) : 
+    (fact_L F f) --> f.
+Proof.
+  use mors_to_arrow_mor.
+  - exact (identity _).
+  - exact (fact_R F f).
+  - abstract (
+      apply pathsinv0;
+      rewrite id_left;
+      exact (three_comp (fact_functor F f))
+    ).
+Defined.
+
 Lemma LNWFS_alg_action_alg_map_rel {T : LNWFSC} 
     (X : LNWFS_alg T) (A : LNWFSC) :
   LNWFS_tot_l_id_left_rev (pr1 X Ltot⊗ A)
@@ -119,17 +145,84 @@ Proof.
      are identity, sadly the terms become a bit too big... *)
   use LNWFS_tot_mor_eq.
   intro f.
+
+  etrans. use pr1_transportf_const.
+  etrans. apply cancel_postcomposition.
+          use pr1_transportf_const.
   
-  (* todo: make Ff_comp: (F · F') f = F f · F' f lemma *)
-Admitted.
+  etrans. apply assoc'.
+  etrans. apply id_left.
+  
+  etrans. apply cancel_precomposition.
+          use pr1_transportf_const.
+  etrans. apply cancel_precomposition.
+          apply id_left.
+
+  etrans. use (pr1_section_disp_on_morphisms_comp (pr1 A)).
+  etrans. apply (section_disp_on_eq_morphisms (pr1 A) (γ' := identity _)).
+  - 
+    (* simpl.
+    unfold arrow_mor00, three_mor11, three_mor12.
+    simpl. *)
+
+    set (X_map_comm := LNWFS_alg_map_comm (pr2 X)).
+    set (X_map_commb := base_paths _ _ X_map_comm).
+    set (X_map_commf := eq_section_nat_trans_disp_on_morphism X_map_commb f).
+    set (X_map_commfb := base_paths _ _ X_map_commf).
+
+    apply pathsinv0.
+    etrans. exact (pathsinv0 X_map_commfb).
+    etrans. use pr1_transportf_const.
+    etrans. apply cancel_postcomposition.
+            use pr1_transportf_const.
+    etrans. apply assoc'.
+    etrans. apply id_left.
+    reflexivity.
+  - apply id_left.
+  - etrans. apply maponpaths.
+            apply (section_disp_id (pr1 A)).
+    reflexivity.
+Qed.
 
 Lemma LNWFS_alg_action_mor_rel {T : LNWFSC} (X : LNWFS_alg T)
-    {A B : LNWFSC} (f : A --> B) :
+    {A B : LNWFSC} (γ : A --> B) :
   LNWFS_alg_mor_axioms 
       (_,, LNWFS_alg_action_alg_map_rel X A)  
       (_,, LNWFS_alg_action_alg_map_rel X B)
-      ((pr1 X) Ltot⊗pre f).   
+      ((pr1 X) Ltot⊗pre γ).   
 Proof.
+  use LNWFS_tot_mor_eq.
+  intro f.
+
+  etrans. use pr1_transportf_const.
+  etrans. apply cancel_postcomposition.
+          use pr1_transportf_const.
+
+  etrans. apply assoc'.
+  etrans. apply id_left.
+
+  apply pathsinv0.
+  etrans. use pr1_transportf_const.
+  etrans. apply cancel_precomposition.
+          use pr1_transportf_const.
+  etrans. apply cancel_precomposition.
+          apply id_left.
+  
+  
+  
+  (* mor: RX (RT f) --> RX f  ~~>  #RX (RT f --> f) *)
+  (* simpl.
+  set (mor := #(fact_L (pr11 X)) (Ff_lff_lp (pr1 T) f)).
+  set (test := section_nt_disp_axioms_from_section_nt_disp (pr1 γ) _ _ mor).
+  set (t := base_paths _ _ test).
+  etrans. apply cancel_precomposition.
+  {
+    unfold three_mor12, arrow_cod.
+    simpl.
+    (* use (section_disp_on_eq_morphisms (pr1 B) (γ' := mor)). *)
+    reflexivity.
+  } *)
+
   (* this should hold *)
 Admitted.
 
@@ -174,20 +267,92 @@ Definition LNWFS_alg_right_action {T : LNWFSC} (X : LNWFS_alg T) :
    and how one obtains a monoid from the free T-algebra
    LNWFS should be a monoidal category (Ff_C) is at least
 *)
+Lemma eq_section_nat_trans_disp_on_morphism
+    {F F' : section_disp (three_disp C)}
+    {γ γ' : section_nat_trans_disp F F'} :
+  γ = γ' -> ∏ f, γ f = γ' f. 
+Proof.
+  intro H.
+  now rewrite H.
+Qed.
+
+Definition pathscomp1 {X : UU} {a b x y : X} (e1 : a = b) (e2 : a = x) (e3 : b = y) : x = y.
+Proof.
+  induction e1. induction e2. apply e3.
+Qed.
+
 Lemma LNWFS_induced_alg_map_rel {T S A : LNWFSC} (F : T --> S)
     (a : LNWFS_alg_disp S A) : 
     LNWFS_tot_l_id_left_rev (functor_identity LNWFSC A)
     · (LNWFS_tot_l_point T Ltot⊗post functor_identity LNWFSC A)
     · ((F Ltot⊗post A) · (LNWFS_alg_map a)) = identity (functor_identity LNWFSC A).
 Proof.
+  use LNWFS_tot_mor_eq.
+  intro f.
 
-Admitted.
+  etrans. use pr1_transportf_const.
+  etrans. apply cancel_postcomposition.
+          use pr1_transportf_const.
+
+  etrans. apply assoc'.
+  etrans. apply id_left.
+  etrans. apply cancel_precomposition.
+          use pr1_transportf_const.
+  etrans. apply assoc.
+  etrans. apply cancel_postcomposition.
+          use (pr1_section_disp_on_morphisms_comp (pr1 A)).
+  
+  destruct a as [a arel].
+  (* simpl. *)
+  set (arelb := base_paths _ _ arel).
+  set (arelbf := eq_section_nat_trans_disp_on_morphism arelb f).
+  
+  apply pathsinv0.
+  etrans. exact (pathsinv0 (base_paths _ _ arelbf)).
+  
+  etrans. use pr1_transportf_const.
+  apply cancel_postcomposition.
+  etrans. use pr1_transportf_const.
+  etrans. apply id_left.
+  use (section_disp_on_eq_morphisms (pr1 A)).
+  - (* naturality of F *)
+    (* cbn. *)
+    set (Ftot := section_nat_trans_data (pr1 F)).
+    set (Ff := Ftot f).
+    set (Ffcomp_top := pr1 (three_mor_comm Ff)).
+    
+    apply pathsinv0.
+    etrans. exact Ffcomp_top.
+    apply id_left.
+  - apply pathsinv0.
+    apply id_left.
+Qed.
 
 Lemma LNWFS_induced_alg_map_mor_rel {T S A B : LNWFSC} (F : T --> S)
-    {a : LNWFS_alg_disp S A} {b : LNWFS_alg_disp S B} {f : A --> B}
-    (ff : LNWFS_alg_mor_axioms a b f) :
-  ((F Ltot⊗post A) · (LNWFS_alg_map a)) · f = (T Ltot⊗pre f) · ((F Ltot⊗post B) · (LNWFS_alg_map b)).
+    {a : LNWFS_alg_disp S A} {b : LNWFS_alg_disp S B} {γ : A --> B}
+    (γγ : LNWFS_alg_mor_axioms a b γ) :
+  ((F Ltot⊗post A) · (LNWFS_alg_map a)) · γ = (T Ltot⊗pre γ) · ((F Ltot⊗post B) · (LNWFS_alg_map b)).
 Proof.
+  use LNWFS_tot_mor_eq.
+  intro f.
+
+  etrans. use pr1_transportf_const.
+  etrans. apply cancel_postcomposition.
+          use pr1_transportf_const.
+
+  apply pathsinv0.
+  etrans. use pr1_transportf_const.
+  etrans. apply cancel_precomposition.
+          use pr1_transportf_const.
+
+  unfold LNWFS_alg_mor_axioms in γγ.
+  cbn in γγ.
+
+  set (γ_map_comm := base_paths _ _ γγ).
+  set (γ_map_commf := eq_section_nat_trans_disp_on_morphism γ_map_comm f).
+  set (γ_map_commfb := base_paths _ _ γ_map_commf).
+  
+  (* cbn. *)
 
 Admitted.
 
@@ -219,6 +384,39 @@ Definition LNWFS_induced_alg_map {T S : LNWFSC} (F : T --> S) :
 Definition NWFS_forgetful_functor : 
     disp_functor (functor_identity _) (NWFS C) (LNWFS C) :=
   dirprodpr1_disp_functor (LNWFS C) (RNWFS C).
+
+
+(* Definition LNWFS_monad_is_NWFS_mul_data (M : Monad (LNWFSC)) 
+    (IX := M LNWFS_tot_lcomp_unit) :
+    nat_trans_data (functor_composite (fact_R (pr1 IX)) (fact_R (pr1 IX))) (fact_R (pr1 IX)).
+Proof.
+  intro f.
+  set (μM := μ M).
+  set (μMIX := pr1 (μM LNWFS_tot_lcomp_unit)).
+  cbn in μMIX.
+  set (test := three_mor11 (μMIX f)).
+  set (μMIXtot := section_nat_trans μMIX).
+  (* set (test := μMIXtot f). *)
+
+  (* cbn in test. *)
+  (* cbn. *)
+  use mors_to_arrow_mor.
+  - exact (test).
+  - exact (identity _).
+  - 
+Defined.
+
+Lemma LNWFS_monad_is_NWFS (M : Monad (LNWFSC)) :
+    total_category (NWFS C).
+Proof.
+  destruct M as [[[FM μM] ηM] laws].
+  set (IX := FM LNWFS_tot_lcomp_unit).
+  use tpair; [|split].
+  - exact (pr1 IX).
+  - exact (pr2 IX).
+  - 
+Qed. *)
+
 
 (* define NWFS_alg as disp_cat over LNWFS_alg with
    "associativity axiom" (Kelly, par 22.1)
@@ -255,30 +453,42 @@ Definition alg_forgetful_functor_right_action_unit_for_limit_ax
     {T : LNWFSC} (X : LNWFS_alg T) :
   is_nat_trans _ _ (alg_forgetful_functor_right_action_unit_for_limit_data X).
 Proof.
-  (* intros L L' γ.
+  intros L L' γ.
   use LNWFS_tot_mor_eq.
   intro f.
-  simpl.
+
+  (* simpl. *)
   etrans. use pr1_transportf_const.
-  etrans. 
-  {
-    simpl.
-    apply maponpaths.
-    etrans. use pr1_transportf_const.
-    reflexivity.
-  }
+  set (test := pr1 (section_nat_trans_data_from_section_nat_trans_disp_funclass (pr1 γ) f)).
+  etrans. apply cancel_precomposition.
+          use pr1_transportf_const.
+  etrans. apply maponpaths.
+          apply id_left.
+          
   apply pathsinv0.
   etrans. use pr1_transportf_const.
+  etrans. apply cancel_postcomposition.
+          use pr1_transportf_const.
+  etrans. apply assoc'.
+  etrans. apply id_left.
+  
+  (* cbn. *)
+  set (mor := Ff_frf_lp (pr11 X) f).
+  set (γnaturality := section_nt_disp_axioms_from_section_nt_disp (pr1 γ)).
+  set (γnaturalitymor := γnaturality _ _ mor).
+  set (γnaturalitymor_base := base_paths _ _ γnaturalitymor).
+  apply pathsinv0.
   etrans. 
   {
-    simpl.
-    apply maponpaths_2.
-    use pr1_transportf_const.
+    apply maponpaths.
+    use (section_disp_on_eq_morphisms (pr1 L') (γ' := mor)); reflexivity.
   }
-  simpl.
-  etrans. apply assoc'.
-  etrans. apply id_left. *)
-Admitted.
+  etrans. exact (pathsinv0 γnaturalitymor_base).
+  etrans. use pr1_transportf_const.
+  
+  apply cancel_postcomposition.
+  use section_disp_on_eq_morphisms; reflexivity.
+Qed.
 
 Definition alg_forgetful_functor_right_action_counit_for_limit_data
     {T : LNWFSC} (X : LNWFS_alg T) :
@@ -305,7 +515,32 @@ Definition alg_forgetful_functor_right_action_form_adjunction
     (_,, alg_forgetful_functor_right_action_unit_for_limit_ax X)
     (_,, alg_forgetful_functor_right_action_counit_for_limit_ax X).
 Proof.
+  use make_form_adjunction.
+  - intro L.
+    use subtypePath; [intro; apply isaprop_LNWFS_alg_mor_axioms|].
+    use LNWFS_tot_mor_eq.
+    intro f.
 
+    etrans. use pr1_transportf_const.
+    etrans. apply cancel_postcomposition.
+            use pr1_transportf_const.
+    etrans. apply assoc'.
+    etrans. apply id_left.
+    
+    admit.
+    (* simpl. *)
+  - intro A.
+    use LNWFS_tot_mor_eq.
+    intro f.
+
+    etrans. use pr1_transportf_const.
+    etrans. apply cancel_postcomposition.
+            use pr1_transportf_const.
+    etrans. apply assoc'.
+    etrans. apply id_left.
+
+    admit.
+    (* simpl. *)
 Admitted.
 
 
@@ -376,20 +611,6 @@ Definition alg_forgetful_functor_right_action_is_adjoint_induced_mul {T : LNWFSC
   (functor_composite (fact_R (pr11 X)) (fact_R (pr11 X))) ⟹ (fact_R (pr11 X)) :=
     (_,, alg_forgetful_functor_right_action_is_adjoint_induced_mul_ax X).
 
-Lemma eq_section_nat_trans_disp_on_morphism
-    {F F' : section_disp (three_disp C)}
-    {γ γ' : section_nat_trans_disp F F'} :
-  γ = γ' -> ∏ f, γ f = γ' f. 
-Proof.
-  intro H.
-  now rewrite H.
-Qed.
-
-Definition pathscomp1 {X : UU} {a b x y : X} (e1 : a = b) (e2 : a = x) (e3 : b = y) : x = y.
-Proof.
-  induction e1. induction e2. apply e3.
-Qed.
-
 Lemma alg_forgetful_functor_right_action_is_adjoint_monad_laws {T : LNWFSC} (X : LNWFS_alg T) 
     (Adj := alg_forgetful_functor_right_action_is_adjoint_for_limit X) :
   Monad_laws (R_monad_data (pr11 X) (alg_forgetful_functor_right_action_is_adjoint_induced_mul X)).
@@ -403,6 +624,10 @@ Proof.
   assert (HAdj : ∏ f, three_mor11 (#(fact_functor (pr11 X)) (c_10 C (fact_functor (pr11 X) f))) = 
                  (fact_L (pr11 X) (fact_R (pr11 X) f))).
   {
+    intro f.
+    cbn.
+    unfold three_mor11, three_mor01.
+    cbn.
     admit.
   }
   (* transparent assert (frf : (∏ f, f --> fact_R (pr11 X) f)).

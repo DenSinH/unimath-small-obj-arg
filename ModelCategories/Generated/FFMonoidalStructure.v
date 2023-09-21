@@ -252,12 +252,12 @@ Definition Ff_l_prewhisker_data (F : Ff C) {G G' : Ff C} (τ : section_nat_trans
     section_nat_trans_disp_data (F ⊗ G) (F ⊗ G').
 Proof.
   intro f.
-  cbn.
+  (* cbn. *)
   set (τρf := τ (fact_R F f)).
   destruct τρf as [mor [comm1 comm2]].
   exists (mor).
   abstract (
-    split; [
+    split; cbn; [
       rewrite assoc, id_left, assoc';
       apply cancel_precomposition;
       etrans; [exact comm1|];
@@ -561,3 +561,338 @@ Notation "F ⊗ F'" := (Ff_lcomp F F').
 Notation "F ⊗pre τ" := (Ff_l_prewhisker F τ) (at level 50).
 Notation "τ ⊗post F" := (Ff_l_postwhisker τ F) (at level 50).
 Notation "τ ⊗prod ρ" := (Ff_l_mor_comp τ ρ) (at level 50).
+
+
+Require Import CategoryTheory.Monoidal.Categories.
+
+Section Ff_monoidal.
+
+Context {C : category}.
+
+Definition Ff_tensor_data : tensor_data (Ff C).
+Proof.
+  use tpair.
+  - exact (Ff_lcomp).
+  - split.
+    * exact (Ff_l_prewhisker).
+    * exact (λ b _ _ γ, Ff_l_postwhisker γ b).
+Defined.
+
+Definition Ff_monoidal_data : monoidal_data (Ff C).
+Proof.
+  use make_monoidal_data.
+  - exact Ff_tensor_data.
+  - exact Ff_lcomp_unit.
+  - exact Ff_l_id_left.
+  - exact Ff_l_id_left_rev.
+  - exact Ff_l_id_right.
+  - exact Ff_l_id_right_rev.
+  - exact Ff_l_assoc.
+  - exact Ff_l_assoc_rev.
+Defined.
+
+Local Ltac functorial_factorization_eq f := (
+  apply subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|];
+  use funextsec;
+  intro f;
+  use subtypePath; [intro; apply isapropdirprod; apply homset_property|]
+).
+
+Definition Ff_monoidal_laws : monoidal_laws Ff_monoidal_data.
+Proof.
+  repeat split.
+  - intros F F'.
+    functorial_factorization_eq f.
+    reflexivity.
+  - intros F F'.
+    functorial_factorization_eq f.
+    cbn.
+    etrans. use (section_disp_on_eq_morphisms F (γ' := identity _)); reflexivity. 
+    etrans. apply maponpaths. apply (section_disp_id F).
+    reflexivity.
+  - intros A F F' F'' γ γ'.
+    functorial_factorization_eq f.
+    etrans. use pr1_transportf_const.
+    apply pathsinv0.
+    etrans. use pr1_transportf_const.
+    reflexivity.
+  - intros A F F' F'' γ γ'.
+    functorial_factorization_eq f.
+    (* cbn. *)
+    apply pathsinv0.
+    etrans. use pr1_transportf_const.
+    (* cbn. *)
+    etrans. use (pr1_section_disp_on_morphisms_comp A).
+    use (section_disp_on_eq_morphisms A).
+    * apply pathsinv0.
+      etrans. use pr1_transportf_const.
+      reflexivity.
+    * apply id_left.
+  - intros A F F' F'' γ γ'.
+    functorial_factorization_eq f.
+    (* cbn. *)
+    etrans. use pr1_transportf_const.
+    apply pathsinv0.
+    etrans. use pr1_transportf_const.
+    cbn.
+    transparent assert (mor : (fact_R A f --> fact_R F f)).
+    {
+      set (γf := (section_nat_trans_data_from_section_nat_trans_disp_funclass γ) f).
+      (* simpl in γf. *)
+      use mors_to_arrow_mor.
+      - exact (pr1 γf).
+      - exact (identity _).
+      - exact (pathsinv0 (pr22 γf)).
+    }
+    set (γ'naturality := section_nt_disp_axioms_from_section_nt_disp γ').
+    set (γ'natf := γ'naturality _ _ mor).
+    set (γ'natfb := base_paths _ _ γ'natf).
+    etrans. apply maponpaths.
+            use (section_disp_on_eq_morphisms F'' (γ' := mor)); reflexivity.
+            
+    etrans. exact (pathsinv0 γ'natfb).
+    etrans. use pr1_transportf_const.
+    apply cancel_postcomposition.
+    use (section_disp_on_eq_morphisms F'); reflexivity.
+  - intros F F' γ.
+    functorial_factorization_eq f.
+    etrans. use pr1_transportf_const.
+    apply pathsinv0.
+    etrans. use pr1_transportf_const.
+    (* cbn. *)
+    etrans. apply id_left.
+    apply pathsinv0.
+    etrans. apply id_right.
+    reflexivity.
+  - functorial_factorization_eq f.
+    (* cbn. *)
+    etrans. use pr1_transportf_const.
+    apply id_left.
+  - functorial_factorization_eq f.
+    etrans. use pr1_transportf_const.
+    apply id_left.
+  - intros F F' γ.
+    functorial_factorization_eq f.
+    etrans. use pr1_transportf_const.
+    apply pathsinv0.
+    etrans. use pr1_transportf_const.
+    etrans. apply id_left.
+    apply pathsinv0.
+    apply id_right.
+  - functorial_factorization_eq f.
+    etrans. use pr1_transportf_const.
+    apply id_left.
+  - functorial_factorization_eq f.
+    etrans. use pr1_transportf_const.
+    apply id_left.
+  - intros A F F' F'' γ.
+    functorial_factorization_eq f.
+    etrans. use pr1_transportf_const.
+    apply pathsinv0.
+    etrans. use pr1_transportf_const.
+    etrans. apply id_right.
+    apply pathsinv0.
+    apply id_left.
+  - intros A F F' F'' γ.
+    functorial_factorization_eq f.
+    etrans. use pr1_transportf_const.
+    apply pathsinv0.
+    etrans. use pr1_transportf_const.
+    etrans. apply id_right.
+    apply pathsinv0.
+    etrans. apply id_left.
+    use (section_disp_on_eq_morphisms F''); reflexivity.
+  - intros A F F' F'' γ.
+    functorial_factorization_eq f.
+    etrans. use pr1_transportf_const.
+    apply pathsinv0.
+    etrans. use pr1_transportf_const.
+    etrans. apply id_right.
+    apply pathsinv0.
+    etrans. apply id_left.
+    use (section_disp_on_eq_morphisms F''); reflexivity.
+  - functorial_factorization_eq f. 
+    etrans. use pr1_transportf_const.
+    apply id_left.
+  - functorial_factorization_eq f. 
+    etrans. use pr1_transportf_const.
+    apply id_left.
+  - intros F F'.
+    functorial_factorization_eq f.
+    etrans. use pr1_transportf_const.
+    etrans. apply id_left.
+    apply pathsinv0.
+    (* cbn. *)
+    etrans. use (section_disp_on_eq_morphisms F' (γ' := identity _)); reflexivity.
+    etrans. apply maponpaths.
+            apply (section_disp_id F').
+    reflexivity.
+  - intros A F F' F''.
+    functorial_factorization_eq f.
+    etrans. use pr1_transportf_const.
+    etrans. apply cancel_postcomposition.
+            use pr1_transportf_const.
+    etrans. apply id_right.
+    etrans. apply id_right.
+
+    apply pathsinv0.
+    etrans. use pr1_transportf_const.
+    etrans. apply id_left.
+    apply pathsinv0.
+
+    etrans. use (section_disp_on_eq_morphisms F'' (γ' := identity _)); reflexivity.
+    etrans. apply maponpaths.
+            apply (section_disp_id F'').
+    reflexivity.
+Qed.
+
+Definition Ff_monoidal : monoidal (Ff C) :=
+    (_,, Ff_monoidal_laws).
+
+End Ff_monoidal.
+
+Require Import UniMath.CategoryTheory.Monads.Monads.
+Require Import CategoryTheory.Monoidal.CategoriesOfMonoids.
+
+Section Ff_monoid_is_RNWFS.
+
+Context {C : category}.
+
+
+Definition Ff_monoid_is_RNWFS_mul_data 
+    {F : Ff C} (R : monoid (Ff_monoidal) F) :
+  nat_trans_data (functor_composite (fact_R F) (fact_R F)) (fact_R F).
+Proof.
+  intro f.
+
+  set (μ := monoid_data_multiplication _ R).
+  set (μf := (section_nat_trans_data_from_section_nat_trans_disp_funclass μ) f).
+  
+  use mors_to_arrow_mor.
+  - exact (pr1 μf).
+  - exact (identity _).
+  - exact (pathsinv0 (pr22 μf)).
+Defined.
+
+Lemma Ff_monoid_is_RNWFS_mul_axioms 
+    {F : Ff C} (R : monoid (Ff_monoidal) F) :
+  is_nat_trans _ _ (Ff_monoid_is_RNWFS_mul_data R).
+Proof.
+  intros f f' γ.
+
+  set (μ := monoid_data_multiplication _ R).
+  set (μaxγ := (section_nt_disp_axioms_from_section_nt_disp μ) _ _ γ).
+  set (μaxγb := base_paths _ _ μaxγ).
+  
+  apply subtypePath; [intro; apply homset_property|].
+  apply pathsdirprod.
+  - cbn.
+    cbn in μaxγb.
+    apply pathsinv0.
+    etrans. exact (pathsinv0 μaxγb).
+    etrans. use pr1_transportf_const.
+    apply cancel_postcomposition.
+    use (section_disp_on_eq_morphisms F); reflexivity.
+  - etrans. apply id_right.
+    apply pathsinv0.
+    etrans. apply id_left.
+    reflexivity.
+Qed.
+
+Definition Ff_monoid_is_RNWFS_mul 
+      {F : Ff C} (R : monoid (Ff_monoidal) F) :
+    (functor_composite (fact_R F) (fact_R F)) ⟹ (fact_R F) :=
+  (_,, Ff_monoid_is_RNWFS_mul_axioms R).
+
+Local Definition pathscomp1 {X : UU} {a b x y : X} (e1 : a = b) (e2 : a = x) (e3 : b = y) : x = y.
+Proof.
+  induction e1. induction e2. apply e3.
+Qed.
+
+
+Definition Ff_monoid_RNWFS_condition 
+    {F : Ff C} (R : monoid (Ff_monoidal) F) : UU :=
+  ∏ f, pr1 (section_nat_trans_data_from_section_nat_trans_disp_funclass (monoid_data_unit Ff_monoidal R) f) = fact_L F f.
+
+Lemma Ff_monoid_is_RNWFS_monad_laws 
+    {F : Ff C} (R : monoid (Ff_monoidal) F) 
+    (H : Ff_monoid_RNWFS_condition R) :
+  Monad_laws (R_monad_data F (Ff_monoid_is_RNWFS_mul R)).
+Proof.
+  set (μ := monoid_data_multiplication _ R).
+  
+  repeat split.
+  - intro f.
+    apply subtypePath; [intro; apply homset_property|].
+    apply pathsdirprod; [|apply id_left].
+    
+    set (μax := monoid_to_unit_right_law _ R).
+    set (μf := (section_nat_trans_data_from_section_nat_trans_disp_funclass μ) f).
+    set (μaxf := eq_section_nat_trans_disp_on_morphism μax f).
+    set (μaxfb := base_paths _ _ μaxf).
+    
+    apply pathsinv0.
+    etrans. exact (pathsinv0 μaxfb).
+    etrans. use pr1_transportf_const.
+
+    apply cancel_postcomposition.
+    (* cbn. *)
+    (* this is the unit condition we need, applied to fact_R F f *)
+    exact (H (fact_R F f)).
+  - intro f.
+    apply subtypePath; [intro; apply homset_property|].
+    apply pathsdirprod; [|apply id_left].
+
+    set (μax := monoid_to_unit_left_law _ R).
+    set (μf := (section_nat_trans_data_from_section_nat_trans_disp_funclass μ) f).
+    set (μaxf := eq_section_nat_trans_disp_on_morphism μax f).
+    set (μaxfb := base_paths _ _ μaxf).
+
+    apply pathsinv0.
+    etrans. exact (pathsinv0 μaxfb).
+    etrans. use pr1_transportf_const.
+
+    apply cancel_postcomposition.
+    set (mor := Λ F f).
+    etrans. use (section_disp_on_eq_morphisms F (γ' := mor)).
+    * (* this is the unit condition we need *)
+      (* cbn. *)
+      exact (H f).
+    * reflexivity.
+    * reflexivity.
+  - intro f.
+    apply subtypePath; [intro; apply homset_property|].
+    apply pathsdirprod; [|reflexivity].
+
+    set (μax := monoid_to_assoc_law _ R).
+    set (μf := (section_nat_trans_data_from_section_nat_trans_disp_funclass μ) f).
+    set (μaxf := eq_section_nat_trans_disp_on_morphism μax f).
+    set (μaxfb := base_paths _ _ μaxf).
+
+    use (pathscomp1 (pathsinv0 μaxfb)).
+    * etrans. use pr1_transportf_const.
+      (* cbn.
+      unfold three_mor11.
+      cbn. *)
+      apply cancel_postcomposition.
+      use (section_disp_on_eq_morphisms F); reflexivity.
+    * etrans. use pr1_transportf_const.
+      etrans. apply cancel_postcomposition.
+              use pr1_transportf_const.
+      
+      etrans. apply assoc'.
+      etrans. apply id_left.
+      
+      reflexivity.
+Qed.
+
+Definition Ff_monoid_is_RNWFS 
+      {F : Ff C} (R : monoid (Ff_monoidal) F)
+      (H : Ff_monoid_RNWFS_condition R) :
+    rnwfs_over F.
+Proof.
+  exists (Ff_monoid_is_RNWFS_mul R).
+  exact (Ff_monoid_is_RNWFS_monad_laws R H).
+Defined.
+
+End Ff_monoid_is_RNWFS.

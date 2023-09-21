@@ -437,3 +437,118 @@ Notation "l L⊗pre τ" := (LNWFS_l_prewhisker l τ) (at level 50).
 Notation "l Ltot⊗pre τ" := (LNWFS_tot_l_prewhisker l τ) (at level 50).
 Notation "τ L⊗post l" := (LNWFS_l_postwhisker τ l) (at level 50).
 Notation "τ Ltot⊗post l" := (LNWFS_tot_l_postwhisker τ l) (at level 50).
+
+Require Import CategoryTheory.Monoidal.Categories.
+Require Import CategoryTheory.Monoidal.Displayed.Monoidal.
+Require Import CategoryTheory.Monoidal.Displayed.TotalMonoidal.
+
+Section LNWFS_monoidal.
+
+Context {C : category}.
+
+Definition LNWFS_disp_tensor_data : disp_tensor (LNWFS C) Ff_monoidal.
+Proof.
+  use tpair.
+  - use tpair.
+    * exact (@LNWFS_lcomp C).
+    * split.
+      + intros; apply LNWFS_l_prewhisker.
+        assumption.
+      + intros A F F' γ α L L' γγ.
+        exact (LNWFS_l_postwhisker γγ L').
+  - abstract (
+      repeat split; repeat intro; apply isaprop_lnwfs_mor_axioms
+    ).
+Defined.
+
+Definition LNWFS_disp_monoidal_data : disp_monoidal_data (LNWFS C) Ff_monoidal.
+Proof.
+  exists LNWFS_disp_tensor_data.
+  exists LNWFS_lcomp_unit.
+  repeat split.
+  - exact (pr1 (LNWFS_l_id_left xx)).
+  - exact (pr2 (LNWFS_l_id_left xx)).
+  - exact (pr1 (LNWFS_l_id_left_rev xx)).
+  - exact (pr2 (LNWFS_l_id_left_rev xx)).
+  - exact (pr1 (LNWFS_l_id_right xx)).
+  - exact (pr2 (LNWFS_l_id_right xx)).
+  - exact (pr1 (LNWFS_l_id_right_rev xx)).
+  - exact (pr2 (LNWFS_l_id_right_rev xx)).
+  - exact (pr1 (LNWFS_l_assoc xx yy zz)).
+  - exact (pr2 (LNWFS_l_assoc xx yy zz)).
+  - exact (pr1 (LNWFS_l_assoc_rev xx yy zz)).
+  - exact (pr2 (LNWFS_l_assoc_rev xx yy zz)).
+Defined.
+
+Definition LNWFS_disp_monoidal_laws : disp_monoidal_laws LNWFS_disp_monoidal_data.
+Proof.
+  repeat split; (repeat intro; apply isaprop_lnwfs_mor_axioms).
+Qed.
+
+Definition LNWFS_monoidal : disp_monoidal (LNWFS C) Ff_monoidal :=
+    (_,, LNWFS_disp_monoidal_laws).
+
+Definition LNWFS_tot_monoidal : monoidal _ :=
+    total_monoidal LNWFS_monoidal.
+
+Definition Ff_monoidal : monoidal (Ff C) :=
+    (_,, Ff_monoidal_laws).
+
+End LNWFS_monoidal.
+
+Require Import UniMath.CategoryTheory.Monads.Monads.
+Require Import CategoryTheory.Monoidal.CategoriesOfMonoids.
+
+Section LNWFS_monoid_is_NWFS.
+
+Context {C : category}.
+Local Definition LNWFSC := total_category (LNWFS C).
+
+
+Definition LNWFS_tot_monoid_is_NWFS_monoid_data 
+    {L : LNWFSC} (R : monoid (LNWFS_tot_monoidal) L) :
+  monoid_data Ff_monoidal (pr1 L).
+Proof.
+  set (Rμ := pr1 (monoid_to_monoid_data _ R)).
+  set (RI := pr2 (monoid_to_monoid_data _ R)).
+
+  repeat split.
+  - exact (pr1 Rμ).
+  - exact (pr1 RI).
+Defined.
+
+Definition LNWFS_tot_monoid_is_NWFS_monoid_axioms
+    {L : LNWFSC} (R : monoid (LNWFS_tot_monoidal) L) :
+  monoid_laws _ (LNWFS_tot_monoid_is_NWFS_monoid_data R).
+Proof.
+  repeat split.
+  - set (law := monoid_to_unit_left_law _ R).
+    apply subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|].
+    exact (base_paths _ _ (base_paths _ _ law)).
+  - set (law := monoid_to_unit_right_law _ R).
+    apply subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|].
+    exact (base_paths _ _ (base_paths _ _ law)).
+  - set (law := monoid_to_assoc_law _ R).
+    apply subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|].
+    exact (base_paths _ _ (base_paths _ _ law)).
+Qed.
+
+Definition LNWFS_tot_monoid_projection 
+      {L : LNWFSC} (R : monoid (LNWFS_tot_monoidal) L) :
+  monoid Ff_monoidal (pr1 L) :=
+    (_,, LNWFS_tot_monoid_is_NWFS_monoid_axioms R).
+
+Definition LNWFS_tot_monoid_is_NWFS 
+    {L : LNWFSC} (R : monoid (LNWFS_tot_monoidal) L) 
+    (H : Ff_monoid_RNWFS_condition (LNWFS_tot_monoid_projection R)):
+  NWFS C (pr1 L).
+Proof.
+  split.
+  - exact (pr2 L).
+  - use Ff_monoid_is_RNWFS.
+    (* project monoid R down to Ff C *)
+    * exact (LNWFS_tot_monoid_projection R).
+    * exact H.
+Defined.
+
+End LNWFS_monoid_is_NWFS.

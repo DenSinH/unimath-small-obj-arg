@@ -1,3 +1,3 @@
 coq_makefile -f _CoqProject -o Makefile
-make clean
+rem make clean
 make -k

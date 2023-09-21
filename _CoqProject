@@ -7,8 +7,13 @@ DisplayedCats/Examples/MonadAlgebras.v
 DisplayedCats/natural_transformation.v
 Monads/PointedEndofunctors.v
 Monoidal/Categories.v
+Monoidal/Functors.v
 Monoidal/CategoriesOfMonoids.v
 Monoidal/WhiskeredBifunctors.v
+Monoidal/Displayed/Monoidal.v
+Monoidal/Displayed/MonoidalSections.v
+Monoidal/Displayed/TotalMonoidal.v
+Monoidal/Displayed/WhiskeredDisplayedBifunctors.v
 ModelCategories/MorphismClass.v
 ModelCategories/Retract.v
 ModelCategories/Lifting.v
