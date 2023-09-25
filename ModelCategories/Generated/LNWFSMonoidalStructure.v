@@ -203,6 +203,7 @@ Proof.
     unfold three_mor11.
     cbn.
     etrans. apply maponpaths.
+    
             (* some sort of transportf term (this is just F on identity (three_mor01 F a)) *)
     admit.
 Admitted.  (* Qed *)

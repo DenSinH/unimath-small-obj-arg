@@ -809,10 +809,30 @@ Proof.
   induction e1. induction e2. apply e3.
 Qed.
 
+Definition Ff_monoid_RNWFS_base_condition 
+    {F : Ff C} (R : monoid (Ff_monoidal) F) : UU :=
+  ∏ f, pr1 (section_nat_trans_data_from_section_nat_trans_disp_funclass (monoid_data_unit Ff_monoidal R) f) = fact_L F f.
 
 Definition Ff_monoid_RNWFS_condition 
     {F : Ff C} (R : monoid (Ff_monoidal) F) : UU :=
-  ∏ f, pr1 (section_nat_trans_data_from_section_nat_trans_disp_funclass (monoid_data_unit Ff_monoidal R) f) = fact_L F f.
+  monoid_data_unit Ff_monoidal R = Ff_l_point F.
+
+Lemma Ff_monoid_RNWFS_base_condition_iff_cond 
+    {F : Ff C} (R : monoid (Ff_monoidal) F) :
+  Ff_monoid_RNWFS_base_condition R <-> Ff_monoid_RNWFS_condition R.
+Proof.
+  split.
+  - intro H.
+    use subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|].
+    apply funextsec.
+    intro f.
+    apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
+    exact (H f).
+  - intro H.
+    intro f.
+    set (Hf := eq_section_nat_trans_disp_on_morphism H f).
+    exact (base_paths _ _ Hf).
+Qed.
 
 Lemma Ff_monoid_is_RNWFS_monad_laws 
     {F : Ff C} (R : monoid (Ff_monoidal) F) 
@@ -838,7 +858,7 @@ Proof.
     apply cancel_postcomposition.
     (* cbn. *)
     (* this is the unit condition we need, applied to fact_R F f *)
-    exact (H (fact_R F f)).
+    exact (pr2 (Ff_monoid_RNWFS_base_condition_iff_cond R) H (fact_R F f)).
   - intro f.
     apply subtypePath; [intro; apply homset_property|].
     apply pathsdirprod; [|apply id_left].
@@ -857,7 +877,7 @@ Proof.
     etrans. use (section_disp_on_eq_morphisms F (γ' := mor)).
     * (* this is the unit condition we need *)
       (* cbn. *)
-      exact (H f).
+      exact (pr2 (Ff_monoid_RNWFS_base_condition_iff_cond R) H f).
     * reflexivity.
     * reflexivity.
   - intro f.
