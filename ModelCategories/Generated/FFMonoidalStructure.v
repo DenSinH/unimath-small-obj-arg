@@ -10,8 +10,13 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Total.
 Require Import UniMath.CategoryTheory.DisplayedCats.Functors.
 Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 
+Require Import UniMath.Combinatorics.StandardFiniteSets.
+
 Require Import UniMath.CategoryTheory.limits.graphs.colimits.
+Require Import UniMath.CategoryTheory.limits.graphs.coequalizers.
 Require Import UniMath.CategoryTheory.Chains.Chains.
+
+Require Import CategoryTheory.Chains.Chains.
 
 Require Import CategoryTheory.DisplayedCats.natural_transformation.
 Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
@@ -920,20 +925,11 @@ Defined.
 
 End Ff_monoid_is_RNWFS.
 
-(* todo: move this to UniMath/CategoryTheory/Chains/Chains.v *)
-Definition Chains (C : category) : UU := 
-    ∏ (d : chain C), ColimCocone d.
-
-Local Definition chain_mor0 {C : category} (d : chain C) : 
-    ∏ v, ∑ (f : dob d 0 --> dob d (S v)), (∏ (x : C) (cc : cocone d x), f · coconeIn cc (S v) = coconeIn cc 0).
-Proof.
-  intro v.
-  use tpair.
-  -  use chain_mor.
-    apply natgthsn0.
-  - intros ? ?.
-    apply chain_mor_coconeIn.
-Defined.
+(* 
+Definition graph_connected (g : graph) : UU :=
+    ∏ {C : category} (D : diagram g C), 
+        ∑ (v0 : vertex g), 
+            ∏ (c : C) (cc : cocone D c), (dob D v0) *)
 
 Section Ff_cocomplete.
 
@@ -942,10 +938,10 @@ Context (CC : Colims C).
 
 Section Ff_cocomplete_diagram.
 
-Context (D : chain (Ff C)).
+Context {g : graph} (D : diagram g (Ff C)).
 
 (* diagram of middle objects *)
-Local Definition diagram_pointwise (a : arrow C) : chain C.
+Local Definition diagram_pointwise (a : arrow C) : diagram g C.
 Proof.
   use tpair.
   - intro v.
@@ -960,11 +956,11 @@ Local Definition HCg : ∏ (a : arrow C), ColimCocone (diagram_pointwise a) :=
 (* this construction only works for non-empty graphs, since
    we need an arrow arrow_dom a --> colim (HCg a), 
    but we can only find this for a non-empty graph *)
-Definition ColimFf_ob (a : arrow C) : three_disp C a.
+Definition ColimFf_ob (v0 : vertex g) (a : arrow C) : three_disp C a.
 Proof.
   exists (colim (HCg a)).
 
-  exists (pr12 (pr1 (dob D 0) a) · (colimIn (HCg a) 0)).
+  exists (pr12 (pr1 (dob D v0) a) · (colimIn (HCg a) v0)).
   use tpair.
   - use colimArrow.
     use make_cocone.
@@ -979,13 +975,13 @@ Proof.
       etrans; [apply cancel_precomposition;
               use (colimArrowCommutes (HCg a))|];
       (* cbn. *)
-      exact (three_comp (fact_functor (dob D 0) a))
+      exact (three_comp (fact_functor (dob D v0) a))
     ).
 Defined.
 
-Definition ColimFf_mor
+Definition ColimFf_mor (v0 : vertex g)
     {a b : arrow C} (f : a --> b) :
-  ColimFf_ob a -->[f] ColimFf_ob b.
+  ColimFf_ob v0 a -->[f] ColimFf_ob v0 b.
 Proof.
   use tpair.
   - use colimOfArrows.
@@ -1006,7 +1002,7 @@ Proof.
     split.
     * (* cbn. *)
       abstract (
-        set (Dv0f := ((section_disp_on_morphisms (section_disp_data_from_section_disp (dob D 0))) f));
+        set (Dv0f := ((section_disp_on_morphisms (section_disp_data_from_section_disp (dob D v0))) f));
         set (Dv0fax := pr2 Dv0f);
         etrans; [apply assoc'|];
         etrans; [apply cancel_precomposition;
@@ -1035,10 +1031,10 @@ Proof.
       ).
 Defined.
 
-Definition ColimFf_data : section_disp_data (three_disp C) :=
-    (_,, @ColimFf_mor).
+Definition ColimFf_data (v0 : vertex g) : section_disp_data (three_disp C) :=
+    (_,, @ColimFf_mor v0).
 
-Lemma ColimFf_axioms : section_disp_axioms ColimFf_data.
+Lemma ColimFf_axioms (v0 : vertex g) : section_disp_axioms (ColimFf_data v0).
 Proof.
   split.
   - intro a.
@@ -1068,14 +1064,19 @@ Proof.
     reflexivity.
 Qed.
 
-Definition ColimFf : Ff C := 
-    (_,, ColimFf_axioms).
+Definition ColimFf (v0 : vertex g) : Ff C := 
+    (_,, ColimFf_axioms v0).
 
 (* we need an edge from v0 to v for this to work,
    regarding equality of (arrow_dom v/v0 · colimIn v/v0) *)
-
-Local Definition colim_nat_trans_in_data {v : nat}  : 
-    dob D v --> ColimFf.
+(* todo: change the assumption H to something more generic,
+   in terms of the graph / the diagram.
+   We need some sort of induction principle *)
+Local Definition colim_nat_trans_in_data 
+      {v0 : vertex g} {v : vertex g}
+      (H : ∏ a, pr12 (pr1 (dob D v0) a) · colimIn (HCg a) v0 =
+           pr12 (pr1 (dob D v) a) · colimIn (HCg a) v) : 
+    dob D v --> ColimFf v0.
 Proof.
   use tpair.
   - intro a.
@@ -1083,9 +1084,19 @@ Proof.
     split.
     * (* unfold ColimFf. *)
       (* cbn. *)
+      apply pathsinv0.
+      etrans. apply id_left.
+      cbn.
       abstract (
         apply pathsinv0;
         etrans; [apply id_left|];
+        apply H
+      ).
+
+      (* abstract (
+        apply pathsinv0;
+        etrans; [apply id_left|];
+   
         induction v as [|v Hv]; [reflexivity|];
         etrans; [exact Hv|];
         assert (e : @edge nat_graph v (S v)); [reflexivity|];
@@ -1095,7 +1106,7 @@ Proof.
         apply cancel_postcomposition;
         etrans; [exact (pr12 (pr1 (dmor D e) a))|];
         apply id_left
-      ).
+      ). *)
     * abstract (
         etrans; [apply id_right|];
         apply pathsinv0;
@@ -1131,8 +1142,9 @@ Proof.
 Defined.
 
 Definition ColimFf_unique_mor
+    (v0: vertex g)
     (F : Ff C) (cc : cocone D F) :
-  ColimFf --> F.
+  ColimFf v0 --> F.
 Proof.
   use tpair.
   * intro a.
@@ -1147,7 +1159,7 @@ Proof.
         etrans; [apply id_left|];
         apply pathsinv0;
         (* cbn. *)
-        etrans; [exact (pr12 (pr1 (coconeIn cc 0) a))|];
+        etrans; [exact (pr12 (pr1 (coconeIn cc v0) a))|];
         apply id_left
       ).
     + abstract (
@@ -1182,13 +1194,16 @@ Proof.
     ).
 Defined.
 
-Lemma ColimFf_unique 
+Lemma ColimFf_unique
+    {v0 : vertex g}
+    (H : ∏ v a, pr12 (pr1 (dob D v0) a) · colimIn (HCg a) v0 =
+           pr12 (pr1 (dob D v) a) · colimIn (HCg a) v)
     (F : Ff C) (cc : cocone D F) :
-  ∃! x : ColimFf --> F,
-            ∏ v, colim_nat_trans_in_data · x = coconeIn cc v.
+  ∃! x : ColimFf v0 --> F,
+            ∏ v, (colim_nat_trans_in_data (H v)) · x = coconeIn cc v.
 Proof.
   use unique_exists.
-  - exact (ColimFf_unique_mor F cc).
+  - exact (ColimFf_unique_mor v0 F cc).
   - abstract (
       intro v;
       functorial_factorization_eq a;
@@ -1213,13 +1228,16 @@ Proof.
     ).
 Defined.
 
-Lemma ColimFfCocone :
-    ColimCocone D.
+Lemma ColimFfCocone
+    {v0 : vertex g}
+    (H : ∏ v a, pr12 (pr1 (dob D v0) a) · colimIn (HCg a) v0 =
+          pr12 (pr1 (dob D v) a) · colimIn (HCg a) v) :
+  ColimCocone D.
 Proof.
   use make_ColimCocone.
-  - exact ColimFf.
+  - exact (ColimFf v0).
   - use make_cocone.
-    * exact @colim_nat_trans_in_data.
+    * intro v. exact (colim_nat_trans_in_data (H v)).
     * abstract (
         intros u v e;
         functorial_factorization_eq a;
@@ -1227,7 +1245,7 @@ Proof.
         (* cbn. *)
         apply (colimInCommutes (HCg a))
       ).
-  - intros F cc; exact (ColimFf_unique _ cc).
+  - intros F cc; exact (ColimFf_unique H _ cc).
 Defined.
 
 End Ff_cocomplete_diagram.
@@ -1237,6 +1255,53 @@ Lemma ChainsFf (HC : Colims C) :
 Proof.
   intros d.
   use (ColimFfCocone d).
+  - exact 0.
+  - abstract (
+      intros v a;
+ 
+      induction v as [|v Hv]; [reflexivity|];
+      etrans; [exact Hv|];
+      assert (e : @edge nat_graph v (S v)); [reflexivity|];
+      etrans; [apply cancel_precomposition;
+              exact (pathsinv0 (colimInCommutes (HCg _ a) _ _ e))|];
+      etrans; [apply assoc|];
+      apply cancel_postcomposition;
+      etrans; [exact (pr12 (pr1 (dmor d e) a))|];
+      apply id_left
+    ).
+Defined.
+
+Local Open Scope stn.
+
+Lemma CoequalizersFf (HC : Colims C) :
+    Coequalizers (Ff C).
+Proof.
+  intros F G f g.
+  use (ColimFfCocone).
+  - exact (● 0).
+  - intros v a.
+    (* cbn. *)
+    induction v as [v v2].
+    induction v as [|v Hv].
+    * abstract (
+        apply cancel_precomposition;
+        assert (H: v2 = idpath _); [apply propproperty|];
+        now rewrite H
+      ).
+    * abstract (
+        induction v as [|v Hv2]; [|induction (nopathsfalsetotrue v2)];
+        etrans; [exact (Hv v2)|];
+
+        (* todo: choice inl / inr? *)
+        assert (e : @edge Coequalizer_graph (0,, v2) (1,, v2)); [exact (inl tt)|];
+        set (diag := (Coequalizer_diagram (Ff C) f g));
+        etrans; [apply cancel_precomposition;
+                exact (pathsinv0 (colimInCommutes (HCg diag a) _ _ e))|];
+        etrans; [apply assoc|];
+        apply cancel_postcomposition;
+        etrans; [exact (pr12 (pr1 (dmor diag e) a))|];
+        apply id_left
+      ).
 Defined.
 
 End Ff_cocomplete.

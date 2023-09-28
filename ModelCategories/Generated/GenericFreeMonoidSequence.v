@@ -16,6 +16,8 @@ Require Import UniMath.CategoryTheory.FunctorCategory.
 Require Import UniMath.CategoryTheory.whiskering.
 Require Import UniMath.CategoryTheory.Chains.Chains.
 
+Require Import CategoryTheory.Chains.Chains.
+
 Require Import CategoryTheory.Monoidal.Categories.
 Require Import CategoryTheory.Monoidal.WhiskeredBifunctors.
 
@@ -44,8 +46,8 @@ Context (V : monoidal C).
 Local Definition CMon : monoidal_cat := (_,, V).
 Context (T : pointed V).
 
-Context (CL : Colims C).
-Context (CE := Coequalizers_from_Colims _ CL).
+Context (CL : Chains C).
+Context (CE : Coequalizers C).
 
 (* the horizontal map can be constructed from the vertical map:
               TXβ
@@ -151,7 +153,7 @@ Definition leftwhisker_chain_with (P : CMon) (d : chain C) :
 
 Definition free_monoid_coeq_sequence_colim_on (A : C) : 
   ColimCocone (free_monoid_coeq_sequence_diagram_on A) :=
-    CL _ _.
+    CL _.
     
 Local Definition free_monoid_coeq_sequence_colim_unit := 
     free_monoid_coeq_sequence_colim_on I_{V}.
@@ -163,7 +165,7 @@ Defined.
 
 Definition free_monoid_coeq_sequence_leftwhisker_colim_on (P A : C) :
     ColimCocone (leftwhisker_chain_with P (free_monoid_coeq_sequence_diagram_on A)) :=
-        CL _ _.
+        CL _.
 
 Definition chain_shift_left (c : chain C) : chain C.
 Proof.
@@ -175,8 +177,8 @@ Proof.
 Defined.
 
 Definition chain_shift_left_colim_map (c : chain C) 
-    (clm := colim (CL _ c))
-    (clmls := colim (CL _ (chain_shift_left c))) :
+    (clm := colim (CL c))
+    (clmls := colim (CL (chain_shift_left c))) :
   clm --> clmls.
 Proof.
   (* unfold clm, clmls.
@@ -198,8 +200,8 @@ Definition right_tensor_preserves_colimits :=
     ∏ (A : CMon), is_omega_cocont (monoidal_right_tensor A).
 
 Definition chain_shift_left_colim_iso (c : chain C)
-    (clm := colim (CL _ c))
-    (clmls := colim (CL _ (chain_shift_left c))) :
+    (clm := colim (CL c))
+    (clmls := colim (CL (chain_shift_left c))) :
   z_iso clm clmls.
 Proof.
   exists (chain_shift_left_colim_map c).
@@ -211,7 +213,7 @@ Admitted. (* maybe different definition for chain_shift_left,
 
 Definition colimσ_on (A : C) : 
     colim (free_monoid_coeq_sequence_leftwhisker_colim_on T A) --> 
-      colim (CL _ (chain_shift_left (free_monoid_coeq_sequence_diagram_on A))).
+      colim (CL (chain_shift_left (free_monoid_coeq_sequence_diagram_on A))).
 Proof.
   use colimOfArrows.
   - intro n.
@@ -500,13 +502,6 @@ The rest of the construction:
 Definition preserves_chains (A : C) :=
     colim (free_monoid_coeq_sequence_colim_on A) = 
       Tinf ⊗_{V} A.
-
-
-Lemma alg_forgetful_functor_right_action_is_adjoint_if_seq_rewri :
-    
-Proof.
-
-Qed.
 
 
 End free_monoid_colim.
