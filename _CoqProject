@@ -1,6 +1,7 @@
 -Q . CategoryTheory
 whiskering.v
 limits/coproducts.v
+limits/colimits.v
 Chains/Chains.v
 DisplayedCats/Examples/Arrow.v
 DisplayedCats/Examples/Three.v
