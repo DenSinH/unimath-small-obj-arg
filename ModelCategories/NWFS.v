@@ -162,11 +162,12 @@ Proof.
   * (* We are left to prove the commutativity in the base category,
     given our displayed properties. This is effectively just commutativity
     in the bottom square. *)
-    cbn.
-    rewrite id_left, id_right.
-    apply pathsdirprod; trivial.
-    symmetry.
-    exact (pr2 (three_mor_comm ff)).
+    apply pathsdirprod.
+    + etrans. apply id_right.
+      apply pathsinv0.
+      apply id_left.
+    + apply pathsinv0.
+      exact (pr2 (three_mor_comm ff)).
 Qed.
 
 Definition c_21 : face_map_2 ⟹ face_map_1 :=
@@ -196,11 +197,12 @@ Proof.
   apply subtypePath.
   - intro x.
     apply homset_property.
-  - cbn.
-    rewrite id_left, id_right.
-    apply pathsdirprod; trivial.
-    symmetry.
-    exact (pr1 (three_mor_comm ff)).
+  - apply pathsdirprod.
+    * apply pathsinv0.
+      exact (pr1 (three_mor_comm ff)).
+    * etrans. apply id_right.
+      apply pathsinv0.
+      apply id_left.
 Qed.
 
 Definition c_10 : face_map_1 ⟹ face_map_0 :=
@@ -231,7 +233,7 @@ Defined. *)
 (* We can't really do this with the "naive definition" of three C, since then we need
 the middle object for the section. We would have to define our own theory.  *)
 Definition functorial_factorization (C : category) := section_disp (three_disp C).
-Definition fact_section {C : category} (F : functorial_factorization C)
+Coercion fact_section {C : category} (F : functorial_factorization C)
     := section_disp_data_from_section_disp F.
 Definition fact_functor {C : category} (F : functorial_factorization C) : arrow C ⟶ three C :=
     section_functor F.

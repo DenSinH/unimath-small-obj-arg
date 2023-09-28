@@ -5,7 +5,6 @@ DisplayedCats/Examples/Arrow.v
 DisplayedCats/Examples/Three.v
 DisplayedCats/Examples/MonadAlgebras.v
 DisplayedCats/natural_transformation.v
-Monads/PointedEndofunctors.v
 Monoidal/Categories.v
 Monoidal/Functors.v
 Monoidal/CategoriesOfMonoids.v

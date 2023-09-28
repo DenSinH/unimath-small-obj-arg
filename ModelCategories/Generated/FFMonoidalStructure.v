@@ -10,6 +10,9 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Total.
 Require Import UniMath.CategoryTheory.DisplayedCats.Functors.
 Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 
+Require Import UniMath.CategoryTheory.limits.graphs.colimits.
+Require Import UniMath.CategoryTheory.Chains.Chains.
+
 Require Import CategoryTheory.DisplayedCats.natural_transformation.
 Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
@@ -20,6 +23,13 @@ Local Open Scope cat.
 Local Open Scope Cat.
 Local Open Scope morcls.
 
+
+Local Ltac functorial_factorization_eq f := (
+  apply subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|];
+  use funextsec;
+  intro f;
+  use subtypePath; [intro; apply isapropdirprod; apply homset_property|]
+).
 
 Section Ff_composition.
 
@@ -450,8 +460,11 @@ Proof.
   intro f.
   exists (identity _).
   abstract (
-    split; rewrite id_left, id_right;
-      [cbn; now rewrite assoc|reflexivity]
+    split; 
+      (etrans; [apply id_right|];
+       apply pathsinv0;
+       etrans; [apply id_left|]); 
+          [apply assoc|reflexivity]
   ).
 Defined.
 
@@ -485,8 +498,11 @@ Proof.
   intro f.
   exists (identity _).
   abstract (
-    split; rewrite id_left, id_right;
-      [cbn; now rewrite assoc|reflexivity]
+    split; 
+      (etrans; [apply id_right|];
+       apply pathsinv0;
+       etrans; [apply id_left|]); 
+          [apply assoc'|reflexivity]
   ).
 Defined.
 
@@ -505,10 +521,7 @@ Proof.
   
   (* unfold three_mor11.
   simpl. *)
-  use section_disp_on_eq_morphisms.
-  - cbn.
-    reflexivity.
-  - reflexivity.
+  use section_disp_on_eq_morphisms; reflexivity.
 Qed.
 
 Definition Ff_l_assoc_rev (F F' F'' : Ff C) :
@@ -590,13 +603,6 @@ Proof.
   - exact Ff_l_assoc.
   - exact Ff_l_assoc_rev.
 Defined.
-
-Local Ltac functorial_factorization_eq f := (
-  apply subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|];
-  use funextsec;
-  intro f;
-  use subtypePath; [intro; apply isapropdirprod; apply homset_property|]
-).
 
 Definition Ff_monoidal_laws : monoidal_laws Ff_monoidal_data.
 Proof.
@@ -786,8 +792,8 @@ Proof.
   
   apply subtypePath; [intro; apply homset_property|].
   apply pathsdirprod.
-  - cbn.
-    cbn in μaxγb.
+  - (* cbn.
+    cbn in μaxγb. *)
     apply pathsinv0.
     etrans. exact (pathsinv0 μaxγb).
     etrans. use pr1_transportf_const.
@@ -823,13 +829,10 @@ Lemma Ff_monoid_RNWFS_base_condition_iff_cond
 Proof.
   split.
   - intro H.
-    use subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|].
-    apply funextsec.
-    intro f.
-    apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
+    functorial_factorization_eq f.
+    (* todo: functorial_factorization_eq f *)
     exact (H f).
-  - intro H.
-    intro f.
+  - intros H f.
     set (Hf := eq_section_nat_trans_disp_on_morphism H f).
     exact (base_paths _ _ Hf).
 Qed.
@@ -916,3 +919,324 @@ Proof.
 Defined.
 
 End Ff_monoid_is_RNWFS.
+
+(* todo: move this to UniMath/CategoryTheory/Chains/Chains.v *)
+Definition Chains (C : category) : UU := 
+    ∏ (d : chain C), ColimCocone d.
+
+Local Definition chain_mor0 {C : category} (d : chain C) : 
+    ∏ v, ∑ (f : dob d 0 --> dob d (S v)), (∏ (x : C) (cc : cocone d x), f · coconeIn cc (S v) = coconeIn cc 0).
+Proof.
+  intro v.
+  use tpair.
+  -  use chain_mor.
+    apply natgthsn0.
+  - intros ? ?.
+    apply chain_mor_coconeIn.
+Defined.
+
+Section Ff_cocomplete.
+
+Context {C : category}.
+Context (CC : Colims C).
+
+Section Ff_cocomplete_diagram.
+
+Context (D : chain (Ff C)).
+
+(* diagram of middle objects *)
+Local Definition diagram_pointwise (a : arrow C) : chain C.
+Proof.
+  use tpair.
+  - intro v.
+    exact (pr1 (pr1 (dob D v) a)).
+  - intros u v e.
+    exact (pr1 (pr1 (dmor D e) a)).
+Defined.
+
+Local Definition HCg : ∏ (a : arrow C), ColimCocone (diagram_pointwise a) :=
+    λ a, CC _ _.
+
+(* this construction only works for non-empty graphs, since
+   we need an arrow arrow_dom a --> colim (HCg a), 
+   but we can only find this for a non-empty graph *)
+Definition ColimFf_ob (a : arrow C) : three_disp C a.
+Proof.
+  exists (colim (HCg a)).
+
+  exists (pr12 (pr1 (dob D 0) a) · (colimIn (HCg a) 0)).
+  use tpair.
+  - use colimArrow.
+    use make_cocone.
+    + intro v.
+      exact (pr122 (pr1 (dob D v) a)).
+    + intros u v e.
+      etrans. exact (pathsinv0 (pr22 (pr1 (dmor D e) a))).
+      apply id_right.
+  - (* cbn. *)
+    abstract (
+      etrans; [apply assoc'|];
+      etrans; [apply cancel_precomposition;
+              use (colimArrowCommutes (HCg a))|];
+      (* cbn. *)
+      exact (three_comp (fact_functor (dob D 0) a))
+    ).
+Defined.
+
+Definition ColimFf_mor
+    {a b : arrow C} (f : a --> b) :
+  ColimFf_ob a -->[f] ColimFf_ob b.
+Proof.
+  use tpair.
+  - use colimOfArrows.
+    * intro v.
+      (* cbn. *)
+      set (Dv := (dob D v)).
+      exact (pr1 ((section_disp_on_morphisms (section_disp_data_from_section_disp Dv)) f)).
+    * intros u v e.
+      (* cbn. *)
+      abstract (
+        set (De := (dmor D e));
+        set (Deax := section_nt_disp_axioms_from_section_nt_disp De _ _ f);
+        etrans; [exact (pathsinv0 (base_paths _ _ Deax))|];
+        etrans; [apply pr1_transportf_const|];
+        reflexivity
+      ).
+  - (* functorality of dob D v *)
+    split.
+    * (* cbn. *)
+      abstract (
+        set (Dv0f := ((section_disp_on_morphisms (section_disp_data_from_section_disp (dob D 0))) f));
+        set (Dv0fax := pr2 Dv0f);
+        etrans; [apply assoc'|];
+        etrans; [apply cancel_precomposition;
+                 use (colimArrowCommutes (HCg a))|];
+        
+        etrans; [apply assoc|];
+        apply pathsinv0;
+        etrans; [apply assoc|];
+        apply cancel_postcomposition;
+        exact (pathsinv0 (pr1 Dv0fax))
+      ).
+    * (* cbn. *)
+
+      abstract (
+        etrans; [use postcompWithColimArrow|];
+        apply pathsinv0;
+        etrans; [use precompWithColimOfArrows|];
+        apply maponpaths;
+        use cocone_paths;
+        intro v;
+        (* cbn. *)
+        set (Dvf := ((section_disp_on_morphisms (section_disp_data_from_section_disp (dob D v))) f));
+        set (Dvfax := pr2 Dvf);
+  
+        exact (pathsinv0 (pr2 Dvfax))
+      ).
+Defined.
+
+Definition ColimFf_data : section_disp_data (three_disp C) :=
+    (_,, @ColimFf_mor).
+
+Lemma ColimFf_axioms : section_disp_axioms ColimFf_data.
+Proof.
+  split.
+  - intro a.
+    use subtypePath; [intro; apply isapropdirprod; apply homset_property|].
+    apply pathsinv0, colim_endo_is_identity; intro u.
+    (* cbn. *)
+    etrans. use (colimOfArrowsIn _ _ (HCg a)).
+    (* cbn. *)
+    etrans. apply cancel_postcomposition.
+            apply maponpaths.
+            exact (section_disp_id (dob D u) _).
+    apply id_left.
+  - intros a b c fab fbc.
+    use subtypePath; [intro; apply isapropdirprod; apply homset_property|].
+    (* cbn. *)
+    apply pathsinv0.
+    etrans. apply precompWithColimOfArrows.
+    apply pathsinv0, colimArrowUnique.
+    intro u.
+    etrans. apply colimOfArrowsIn.
+
+    apply pathsinv0.
+    etrans. apply assoc.
+    apply cancel_postcomposition.
+
+    etrans. apply pr1_section_disp_on_morphisms_comp.
+    reflexivity.
+Qed.
+
+Definition ColimFf : Ff C := 
+    (_,, ColimFf_axioms).
+
+(* we need an edge from v0 to v for this to work,
+   regarding equality of (arrow_dom v/v0 · colimIn v/v0) *)
+
+Local Definition colim_nat_trans_in_data {v : nat}  : 
+    dob D v --> ColimFf.
+Proof.
+  use tpair.
+  - intro a.
+    exists (colimIn (HCg a) v).
+    split.
+    * (* unfold ColimFf. *)
+      (* cbn. *)
+      abstract (
+        apply pathsinv0;
+        etrans; [apply id_left|];
+        induction v as [|v Hv]; [reflexivity|];
+        etrans; [exact Hv|];
+        assert (e : @edge nat_graph v (S v)); [reflexivity|];
+        etrans; [apply cancel_precomposition;
+                exact (pathsinv0 (colimInCommutes (HCg a) _ _ e))|];
+        etrans; [apply assoc|];
+        apply cancel_postcomposition;
+        etrans; [exact (pr12 (pr1 (dmor D e) a))|];
+        apply id_left
+      ).
+    * abstract (
+        etrans; [apply id_right|];
+        apply pathsinv0;
+        etrans; [apply (colimArrowCommutes (HCg a))|];
+        reflexivity
+      ).
+  - abstract (
+      intros a b f;
+      apply subtypePath; [intro; apply isapropdirprod; apply homset_property|];
+      etrans; [use pr1_transportf_const|];
+      apply pathsinv0;
+      (* cbn. *)
+      etrans; [apply (colimOfArrowsIn _ _ (HCg a))|];
+      reflexivity
+    ).
+Defined.
+
+Local Definition cocone_pointwise (F : Ff C) (cc : cocone D F) a :
+  cocone (diagram_pointwise a) (pr1 (pr1 F a)).
+Proof.
+  use make_cocone.
+  - intro v.
+    exact (pr1 (pr1 (coconeIn cc v) a)).
+  - abstract (
+      intros u v e;
+      (* cbn. *)
+      set (cccomm_pointwise := eq_section_nat_trans_disp_on_morphism (coconeInCommutes cc _ _ e) a);
+      apply pathsinv0;
+      etrans; [exact (pathsinv0 (base_paths _ _ cccomm_pointwise))|];
+      etrans; [use pr1_transportf_const|];
+      reflexivity
+    ).
+Defined.
+
+Definition ColimFf_unique_mor
+    (F : Ff C) (cc : cocone D F) :
+  ColimFf --> F.
+Proof.
+  use tpair.
+  * intro a.
+    exists (colimArrow (HCg a) _ (cocone_pointwise F cc a)).
+    split.
+    + abstract (
+        (* cbn. *)
+        etrans; [apply assoc'|];
+        etrans; [apply cancel_precomposition;
+                 apply (colimArrowCommutes (HCg a))|];
+        apply pathsinv0;
+        etrans; [apply id_left|];
+        apply pathsinv0;
+        (* cbn. *)
+        etrans; [exact (pr12 (pr1 (coconeIn cc 0) a))|];
+        apply id_left
+      ).
+    + abstract (
+        etrans; [apply id_right|];
+        apply pathsinv0;
+        etrans; [apply postcompWithColimArrow|];
+        apply maponpaths;
+        use cocone_paths;
+        intro u;
+        (* cbn. *)
+        (* naturality of coconeIn cc at u *)
+        etrans; [exact (pathsinv0 (pr22 (pr1 (coconeIn cc u) a)))|];
+        apply id_right
+      ).
+  * abstract (
+      intros a b f;
+      apply subtypePath; [intro; apply isapropdirprod; apply homset_property|];
+      etrans; [use pr1_transportf_const|];
+      etrans; [apply precompWithColimOfArrows|];
+      apply pathsinv0;
+      etrans; [apply postcompWithColimArrow|];
+
+      use colimArrowUnique;
+      intro u;
+      etrans; [apply (colimArrowCommutes (HCg a))|];
+      (* cbn. *)
+  
+      set (ccuf := (section_nt_disp_axioms_from_section_nt_disp (coconeIn cc u)) _ _ f);
+      etrans; [exact (pathsinv0 (base_paths _ _ ccuf))|];
+      etrans; [use pr1_transportf_const|];
+      reflexivity
+    ).
+Defined.
+
+Lemma ColimFf_unique 
+    (F : Ff C) (cc : cocone D F) :
+  ∃! x : ColimFf --> F,
+            ∏ v, colim_nat_trans_in_data · x = coconeIn cc v.
+Proof.
+  use unique_exists.
+  - exact (ColimFf_unique_mor F cc).
+  - abstract (
+      intro v;
+      functorial_factorization_eq a;
+      etrans; [use pr1_transportf_const|];
+      etrans; [apply (colimArrowCommutes (HCg a))|];
+      reflexivity
+    ).
+  - abstract (
+      intro; apply impred; intro; apply homset_property
+    ).
+  - abstract (
+      intros f t;
+      functorial_factorization_eq a;
+      apply colimArrowUnique;
+      intro u;
+      (* cbn. *)
+      set (tax := eq_section_nat_trans_disp_on_morphism (t u) a);
+      apply pathsinv0;
+      etrans; [exact (pathsinv0 (base_paths _ _ tax))|];
+      etrans; [use pr1_transportf_const|];
+      reflexivity
+    ).
+Defined.
+
+Lemma ColimFfCocone :
+    ColimCocone D.
+Proof.
+  use make_ColimCocone.
+  - exact ColimFf.
+  - use make_cocone.
+    * exact @colim_nat_trans_in_data.
+    * abstract (
+        intros u v e;
+        functorial_factorization_eq a;
+        etrans; [use pr1_transportf_const|];
+        (* cbn. *)
+        apply (colimInCommutes (HCg a))
+      ).
+  - intros F cc; exact (ColimFf_unique _ cc).
+Defined.
+
+End Ff_cocomplete_diagram.
+
+Lemma ChainsFf (HC : Colims C) : 
+    Chains (Ff C).
+Proof.
+  intros d.
+  use (ColimFfCocone d).
+Defined.
+
+End Ff_cocomplete.

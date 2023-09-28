@@ -16,8 +16,8 @@ Lemma section_disp_on_eq_morphisms {C : category}
     {f f' : arrow C} {γ γ': f --> f'} 
     (H00 : arrow_mor00 γ = arrow_mor00 γ')
     (H11 : arrow_mor11 γ = arrow_mor11 γ') :
-  pr1 (section_disp_on_morphisms (section_disp_data_from_section_disp F) γ) =
-    pr1 (section_disp_on_morphisms (section_disp_data_from_section_disp F) γ').
+  pr1 (section_disp_on_morphisms F γ) =
+    pr1 (section_disp_on_morphisms F γ').
 Proof.
   assert (Heq : γ = γ').
   {
@@ -34,8 +34,8 @@ Lemma section_disp_on_eq_morphisms' {C : category}
     (F : section_disp (three_disp C)) {f f' : arrow C} {γ : f --> f'} 
     (H : arrow_mor00 γ · f' = f · arrow_mor11 γ) :
   let alternate := ((arrow_mor00 γ,, arrow_mor11 γ),, H) : f --> f' in
-  pr1 (section_disp_on_morphisms (section_disp_data_from_section_disp F) alternate) =
-    pr1 (section_disp_on_morphisms (section_disp_data_from_section_disp F) γ).
+  pr1 (section_disp_on_morphisms F alternate) =
+    pr1 (section_disp_on_morphisms F γ).
 Proof.
   use section_disp_on_eq_morphisms.
   - reflexivity.

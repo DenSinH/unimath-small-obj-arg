@@ -123,7 +123,7 @@ Proof.
   cbn.
   
   Search (luinv^{ ?V }_{ ?X ⊗_{?V} ?A}).
-Admitted.
+Admitted. (* annoying, sbt *)
 
 Lemma Mon_alg_action_mor_rel {T : pointed} (X : Mon_alg T)
     {A B : C} (f : A --> B) :
@@ -135,7 +135,7 @@ Proof.
   destruct X as [X [x rel]].
   cbn.
 
-Admitted.
+Admitted. (* annoying, sbt *)
 
 Definition Mon_alg_right_action_data {T : pointed} (X : Mon_alg T) :
   functor_data C (Mon_alg T).
@@ -181,7 +181,7 @@ Lemma Mon_induced_alg_map_rel {T S : pointed} {A : C} (F : T --> S)
     identity _.
 Proof.
 
-Admitted.
+Admitted. (* annoying, sbt *)
 
 Lemma Mon_induced_alg_map_mor_rel {T S : pointed} {A B : C} (F : T --> S)
     {a : Mon_alg_disp S A} {b : Mon_alg_disp S B} {f : A --> B}
@@ -189,7 +189,7 @@ Lemma Mon_induced_alg_map_mor_rel {T S : pointed} {A B : C} (F : T --> S)
     F ⊗^{ V}_{r} A · (pr1 a) · f = T ⊗^{ V}_{l} f · (F ⊗^{ V}_{r} B · (pr1 b)).
 Proof.
 
-Admitted.
+Admitted. (* annoying, sbt *)
 
 Definition Mon_induced_alg_map_data {T S : pointed} (F : T --> S) :
     disp_functor_data (functor_identity _) (Mon_alg_disp S) (Mon_alg_disp T).
@@ -352,7 +352,7 @@ Proof.
     etrans. apply cancel_postcomposition.
             apply (monoidal_associatornatleft V).
     admit.
-Admitted.
+Admitted. (* annoying, sbt *)
 
 Definition alg_forgetful_functor_right_action_is_adjoint_monoid 
     {T : pointed} {X : Mon_alg T} 

@@ -31,7 +31,6 @@ Require Import CategoryTheory.ModelCategories.Generated.LiftingWithClass.
 
 Require Import CategoryTheory.DisplayedCats.Examples.MonadAlgebras.
 Require Import CategoryTheory.limits.coproducts.
-Require Import CategoryTheory.Monads.PointedEndofunctors.
 
 Local Open Scope cat.
 Local Open Scope mor_disp.
@@ -1175,7 +1174,7 @@ Proof.
       apply pathsinv0.
       etrans. apply PushoutArrow_PushoutIn2.
       reflexivity. *)
-Admitted. (* todo: this hangs *)
+Admitted. (* necessary! *)
 
 Definition one_step_comonad : Monad (op_cat (arrow C)) :=
     (_,, one_step_comonad_laws).
@@ -1319,7 +1318,7 @@ Proof.
            admit.
         -- admit.
   - cbn.
-Admitted.
+Admitted. (* unimportant *)
 
 (* osc = one step comonad *)
 Definition natural_bijections_osc (n : nwfs C) :
@@ -1367,7 +1366,7 @@ Proof.
       admit.
   - (* disp_functor_axioms *)
     simpl. *)
-Admitted.
+Admitted. (* unimportant *)
 
 
 Definition natural_bijections_osc_inv (n : nwfs C) :
@@ -1389,7 +1388,7 @@ Proof.
       (* so we need g to be an L-map, which we can if g is in J,
          but can't otherwise... *)
       
-Admitted.
+Admitted. (* unimportant *)
 
 
 End natural_bijections.
