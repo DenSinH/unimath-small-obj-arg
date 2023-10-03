@@ -119,11 +119,32 @@ Lemma Mon_alg_action_alg_map_rel {T : pointed}
   · (αinv^{ V }_{ T, pr1 X, A} · pr12 X ⊗^{ V}_{r} A) =
   identity _.
 Proof.
-  destruct X as [X [x rel]].
-  cbn.
+  destruct X as [X [x xrel]].
+  (* cbn. *)
+
+  set (trinv := monoidal_triangle_identity'_inv V X A).
+  set (associnvnat := monoidal_associatorinvnatright V _ _ X A (pointed_pt T)).
+  set (whiskerrightcomp := bifunctor_rightcomp V).
+
+  etrans. apply assoc.
+  etrans. apply assoc4.
+  etrans. apply maponpaths_2.
+          apply maponpaths.
+          exact associnvnat.
   
-  Search (luinv^{ ?V }_{ ?X ⊗_{?V} ?A}).
-Admitted. (* annoying, sbt *)
+  etrans. apply cancel_postcomposition.
+          apply assoc.
+  etrans. do 2 apply cancel_postcomposition.
+          exact trinv.
+  
+  etrans. apply cancel_postcomposition.
+          exact (pathsinv0 (whiskerrightcomp A _ _ _ _ _)).
+  etrans. exact (pathsinv0 (whiskerrightcomp A _ _ _ _ _)).
+  
+  etrans. apply maponpaths.
+          exact xrel.
+  apply (bifunctor_rightid V).
+Qed.
 
 Lemma Mon_alg_action_mor_rel {T : pointed} (X : Mon_alg T)
     {A B : C} (f : A --> B) :
@@ -131,11 +152,21 @@ Lemma Mon_alg_action_mor_rel {T : pointed} (X : Mon_alg T)
       (_,, Mon_alg_action_alg_map_rel X A)
       (_,, Mon_alg_action_alg_map_rel X B) (pr1 X ⊗^{ V}_{l} f).   
 Proof.
-  unfold Mon_alg_mor_axioms.
-  destruct X as [X [x rel]].
-  cbn.
+  (* unfold Mon_alg_mor_axioms. *)
+  destruct X as [X [x xrel]].
+  (* cbn. *)
 
-Admitted. (* annoying, sbt *)
+  etrans. apply assoc'.
+  etrans. apply cancel_precomposition.
+          use (whiskerscommutes _ (bifunctor_equalwhiskers V)).
+
+  etrans. apply assoc.
+  apply pathsinv0.
+  etrans. apply assoc.
+  apply cancel_postcomposition.
+
+  apply (monoidal_associatorinvnatleft V).
+Qed.
 
 Definition Mon_alg_right_action_data {T : pointed} (X : Mon_alg T) :
   functor_data C (Mon_alg T).
@@ -144,7 +175,7 @@ Proof.
   - intro A.
     exists ((pr1 X) ⊗_{V} A).
     cbn.
-    unfold Mon_alg_data.
+    (* unfold Mon_alg_data. *)
     exists ((αinv_{V} T (pr1 X) A) · ((pr12 X) ⊗^{V}_{r} A)).
     apply Mon_alg_action_alg_map_rel.
   - intros A B f.
@@ -175,13 +206,29 @@ Definition Mon_alg_right_action {T : pointed} (X : Mon_alg T) :
    Mon should be a monoidal category (Ff_C) is at least
 *)
 
-Lemma Mon_induced_alg_map_rel {T S : pointed} {A : C} (F : T --> S)
+(* this is not needed
+   in case it is: define morphisms of pointed objects *)
+(* Lemma Mon_induced_alg_map_rel {T S : pointed} {A : C} (F : T --> S)
     (a : Mon_alg_disp S A) : 
   luinv^{ V }_{ A} · pointed_pt T ⊗^{ V}_{r} A · (F ⊗^{ V}_{r} A · (pr1 a)) =
     identity _.
 Proof.
+  destruct a as [a arel].
+  cbn.
+  
+  etrans. apply assoc.
+  etrans. apply assoc4.
+  etrans. apply maponpaths_2.
+          apply maponpaths.
+          exact (pathsinv0 (bifunctor_rightcomp V A _ _ _ _ _)).
+  
+  etrans. apply maponpaths_2.
+          apply maponpaths.
+          apply maponpaths.
 
-Admitted. (* annoying, sbt *)
+
+
+Admitted. (* unimportant *)
 
 Lemma Mon_induced_alg_map_mor_rel {T S : pointed} {A B : C} (F : T --> S)
     {a : Mon_alg_disp S A} {b : Mon_alg_disp S B} {f : A --> B}
@@ -189,7 +236,7 @@ Lemma Mon_induced_alg_map_mor_rel {T S : pointed} {A B : C} (F : T --> S)
     F ⊗^{ V}_{r} A · (pr1 a) · f = T ⊗^{ V}_{l} f · (F ⊗^{ V}_{r} B · (pr1 b)).
 Proof.
 
-Admitted. (* annoying, sbt *)
+Admitted. (* unimportant *)
 
 Definition Mon_induced_alg_map_data {T S : pointed} (F : T --> S) :
     disp_functor_data (functor_identity _) (Mon_alg_disp S) (Mon_alg_disp T).
@@ -216,7 +263,7 @@ Qed.
 
 Definition Mon_induced_alg_map {T S : pointed} (F : T --> S) :
     disp_functor (functor_identity _) (Mon_alg_disp S) (Mon_alg_disp T) :=
-  (_,, Mon_induced_alg_map_axioms F).
+  (_,, Mon_induced_alg_map_axioms F). *)
 
 (* define NWFS_alg as disp_cat over Mon_alg with
    "associativity axiom" (Kelly, par 22.1)
@@ -266,40 +313,159 @@ Proof.
   exact η.
 Defined.
 
+Definition alg_forgetful_functor_right_action_adjoint_monad_unit_preserves_right_tensor
+    {T : pointed} {X : Mon_alg T}     
+    (Adj : alg_forgetful_functor_right_action_is_adjoint X) :=
+  let m := Monad_from_adjunction Adj in
+  ∏ (Y : C), 
+    η m Y = 
+      luinv_{V} Y · 
+      η m I_{V} ⊗^{V}_{r} Y ·
+      (ru_{V} (pr1 X)) ⊗^{V}_{r} Y.
+
+
+(* need: 
+pr1 X ⊗^{ V}_{l} (pr1 X ⊗^{ V}_{l} ruinv^{ V }_{ pr1 X}) · μ m (m I_{ V}) 
+    =
+    αinv^{ V }_{ pr1 X, pr1 X, pr1 X}
+    · (pr1 X ⊗^{ V}_{l} ruinv^{ V }_{ pr1 X}
+        · μ (Monad_from_adjunction Adj) I_{ V} · ru^{ V }_{ pr1 X})
+      ⊗^{ V}_{r} pr1 X · pr1 X ⊗^{ V}_{l} ruinv^{ V }_{ pr1 X} *)
+Definition alg_forgetful_functor_right_action_adjoint_monad_mul_preserves_right_tensor
+      {T : pointed} {X : Mon_alg T}     
+      (Adj : alg_forgetful_functor_right_action_is_adjoint X) :=
+    let m := Monad_from_adjunction Adj in
+    ∏ (Y : C), 
+        μ m Y = 
+          αinv_{V} _ _ _ ·
+          (_ ⊗^{V}_{l} ruinv_{V} _) ⊗^{V}_{r} _ ·
+          μ m I_{V} ⊗^{V}_{r} Y ·
+          ru_{V} _ ⊗^{V}_{r} _.
+
+(* Definition alg_forgetful_functor_right_action_adjoint_monad_mul_preserves_right_tensor
+      {T : pointed} {X : Mon_alg T}     
+      (Adj : alg_forgetful_functor_right_action_is_adjoint X) :=
+    let m := Monad_from_adjunction Adj in
+    ∏ (Y : C), 
+        μ m Y = 
+          (pr1 X) ⊗^{V}_{l} ((pr1 X) ⊗^{V}_{l} luinv_{V} Y) · 
+          (pr1 X) ⊗^{V}_{l} αinv_{V} _ _ _ · 
+          αinv_{V} _ _ _ · 
+          μ m I_{V} ⊗^{V}_{r} Y ·
+          (α_{V} _ _ _) ·
+          (pr1 X) ⊗^{V}_{l} lu_{V} Y. *)
+
 Definition alg_forgetful_functor_right_action_is_adjoint_monoid_laws 
     {T : pointed} {X : Mon_alg T} 
-    (Adj : alg_forgetful_functor_right_action_is_adjoint X)  :
+    {Adj : alg_forgetful_functor_right_action_is_adjoint X}
+    (ηr : alg_forgetful_functor_right_action_adjoint_monad_unit_preserves_right_tensor Adj)
+    (μr : alg_forgetful_functor_right_action_adjoint_monad_mul_preserves_right_tensor Adj) :
   monoid_laws V (alg_forgetful_functor_right_action_is_adjoint_monoid_data Adj).
 Proof.
   (* these should just follow from the monad laws of Monad_from_adjunction Adj *)
   set (m := Monad_from_adjunction Adj).
+  set (u := unit_from_are_adjoints Adj).
   repeat split.
-  - unfold monoid_laws_unit_left.
+  - 
+    (* unfold monoid_laws_unit_left.
     cbn.
-    unfold alg_forgetful_functor_right_action_is_adjoint_induced_mul.
-    cbn.
-    set (test := Monad_law1 (T := m)).
-    set (testI := test I_{V}).
-    cbn in testI.
+    unfold alg_forgetful_functor_right_action_is_adjoint_induced_mul. *)
+    (* cbn. *)
+    
     etrans. apply maponpaths_2.
             apply (bifunctor_rightcomp V).
     etrans. apply assoc.
-    etrans. apply maponpaths_2.
-            apply assoc.
-            
+    etrans. apply cancel_postcomposition, assoc.
+    etrans. apply cancel_postcomposition, assoc4.
+    etrans. do 2 apply cancel_postcomposition.
+            apply maponpaths.
+            apply (whiskerscommutes _ (bifunctor_equalwhiskers V)).
+    
+    etrans. do 2 apply cancel_postcomposition.
+    {
+      etrans. apply assoc.
+      apply cancel_postcomposition.
+      apply (whiskerscommutes _ (bifunctor_equalwhiskers V)).
+    }
 
-    show_id_type.
-    admit.
-  - unfold monoid_laws_unit_right.
-    cbn.
-    unfold alg_forgetful_functor_right_action_is_adjoint_induced_mul.
-    cbn.
-    admit.
-  - unfold monoid_laws_assoc.
-    cbn.
-    unfold alg_forgetful_functor_right_action_is_adjoint_induced_mul.
+    (* transform rhs to identity (m I_{V}) (== identity (pr1 X))
+       then plug in monad law 1 *)
+    apply pathsinv0.
+    apply (pre_comp_with_z_iso_is_inj 
+            (is_inverse_in_precat_inv (monoidal_leftunitorisolaw V _))).
+    apply (pre_comp_with_z_iso_is_inj 
+             (monoidal_rightunitorisolaw V _)).
+    apply (post_comp_with_z_iso_is_inj 
+             (is_inverse_in_precat_inv (monoidal_rightunitorisolaw V (pr1 X)))).
+    etrans. 
+    {
+      etrans. apply cancel_postcomposition.
+              apply cancel_precomposition.
+              apply (monoidal_leftunitorisolaw V _).
+      etrans. apply cancel_postcomposition.
+              apply id_right.
+      etrans. apply (monoidal_rightunitorisolaw V _).
+      exact (pathsinv0 (Monad_law1 (T := m) I_{V})).
+    }
+    
     (* cbn. *)
+    
+    apply pathsinv0.
+    etrans. apply cancel_postcomposition, assoc.
+    etrans. apply cancel_postcomposition, assoc.
+    etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+            apply (monoidal_rightunitorisolaw V _).
+    etrans. apply id_right.
 
+    etrans. apply assoc.
+    apply cancel_postcomposition.
+
+    apply pathsinv0.
+    etrans. apply ηr.
+    apply pathsinv0.
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition, assoc.
+    do 2 apply cancel_postcomposition.
+    etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+            apply (monoidal_leftunitorinvnat V).
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+            apply (monoidal_rightunitorisolaw V _).
+    apply id_left.
+  - 
+    (* unfold monoid_laws_unit_right.
+    cbn.
+    unfold alg_forgetful_functor_right_action_is_adjoint_induced_mul.
+     *)
+    etrans. apply cancel_postcomposition.
+            apply (bifunctor_leftcomp V).
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+            apply assoc.
+    etrans. do 2 apply cancel_postcomposition.
+    etrans. apply assoc'.
+            apply cancel_precomposition.
+    {   
+        etrans. apply (pathsinv0 (bifunctor_leftcomp V _ _ _ _ _ _)).
+        etrans. apply maponpaths.
+                exact (pr1 (monoidal_rightunitorisolaw V (pr1 X))).
+        apply (bifunctor_leftid V).
+    }
+    etrans. do 2 apply cancel_postcomposition.
+            apply id_right.
+    
+    apply pathsinv0.
+    etrans. apply (pathsinv0 (id_left _)).
+    apply cancel_postcomposition.
+    apply pathsinv0.
+    exact (Monad_law2 (T := m) I_{V}).
+  - 
+    (* unfold monoid_laws_assoc. *)
+    (* cbn. *)
+    (* unfold alg_forgetful_functor_right_action_is_adjoint_induced_mul. *)
+    (* cbn. *)
     etrans. apply cancel_postcomposition.
             apply maponpaths.
             apply (bifunctor_leftcomp V).
@@ -330,13 +496,14 @@ Proof.
             apply (bifunctor_leftid V).
     etrans. do 2 apply cancel_postcomposition.
             apply id_right.
-
+    
     etrans. do 2 apply cancel_postcomposition.
             apply assoc.
     etrans. apply cancel_postcomposition.
             apply assoc'.
     etrans. apply cancel_postcomposition.
             apply cancel_precomposition.
+    (* #m (μ m I_{V}) = X ⊗^{V}_{l} μ m I_{V} *)
             exact (Monad_law3 (T := m) I_{V}).
     
     (* cbn. *)
@@ -349,15 +516,76 @@ Proof.
     apply cancel_postcomposition.
     apply pathsinv0.
 
+    apply (pre_comp_with_z_iso_is_inj 
+            (is_inverse_in_precat_inv (monoidal_associatorisolaw V _ _ _))).
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition, assoc.
+    etrans. do 2 apply cancel_postcomposition.
+            apply (monoidal_associatorisolaw V).
+    etrans. apply assoc'.
+    etrans. apply id_left.
+    
+    etrans. apply maponpaths.
+            apply μr.
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition, assoc.
+    
+    apply pathsinv0.
+    etrans. apply assoc.
     etrans. apply cancel_postcomposition.
-            apply (monoidal_associatornatleft V).
-    admit.
-Admitted. (* annoying, sbt *)
+            apply cancel_precomposition.
+    {
+      etrans. apply (bifunctor_rightcomp V).
+      apply cancel_postcomposition.
+      apply (bifunctor_rightcomp V).
+    }
+
+    etrans. apply cancel_postcomposition, assoc.
+    etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+            apply (whiskerscommutes _ (bifunctor_equalwhiskers V)).
+    etrans. apply assoc.
+    apply cancel_postcomposition.
+    
+    etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+    {
+      etrans. apply assoc'.
+      apply cancel_precomposition.
+      apply (whiskerscommutes _ (bifunctor_equalwhiskers V)).
+    }
+    do 2 (etrans; [apply assoc|]).
+    apply cancel_postcomposition.
+
+    etrans. apply cancel_postcomposition.
+            apply (pathsinv0 (monoidal_associatorinvnatleftright V _ _ _ _ _)).
+    
+    apply pathsinv0.
+    etrans. apply cancel_precomposition.
+            apply (pathsinv0 (monoidal_associatorinvnatleftright V _ _ _ _ _)).
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+    {
+      etrans. apply (pathsinv0 (bifunctor_leftcomp V _ _ _ _ _ _)).
+      etrans. apply maponpaths.
+      apply (pathsinv0 (whiskerscommutes _ (bifunctor_equalwhiskers V) _ _)).
+      apply (bifunctor_leftcomp V).
+    }
+    etrans. apply assoc'.
+    apply pathsinv0.
+    etrans. apply assoc'.
+    apply cancel_precomposition.
+
+    apply pathsinv0.
+    apply (monoidal_associatorinvnatleft V).
+Qed.
 
 Definition alg_forgetful_functor_right_action_is_adjoint_monoid 
     {T : pointed} {X : Mon_alg T} 
-    (Adj : alg_forgetful_functor_right_action_is_adjoint X)  :
-  monoid _ _ := (_,, alg_forgetful_functor_right_action_is_adjoint_monoid_laws Adj).
+    {Adj : alg_forgetful_functor_right_action_is_adjoint X}
+    (ηr : alg_forgetful_functor_right_action_adjoint_monad_unit_preserves_right_tensor Adj)
+    (μr : alg_forgetful_functor_right_action_adjoint_monad_mul_preserves_right_tensor Adj) :
+  monoid _ _ := (_,, alg_forgetful_functor_right_action_is_adjoint_monoid_laws ηr μr).
 
 (* todo: define free monoid *)
 (* Lemma alg_free_monad_exists_if_alg_forgetful_functor_right_action_is_adjoint {T : pointed} (X : Mon_alg T) :

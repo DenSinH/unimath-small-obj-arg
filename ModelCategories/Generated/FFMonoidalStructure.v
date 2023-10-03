@@ -534,7 +534,6 @@ Definition Ff_l_assoc_rev (F F' F'' : Ff C) :
     (F ⊗ (F' ⊗ F'')) --> ((F ⊗ F') ⊗ F'') :=
   (_,, Ff_l_assoc_rev_axioms F F' F'').
 
-(* todo: is this defined correctly? *)
 Definition Ff_l_mor_comp {F F' G G' : Ff C} 
     (τ : F --> F') (ρ : G --> G') :
   (F ⊗ G) --> (F' ⊗ G').
@@ -836,7 +835,6 @@ Proof.
   split.
   - intro H.
     functorial_factorization_eq f.
-    (* todo: functorial_factorization_eq f *)
     exact (H f).
   - intros H f.
     set (Hf := eq_section_nat_trans_disp_on_morphism H f).
@@ -1065,12 +1063,6 @@ Definition ColimFf (v0 : vertex g) : Ff C :=
 
 (* we need an edge from v0 to v for this to work,
    regarding equality of (arrow_dom v/v0 · colimIn v/v0) *)
-(* todo: change the assumption H to something more generic,
-   in terms of the graph / the diagram.
-   All we really need is connectedness of the graph (through
-   some finite path), then we could do induction over the 
-   path and the proof would work.
-   For now, this is sufficient *)
 Local Definition colim_nat_trans_in_data 
       {v0 : vertex g} {v : vertex g} : 
     dob D v --> ColimFf v0.
@@ -1255,14 +1247,13 @@ Proof.
   - exact 0.
 Defined.
 
-Local Open Scope stn.
 
 Lemma CoequalizersFf (HC : Colims C) :
     Coequalizers (Ff C).
 Proof.
   intros F G f g.
   use (ColimFfCocone).
-  - use (is_connected_pointed Coequalizer_graph (● 0)).
+  - use (is_connected_pointed Coequalizer_graph (● 0)%stn).
     intro v.
     induction v as [v v2].
     induction v as [|v Hv].
@@ -1271,13 +1262,13 @@ Proof.
       reflexivity.
     * induction v as [|v Hv2]; [|induction (nopathsfalsetotrue v2)].
       exists 1.
-      exists (● 1).
+      exists (● 1)%stn.
       split.
       + do 2 apply inl.
         exact tt.
       + apply subtypePath; [intro; apply propproperty|].
         reflexivity.
-  - exact (● 0).
+  - exact (● 0)%stn.
 Defined.
 
 End Ff_cocomplete.

@@ -71,7 +71,7 @@ Coercion pair_diagram_arr (X : pair_diagram) :=
 Local Definition pair_diagram_horizontal_arrow (X : pair_diagram) : (pair_diagram_lob X) --> (pair_diagram_rob X).
 Proof.
   destruct X as [Xβ [Xβ1 xβ]].
-  cbn.
+  (* cbn. *)
   set (τX := (luinv_{V} Xβ) · (pointed_pt _ T) ⊗^{V}_{r} Xβ : Xβ --> T ⊗_{V} Xβ).
   exact (τX · xβ).
 Defined.
@@ -176,7 +176,132 @@ Proof.
     abstract (now rewrite <- e).
 Defined.
 
-Definition chain_shift_left_colim_map (c : chain C) 
+Definition chain_shift_left_base_cocone (c : chain C)
+    (clmsh := colim (CL (chain_shift_left c))) :
+  cocone c clmsh.
+Proof.
+  use make_cocone.
+  - intro v.
+    (* induction v.
+    * exact ((dmor c (idpath _)) · (colimIn (CL (chain_shift_left c)) 0)).
+    * exact (colimIn (CL (chain_shift_left c)) v). *)
+    exact ((dmor c (idpath _)) · (colimIn (CL (chain_shift_left c)) v)).
+  - abstract (
+      intros u v e;
+      etrans; [|
+        apply cancel_precomposition;
+        exact (colimInCommutes (CL (chain_shift_left c)) _ _ e)
+      ];
+      etrans; [apply assoc|];
+      apply pathsinv0;
+      etrans; [apply assoc|];
+      apply cancel_postcomposition;
+      rewrite <- e;
+      apply cancel_precomposition;
+      apply (maponpaths (dmor c));
+      apply isasetnat
+    ).
+Defined.
+
+Definition chain_shift_left_shl_cocone (c : chain C)
+    (clm := colim (CL c)) :
+  cocone (chain_shift_left c) clm.
+Proof.
+  use make_cocone.
+  - intro v.
+    apply (colimIn (CL c)).
+  - abstract (
+      intros u v e;
+      apply (colimInCommutes _ (S u : vertex nat_graph) (S v))
+    ).
+Defined.
+
+Definition chain_shift_left_fwd_cocone (c : chain C)
+    {k : C} (cc : cocone c k) :
+  cocone (chain_shift_left c) k.
+Proof.
+  use make_cocone.
+  - intro v.
+    exact (coconeIn cc (S v)).
+  - abstract (
+      intros u v e;
+      apply (coconeInCommutes cc _ _ _)
+    ).
+Defined.
+
+Definition chain_shift_left_inv_cocone (c : chain C)
+    {k : C} (cc : cocone (chain_shift_left c) k) :
+  cocone c k.
+Proof.
+  use make_cocone.
+  - intro v.
+    induction v.
+    * apply (postcompose (coconeIn cc 0)).
+      use (dmor c).
+      reflexivity.
+    * exact (coconeIn cc v).
+  - abstract (
+      intros u v e;
+      induction u; [now rewrite <- e|];
+      rewrite <- e;
+      (* cbn. *)
+      apply pathsinv0;
+      etrans; [apply (pathsinv0 (coconeInCommutes cc _ _ (idpath (S u))))|];
+      apply cancel_postcomposition;
+      apply (maponpaths (dmor c));
+      apply isasetnat
+    ).
+Defined.
+
+Definition chain_shift_left_base_isColimCocone (c : chain C) :
+    isColimCocone _ _ (chain_shift_left_base_cocone c).
+Proof.
+  set (clmsh := CL (chain_shift_left c)).
+  intros cl cc.
+  set (fwd_cocone := chain_shift_left_fwd_cocone _ cc).
+  set (fwd_univProp := colimUnivProp clmsh cl fwd_cocone).
+  destruct fwd_univProp as [mor uniqueness].
+  use unique_exists.
+  - exact (pr1 mor).
+  - abstract (
+      intro v;
+      etrans; [apply assoc'|];
+      etrans; [apply cancel_precomposition;
+              exact (pr2 mor v)|];
+      apply (coconeInCommutes cc)
+    ).
+  - abstract (
+      intro; apply impred; intro; apply homset_property
+    ).
+  - abstract (
+      intros y ccy;
+      (* cbn. *)
+      apply pathsinv0;
+      etrans; [use (λ t, pathsinv0 (base_paths _ _ (uniqueness t)))|]; [
+        exists y;
+        intro v;
+        apply pathsinv0;
+        etrans; [exact (pathsinv0 (ccy (S v)))|];
+        apply cancel_postcomposition;
+        apply pathsinv0;
+        etrans; [exact (pathsinv0 (colimInCommutes clmsh _ _ (idpath _)))|];
+        apply cancel_postcomposition;
+        apply (maponpaths (dmor c));
+        apply isasetnat
+      | reflexivity
+      ] 
+    ).
+Qed.
+
+Definition chain_shift_left_shl_colim_cocone (c : chain C)
+    (clmsh := colim (CL (chain_shift_left c))) :
+  ColimCocone c.
+Proof.
+  use (make_ColimCocone _ clmsh); [apply chain_shift_left_base_cocone|].
+  exact (chain_shift_left_base_isColimCocone c).
+Defined.
+
+(* Definition chain_shift_left_colim_map (c : chain C) 
     (clm := colim (CL c))
     (clmls := colim (CL (chain_shift_left c))) :
   clm --> clmls.
@@ -194,22 +319,15 @@ Proof.
     cbn.
     apply maponpaths.
     apply isasetnat.
-Defined.
-
-Definition right_tensor_preserves_colimits :=
-    ∏ (A : CMon), is_omega_cocont (monoidal_right_tensor A).
+Defined. *)
 
 Definition chain_shift_left_colim_iso (c : chain C)
     (clm := colim (CL c))
     (clmls := colim (CL (chain_shift_left c))) :
   z_iso clm clmls.
 Proof.
-  exists (chain_shift_left_colim_map c).
-  use tpair.
-  - admit.
-  - admit.
-Admitted. (* maybe different definition for chain_shift_left, 
-             these colimits should be the same *)
+  exact (z_iso_from_colim_to_colim (CL c) (chain_shift_left_shl_colim_cocone c)).
+Defined.
 
 Definition colimσ_on (A : C) : 
     colim (free_monoid_coeq_sequence_leftwhisker_colim_on T A) --> 
@@ -219,19 +337,23 @@ Proof.
   - intro n.
     (* cbn. *)
     set (σα := pair_diagram_arr (free_monoid_coeq_sequence_on A n)).
-    exact (σα).
+    exact σα.
   - intros m n e.
-    cbn.
+  simpl.
+    (* cbn. *)
+    (* cbn. *)
+    (* unfold monoidal_cat_tensor_mor. *)
+    (* cbn. *)
+    etrans. do 2 apply cancel_postcomposition.
+            apply (bifunctor_rightid V).
+    etrans. apply cancel_postcomposition, id_left.
     rewrite <- e.
-    cbn.
     etrans. apply cancel_postcomposition.
             apply maponpaths.
             apply id_right.
+    simpl.
     unfold pair_diagram_horizontal_arrow.
-    cbn.
-    apply pathsinv0.
-    etrans. apply assoc.
-    (* etrans. apply id_right. *)      
+    unfold next_pair_diagram.
     admit.
 Admitted. (* annoying, maybe not trivial *)
 
@@ -367,6 +489,9 @@ Proof.
   use whiskerscommutes.
   exact (bifunctor_equalwhiskers V).
 Qed.
+
+Definition right_tensor_preserves_colimits :=
+    ∏ (A : CMon), is_omega_cocont (monoidal_right_tensor A).
 
 Definition free_monoid_coeq_sequence_converges_gives_adjoint_counit_data 
     (Hconv : free_monoid_coeq_sequence_converges_on I_{V})
