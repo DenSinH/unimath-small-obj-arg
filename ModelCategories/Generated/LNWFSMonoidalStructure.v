@@ -106,6 +106,47 @@ Proof.
   ).
 Defined.
 
+Definition LNWFS_lcomp_comul_L_lp 
+    {F : Ff C} 
+    (L : lnwfs_over F)
+    (F' : Ff C)
+    (f : arrow C)
+      (λf := fact_L F f)
+      (λ'ρf := fact_L F' (fact_R F f))
+      (comp := λf · λ'ρf) : 
+  fact_L F f --> comp.
+Proof.
+  use mors_to_arrow_mor.
+  - exact (identity _).
+  - exact (λ'ρf).
+  - abstract (apply id_left).
+Defined.
+
+Definition LNWFS_lcomp_comul_L'_lp
+    {F F' : Ff C} 
+    (L : lnwfs_over F)
+    (L' : lnwfs_over F')
+    (f : arrow C)
+      (λf := fact_L F f)
+      (λ'ρf := fact_L F' (fact_R F f))
+      (comp := λf · λ'ρf)
+      (ρcomp := fact_R F comp) :
+  λ'ρf --> ρcomp.
+Proof.
+  set (L_lp := LNWFS_lcomp_comul_L_lp L F' f : (fact_L F f --> comp)).
+  set (L_lift := left_reduced_lp_lift L L_lp).
+  destruct L_lift as [L_lift [L_comm1 L_comm2]].
+
+  use mors_to_arrow_mor.
+  - exact (L_lift).
+  - exact (identity _).
+  - abstract (
+      etrans; [exact L_comm2|];
+      apply pathsinv0;
+      apply id_right
+    ).
+Defined.
+
 
 Definition LNWFS_lcomp_comul_data {F F' : Ff C} (L : lnwfs_over F) (L' : lnwfs_over F') :
     nat_trans_data (fact_L (F ⊗ F')) ((fact_L (F ⊗ F')) ∙ (fact_L (F ⊗ F'))).
@@ -118,29 +159,11 @@ Proof.
   set (λcomp := fact_L F comp).
   set (ρcomp := fact_R F comp).
 
-  transparent assert (L_lp : (fact_L F f --> comp)).
-  {
-    use mors_to_arrow_mor.
-    - exact (identity _).
-    - exact (λ'ρf).
-    - abstract (apply id_left).
-  }
-
+  set (L_lp := LNWFS_lcomp_comul_L_lp L F' f : (fact_L F f --> comp)).
   set (L_lift := left_reduced_lp_lift L L_lp).
-  destruct L_lift as [L_lift [L_comm1 L_comm2]].
+  (* destruct L_lift as [L_lift [L_comm1 L_comm2]]. *)
 
-  transparent assert (L'_lp : (λ'ρf --> ρcomp)).
-  {
-    use mors_to_arrow_mor.
-    - exact (L_lift).
-    - exact (identity _).
-    - abstract (
-        etrans; [exact L_comm2|];
-        apply pathsinv0;
-        apply id_right
-      ).
-  }
-
+  set (L'_lp := LNWFS_lcomp_comul_L'_lp L L' f : (λ'ρf --> ρcomp)).
   set (L'_lift := left_reduced_lp_lift L' L'_lp).
   destruct L'_lift as [L'_lift [L'_comm1 L'_comm2]].
 
@@ -156,11 +179,11 @@ Proof.
         apply cancel_precomposition;
         exact L'_comm1
       |];
-      etrans; 
+      etrans;
       [
         etrans; [apply assoc|];
         apply cancel_postcomposition;
-        exact L_comm1
+        exact (pr12 L_lift)
       |];
       etrans; [apply assoc'|];
       etrans; [apply id_left|];
@@ -246,15 +269,19 @@ Proof.
     etrans. exact (pathsinv0 (lnwfs_Σ_bottom_map_inv L' (fact_R F a))).
     apply cancel_precomposition.
     apply pathsinv0.
-    
-    (* etrans. apply cancel_postcomposition.
-            use (section_disp_on_eq_morphisms F' (γ' := identity _)). *)
-    admit.
+
+    set (F'L'_lp := #(fact_functor F') (LNWFS_lcomp_comul_L'_lp L L' a)).
+    etrans. apply (pathsinv0 (pr2 (three_mor_comm F'L'_lp))).
+    apply id_right.
   - apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod; [apply id_left|].
     etrans. apply assoc'.
     apply pathsinv0.
     etrans. exact (pathsinv0 (lnwfs_Σ_bottom_map_inv L' (fact_R F a))).
     apply cancel_precomposition.
+
+    (* cbn.
+    unfold three_mor12, three_mor11.
+    cbn. *)
     (* etrans.
     {
       cbn.
@@ -263,10 +290,13 @@ Proof.
     } *)
     apply pathsinv0.
     etrans. apply (pr1_section_disp_on_morphisms_comp F').
+    (* cbn. *)
     admit.
-  - admit.
-    (* apply cancel_postcomposition.
-    apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod. *)
+  - 
+
+    admit.
+    (* apply cancel_postcomposition. *)
+    (* apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod. *)
 
 Admitted. (* Qed *)
 
@@ -478,25 +508,46 @@ Proof.
     apply cancel_precomposition.
 
     (* naturality of τG at 
-    
-    (left_reduced_lp_lift L
-                (mors_to_arrow_mor (three_mor01 (F a))
-                   (three_mor01 (F a) · three_mor01 (G' (fact_R F a)))
-                   (identity (three_ob0 (F a))) (three_mor01 (G' (fact_R F a)))
-                   (LNWFS_lcomp_comul_data_subproof F G' a))))
-
-    todo: define ^this^ as it's own thing
+        (LNWFS_lcomp_comul_L'_lp L Λ' a)
     *)
-    set (τGnat := pr2 τG).
-
-    
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+            apply (pr1_section_disp_on_morphisms_comp G).
+  
     apply pathsinv0.
+    etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+    {
+      set (τGnat := pr2 τG).
+      exact (pathsinv0 (base_paths _ _ (τGnat _ _ (LNWFS_lcomp_comul_L'_lp L Λ' a)))).
+    }
 
-    admit.
+    etrans. apply cancel_precomposition.
+            use (pr1_transportf_const).
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+            apply (pr1_section_disp_on_morphisms_comp G).
+    apply cancel_postcomposition.
+    apply (section_disp_on_eq_morphisms G).
+    * etrans. apply id_left.
+      (* cbn. *)
+      apply pathsinv0.
+      etrans. apply assoc'.
+      apply cancel_precomposition.
+      (* unfold three_mor11. *)
+      (* cbn. *)
+      etrans. apply (pr1_section_disp_on_morphisms_comp F).
+      apply (section_disp_on_eq_morphisms F).
+      + apply id_left.
+      + etrans. exact (pr1 (three_mor_comm (section_nat_trans τG (fact_R F a)))).
+        apply id_left.
+    * etrans. apply id_right.
+      apply pathsinv0.
+      apply id_left.
   - apply id_left.
-  - 
-
-Admitted.  (* Qed *)
+  - etrans. exact (pathsinv0 (pr2 (three_mor_comm (section_nat_trans τG (fact_R F a))))).
+    apply id_right.
+Qed.
 
 Definition LNWFS_tot_l_prewhisker (L : total_category (LNWFS C))
     {Λ Λ' : total_category (LNWFS C)} (τ : Λ --> Λ') :
@@ -514,7 +565,7 @@ Lemma LNWFS_tot_l_prewhisker_id
   (L Ltot⊗pre identity Λ) = identity _.
 Proof.
   apply subtypePath; [intro; apply isaprop_lnwfs_mor_axioms|].
-  cbn.
+  (* cbn. *)
   etrans. use Ff_l_prewhisker_id.
   reflexivity.
 Qed.
@@ -526,7 +577,7 @@ Lemma LNWFS_tot_l_prewhisker_comp
   (L Ltot⊗pre (τ · τ')) = (L Ltot⊗pre τ) · (L Ltot⊗pre τ').
 Proof.
   apply subtypePath; [intro; apply isaprop_lnwfs_mor_axioms|].
-  cbn.
+  (* cbn. *)
   etrans. use Ff_l_prewhisker_comp.
   reflexivity.
 Qed.
@@ -542,13 +593,74 @@ Proof.
     etrans. apply cancel_precomposition.
             apply id_right.
     apply id_right.
-  - 
-    admit.
+  - apply pathsinv0.
+    etrans. 
+    {
+      etrans. apply cancel_precomposition.
+              use (pr1_section_disp_on_morphisms_comp F).
+      etrans. apply assoc'.
+      apply cancel_precomposition.
+      use (pr1_section_disp_on_morphisms_comp F).
+    }
+
+    set (mor := three_mor_mor12 (section_nat_trans τG a) : fact_R G a --> fact_R G' a).
+    apply pathsinv0.
+    etrans. apply assoc.
+    set (Lnatmor := nat_trans_ax (pr1 L) _ _ mor).
+    set (Lnatmor11 := pr2 (pathsdirprodweq (base_paths _ _ Lnatmor))).
+    etrans. apply cancel_postcomposition.
+            exact (Lnatmor11).
+    etrans. apply assoc'.
+    apply cancel_precomposition.
+    clear Lnatmor Lnatmor11.
+    
+    etrans. apply (pr1_section_disp_on_morphisms_comp F).
+    use section_disp_on_eq_morphisms.
+    * (* rewrite lnwfs_mor_axioms of τ *)
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              exact (pr2 (pathsdirprodweq (base_paths _ _ (pr1 τ a)))).
+      
+      etrans. apply assoc'.
+      apply pathsinv0.
+      etrans. apply assoc'.
+      apply cancel_precomposition.
+      (* cbn.
+      unfold three_mor11.
+      cbn. *)
+
+      set (τGnat := base_paths _ _ (pr2 τG _ _ (LNWFS_lcomp_comul_L_lp Λ' F a))).
+      apply pathsinv0.
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              exact (pathsinv0 τGnat).
+
+      etrans. apply cancel_precomposition.
+              use pr1_transportf_const.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply (pr1_section_disp_on_morphisms_comp G).
+      
+      apply pathsinv0.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply (pr1_section_disp_on_morphisms_comp G).
+      
+      apply cancel_postcomposition.
+      use (section_disp_on_eq_morphisms G).
+      + reflexivity.
+      + (* commutativity of F on τGa *)
+        set (FτGa := #(fact_functor F) (three_mor_mor12 (section_nat_trans τG a))).
+        exact (pr1 (three_mor_comm FτGa)).
+    * etrans. apply id_right.
+      apply pathsinv0.
+      etrans. apply id_left.
+      apply id_right.
   - apply id_left.
-  - cbn.
-    (* naturality of τG *)
-    admit.
-Admitted.  (* Qed *)
+  - set (FτGa := #(fact_functor F) (three_mor_mor12 (section_nat_trans τG a))).
+    etrans. apply (pathsinv0 (pr2 (three_mor_comm FτGa))).
+    apply id_right.
+Qed.
 
 Definition LNWFS_tot_l_postwhisker {Λ Λ' : total_category (LNWFS C)} 
     (τ : Λ --> Λ') (L : total_category (LNWFS C)):
@@ -563,7 +675,7 @@ Lemma LNWFS_tot_l_postwhisker_id
   ((identity Λ) Ltot⊗post L) = identity _.
 Proof.
   apply subtypePath; [intro; apply isaprop_lnwfs_mor_axioms|].
-  cbn.
+  (* cbn. *)
   etrans. use Ff_l_postwhisker_id.
   reflexivity.
 Qed.
@@ -575,7 +687,7 @@ Lemma LNWFS_tot_l_postwhisker_comp
   ((τ · τ') Ltot⊗post L) = (τ Ltot⊗post L) · (τ' Ltot⊗post L).
 Proof.
   apply subtypePath; [intro; apply isaprop_lnwfs_mor_axioms|].
-  cbn.
+  (* cbn. *)
   etrans. use Ff_l_postwhisker_comp.
   reflexivity.
 Qed.
@@ -593,7 +705,6 @@ Proof.
     apply pathsinv0.
     etrans. apply cancel_precomposition.
             apply id_right.
-
             
     admit.
   - apply id_left.
@@ -633,16 +744,8 @@ Definition LNWFS_l_mor_comp {F F' G G' : Ff C}
     (τ : L -->[τF] L') (ρ : Λ -->[ρG] Λ') :
   (L L⊗ Λ) -->[Ff_l_mor_comp τF ρG] (L' L⊗ Λ').
 Proof.
-  split; (intro; apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod).
-  - etrans. apply id_left.
-    apply pathsinv0.
-    etrans. apply id_left.
-    apply id_left.
-  - 
-    admit.
-  - apply id_left.
-  - admit.
-Admitted.  (* Qed *)
+  exact ((τ L⊗post Λ ;; (L' L⊗pre ρ))%mor_disp).
+Qed.
 
 Definition LNWFS_tot_l_mor_comp {L L' Λ Λ' : total_category (LNWFS C)}
     (τ : L --> L') (ρ : Λ --> Λ') :

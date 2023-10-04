@@ -337,16 +337,10 @@ Definition Ff_l_postwhisker_data {G G'} (τ : section_nat_trans_disp G G') (F : 
 Proof.
   intro f.
   
-  destruct (τ f) as [τf [commτ1 commτ2]].
+  (* destruct (τ f) as [τf [commτ1 commτ2]]. *)
   set (ρGf := fact_R G f).
   set (ρG'f := fact_R G' f).
-  unshelve epose (γρ := _ : ρGf --> ρG'f).
-  {
-    use mors_to_arrow_mor.
-    - exact τf.
-    - exact (identity _).
-    - abstract (exact (pathsinv0 commτ2)).
-  }
+  set (γρ := three_mor_mor12 (section_nat_trans τ f) : ρGf --> ρG'f).
   
   set (Fγρ := (section_disp_on_morphisms (section_disp_data_from_section_disp F) γρ)).
   exists (pr1 Fγρ).
@@ -370,11 +364,13 @@ Proof.
     *)
   abstract (
     split; [
-      cbn; rewrite assoc';
+      etrans; [apply assoc'|];
       etrans; [apply maponpaths; exact (pr1 comm)|];
-      rewrite assoc, assoc;
+      etrans; [apply assoc|];
+      apply pathsinv0; 
+      etrans; [apply assoc|];
       apply cancel_postcomposition;
-      exact (commτ1)|
+      exact (pathsinv0 (pr12 (τ f)))|
       exact (pr2 comm)
     ]
   ).
@@ -645,20 +641,13 @@ Proof.
     etrans. use pr1_transportf_const.
     apply pathsinv0.
     etrans. use pr1_transportf_const.
-    cbn.
-    transparent assert (mor : (fact_R A f --> fact_R F f)).
-    {
-      set (γf := (section_nat_trans_data_from_section_nat_trans_disp_funclass γ) f).
-      (* simpl in γf. *)
-      use mors_to_arrow_mor.
-      - exact (pr1 γf).
-      - exact (identity _).
-      - exact (pathsinv0 (pr22 γf)).
-    }
+    (* cbn. *)
+    set (mor := three_mor_mor12 (section_nat_trans γ f) : fact_R A f --> fact_R F f).
+
     set (γ'naturality := section_nt_disp_axioms_from_section_nt_disp γ').
     set (γ'natf := γ'naturality _ _ mor).
     set (γ'natfb := base_paths _ _ γ'natf).
-    etrans. apply maponpaths.
+    etrans. apply cancel_precomposition.
             use (section_disp_on_eq_morphisms F'' (γ' := mor)); reflexivity.
             
     etrans. exact (pathsinv0 γ'natfb).
@@ -778,11 +767,7 @@ Proof.
 
   set (μ := monoid_data_multiplication _ R).
   set (μf := (section_nat_trans_data_from_section_nat_trans_disp_funclass μ) f).
-  
-  use mors_to_arrow_mor.
-  - exact (pr1 μf).
-  - exact (identity _).
-  - exact (pathsinv0 (pr22 μf)).
+  exact (three_mor_mor12 (section_nat_trans μ f)).
 Defined.
 
 Lemma Ff_monoid_is_RNWFS_mul_axioms 

@@ -125,6 +125,28 @@ Definition three_mor11 {C : category} {xxx yyy : three C} (fff : xxx --> yyy) :=
 Definition three_mor22 {C : category} {xxx yyy : three C} (fff : xxx --> yyy) := pr211 fff.
 Definition three_mor_comm {C : category} {xxx yyy : three C} (fff : xxx --> yyy) := pr22 fff.
 
+Definition three_mor_mor01 {C : category} {xxx yyy : three C} (fff : xxx --> yyy) :
+    (three_mor01 xxx) --> (three_mor01 yyy). 
+Proof.
+  use mors_to_arrow_mor.
+  - exact (three_mor00 fff).
+  - exact (three_mor11 fff).
+  - abstract (
+      exact (pathsinv0 (pr1 (three_mor_comm fff)))
+    ).
+Defined.
+
+Definition three_mor_mor12 {C : category} {xxx yyy : three C} (fff : xxx --> yyy) :
+    (three_mor12 xxx) --> (three_mor12 yyy). 
+Proof.
+  use mors_to_arrow_mor.
+  - exact (three_mor11 fff).
+  - exact (three_mor22 fff).
+  - abstract (
+      exact (pathsinv0 (pr2 (three_mor_comm fff)))
+    ).
+Defined.
+
 Definition three_mor_eq {C : category} {x y : three C} {f g : x --> y}
     (H00: three_mor00 f = three_mor00 g)
     (H11: three_mor11 f = three_mor11 g)
