@@ -7,6 +7,18 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 Local Open Scope cat.
 Local Open Scope mor_disp_scope.
 
+
+Lemma isaprop_section_disp_axioms {C : category} {D : disp_cat C} (F : section_disp_data D) 
+    (Hmor : ∏ (x y : C) (f : x --> y) (c : D x) (d : D y), isaset (c -->[f] d)) :
+    isaprop (section_disp_axioms F).
+Proof.
+  apply isapropdirprod.
+  - apply impred; intro.
+    apply Hmor.
+  - do 5 (apply impred; intro).
+    apply Hmor.
+Qed.
+
 Definition section_nat_trans_disp_data 
     {C : category} 
     {D : disp_cat C} 
@@ -50,7 +62,7 @@ Proof.
   apply (isofhleveltotal2 2).
   - apply impred. intro t. apply homsets_disp.
   - intro x. apply isasetaprop. apply isaprop_section_nat_trans_disp_axioms.
-Defined.
+Qed.
 
 Definition section_nt_disp_data_from_section_nt_disp
     {C : category}
@@ -122,16 +134,17 @@ Proof.
   use tpair.
   - intro.
     exact (id_disp _).
-  - simpl.
-    intros x x' f.
+  - intros x x' f.
 
     (* todo: understand this *)
     (* Bicategories\Core\Examples\FibSlice.v : opfib_slice_prebicat_laws *)
-    rewrite id_left_disp, id_right_disp.
-    unfold transportb.
-    rewrite transport_f_f.
-    apply maponpaths_2.
-    apply homset_property.
+    abstract (
+      rewrite id_left_disp, id_right_disp;
+      unfold transportb;
+      rewrite transport_f_f;
+      apply maponpaths_2;
+      apply homset_property
+    ).
 Defined.
 
 Definition section_nat_trans_comp
@@ -145,25 +158,26 @@ Proof.
   use tpair.
   - intro x.
     exact (transportf _ (id_left _) (FF' x ;; F'F'' x)).
-  - simpl.
-    intros x x' f.
+  - intros x x' f.
     
-    rewrite mor_disp_transportf_prewhisker.
-    rewrite mor_disp_transportf_postwhisker.
-    rewrite transport_f_f.
-
-    rewrite assoc_disp_var, transport_f_f.
-    rewrite <- (section_nt_disp_axioms_from_section_nt_disp F'F'').
-
-    rewrite mor_disp_transportf_prewhisker, transport_f_f.
-
-    do 2 rewrite assoc_disp, transport_f_b.
-    rewrite <- (section_nt_disp_axioms_from_section_nt_disp FF').
-
-    rewrite mor_disp_transportf_postwhisker, transport_f_f.
-
-    apply maponpaths_2.
-    apply homset_property.
+    abstract (
+      rewrite mor_disp_transportf_prewhisker;
+      rewrite mor_disp_transportf_postwhisker;
+      rewrite transport_f_f;
+  
+      rewrite assoc_disp_var, transport_f_f;
+      rewrite <- (section_nt_disp_axioms_from_section_nt_disp F'F'');
+  
+      rewrite mor_disp_transportf_prewhisker, transport_f_f;
+  
+      do 2 rewrite assoc_disp, transport_f_b;
+      rewrite <- (section_nt_disp_axioms_from_section_nt_disp FF');
+  
+      rewrite mor_disp_transportf_postwhisker, transport_f_f;
+  
+      apply maponpaths_2;
+      apply homset_property
+    ).
 Defined.
 
 Lemma section_nat_trans_eq {C : category} {D : disp_cat C}

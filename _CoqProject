@@ -1,13 +1,20 @@
 -Q . CategoryTheory
+whiskering.v
 limits/coproducts.v
+limits/colimits.v
+Chains/Chains.v
 DisplayedCats/Examples/Arrow.v
 DisplayedCats/Examples/Three.v
 DisplayedCats/Examples/MonadAlgebras.v
 DisplayedCats/natural_transformation.v
-Monads/PointedEndofunctors.v
 Monoidal/Categories.v
 Monoidal/Functors.v
-Monoidal/MonoidalBinprod.v
+Monoidal/CategoriesOfMonoids.v
+Monoidal/WhiskeredBifunctors.v
+Monoidal/Displayed/Monoidal.v
+Monoidal/Displayed/MonoidalSections.v
+Monoidal/Displayed/TotalMonoidal.v
+Monoidal/Displayed/WhiskeredDisplayedBifunctors.v
 ModelCategories/MorphismClass.v
 ModelCategories/Retract.v
 ModelCategories/Lifting.v
@@ -16,5 +23,10 @@ ModelCategories/NWFS.v
 ModelCategories/NWFSisWFS.v
 ModelCategories/WeakEquivalences.v
 ModelCategories/ModelCategory.v
+ModelCategories/Generated/Helpers.v
 ModelCategories/Generated/LiftingWithClass.v
 ModelCategories/Generated/OneStepMonad.v
+ModelCategories/Generated/FFMonoidalStructure.v
+ModelCategories/Generated/LNWFSMonoidalStructure.v
+ModelCategories/Generated/GenericFreeMonoid.v
+ModelCategories/Generated/LNWFSFreeMonoid.v

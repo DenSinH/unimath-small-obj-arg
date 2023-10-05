@@ -27,6 +27,7 @@ Require Import CategoryTheory.ModelCategories.Retract.
 Require Import CategoryTheory.ModelCategories.Lifting.
 Require Import CategoryTheory.ModelCategories.NWFS.
 Require Import CategoryTheory.ModelCategories.NWFSisWFS.
+Require Import CategoryTheory.ModelCategories.Generated.Helpers.
 
 Require Import CategoryTheory.DisplayedCats.Examples.MonadAlgebras.
 Require Import CategoryTheory.limits.coproducts.
@@ -40,27 +41,7 @@ Arguments CoproductArrow {_} {_} {_} _ {_}.
 Arguments CoproductIn {_} {_} {_} _.
 Arguments CoproductInCommutes {_} {_} {_} _ {_}.
 
-(* 
-Definition morcls_disp : disp_cat (arrow C).
-Proof.
-  use disp_cat_from_SIP_data.
-  - exact (λ g, J _ _ g).
-  - intros g g' d d' m.
-    (* todo: only identity maps, unit gives all maps *)
-    
-    exact (∑ (H : g = g'), m = transportf _ H (identity _)).
-  - intros.
-    simpl in *.
-    apply isaproptotal2.
-    * intro. admit.
-    * intros.
-      admit.
-  - intros.
 
-  - intros.
-    exact tt.
-Defined.
-*)
 Section preliminaries.
 
 Context {C : category}.
@@ -135,9 +116,11 @@ Proof.
     {
       trivial.
     }
-    rewrite X, assoc.
-    rewrite mn, mn', assoc.
-    reflexivity.
+    abstract (
+      rewrite X, assoc;
+      rewrite mn, mn', assoc;
+      reflexivity
+    ).
 Defined.
 
 Definition rlp_morcls (J : morphism_class C) : category := 
@@ -184,7 +167,6 @@ Proof.
   intros f f' ff ff' S Sisalg g Jg Sgf.
   unfold morcls_L_map_structure in η.
   simpl.
-
   unfold three_mor11.
   simpl.
   (* cancel precomposition with  
@@ -194,7 +176,14 @@ Proof.
 
   (* cancel precomposition with 
     three_mor11 (#n Sgf)*)
+  (* first "fix" the morphisms, since the (propositional) 
+     commutativity is not equal *)
+  etrans. apply maponpaths_2.
+  use (section_disp_on_eq_morphisms' (nwfs_fact n) (γ := Sgf)).
+
   apply pathsinv0.
+  etrans. apply maponpaths_2.
+          use (section_disp_on_eq_morphisms' (nwfs_fact n) (γ := Sgf · S)).
   etrans. apply maponpaths_2, maponpaths.
           apply (section_disp_comp (nwfs_fact n)).
   simpl.
@@ -212,7 +201,7 @@ Proof.
     |      |      |
     |   λf |      |λf'
     |      v S11  v
-  ρf | αf    +++++> +++++++>
+ ρf | αf    +++++> +++++++>
     |      |      |        |
     |   ρf |      |ρf' αf' | f'
     v      v      v        v
@@ -261,41 +250,41 @@ Lemma algebraically_free_nwfs_gives_cofibrantly_generated_wfs :
   algebraically_free -> 
     (nwfs_R_maps_class n)^cl = λ x y f, ∥rlp_morcls_disp J f∥.
 Proof.
-intro H.
-destruct H as [η cofibη].
-unfold cofibrantly_generated in cofibη.
+  intro H.
+  destruct H as [η cofibη].
+  unfold cofibrantly_generated in cofibη.
 
-(* suffices to show R = J□ *)
-apply morcls_eq_impl_morcls_cl_eq.
-{
-  (* J□ is closed under retracts *)
-  intros x' y' g' x y g Hg.
-  destruct Hg as [Jg Rgg'].
-  use (hinhuniv _ Jg).
-  clear Jg; intro Jg.
+  (* suffices to show R = J□ *)
+  apply morcls_eq_impl_morcls_cl_eq.
+  {
+    (* J□ is closed under retracts *)
+    intros x' y' g' x y g Hg.
+    destruct Hg as [Jg Rgg'].
+    use (hinhuniv _ Jg).
+    clear Jg; intro Jg.
 
-  apply hinhpr.
-  intros f Jf.
-  simpl in Jg.
-  apply (@right_lifting_data_retract J g g').
-  - exact Rgg'.
-  - exact Jg.
-  - exact Jf.
-}
+    apply hinhpr.
+    intros f Jf.
+    simpl in Jg.
+    apply (@right_lifting_data_retract J g g').
+    - exact Rgg'.
+    - exact Jg.
+    - exact Jf.
+  }
 
-apply morphism_class_subset_antisymm; 
-  intros x y f Hf;
-  use (hinhuniv _ Hf);
-  clear Hf; intro Hf;
-  apply hinhpr.
-- (* R-Map ⊆ J□ *)
-  set (θ := R_map_rlp_morcls_structure η).
-  (* θ is a functor that lies over identity *)
-  exact (θ f Hf).
-- (* J□ ⊆ R-Map *)
-  (* the "inverse" of θ also lies over identity *)
-  set (θinv := right_adjoint_of_is_equiv_over _ cofibη).
-  exact (θinv f Hf).
+  apply morphism_class_subset_antisymm; 
+    intros x y f Hf;
+    use (hinhuniv _ Hf);
+    clear Hf; intro Hf;
+    apply hinhpr.
+  - (* R-Map ⊆ J□ *)
+    set (θ := R_map_rlp_morcls_structure η).
+    (* θ is a functor that lies over identity *)
+    exact (θ f Hf).
+  - (* J□ ⊆ R-Map *)
+    (* the "inverse" of θ also lies over identity *)
+    set (θinv := right_adjoint_of_is_equiv_over _ cofibη).
+    exact (θinv f Hf).
 Qed.
 
 End preliminaries.
@@ -320,10 +309,9 @@ Definition morcls_lp_coprod :=
 (* the canonical diagram capturing all lifting problems in J *)
 Definition morcls_lp_coprod_diagram : morcls_lp_coprod --> g.
 Proof.
-  use tpair.
-  - split.
-    * exact (CoproductArrow (morcls_lp_dom_coprod) (λ j, arrow_mor00 j)).
-    * exact (CoproductArrow (morcls_lp_cod_coprod) (λ j, arrow_mor11 j)).
+  use mors_to_arrow_mor.
+  - exact (CoproductArrow (morcls_lp_dom_coprod) (λ j, arrow_mor00 j)).
+  - exact (CoproductArrow (morcls_lp_cod_coprod) (λ j, arrow_mor11 j)).
   - abstract (
       unfold morcls_lp_coprod;
       simpl;

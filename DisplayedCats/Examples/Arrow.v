@@ -8,6 +8,9 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.SIP.
 Require Import UniMath.CategoryTheory.DisplayedCats.Total.
 
+Require Import UniMath.CategoryTheory.limits.graphs.colimits.
+
+
 Local Open Scope cat.
 Local Open Scope mor_disp.
 
@@ -62,7 +65,7 @@ Definition mors_to_arrow_mor {C : category} {a b x y : C} (f : a --> b) (g : x -
 Proof.
   use tpair.
   - exact (make_dirprod h k).
-  - exact H.
+  - abstract (exact H).
 Defined.
 
 Definition opp_arrow {C : category} (g : arrow C) : arrow (op_cat C) :=
@@ -85,3 +88,131 @@ Definition top_square {C : category}
 Definition bottom_square {C : category}
     {f f' : arrow C} {mor mor1' : f --> f'} (H : mor = mor1') := 
   dirprod_pr2 (pathsdirprodweq (base_paths _ _ H)).
+
+Definition arrow_base_colims {C : category} (CC : Colims C) :
+    Colims (arrow_base C).
+Proof.
+  intros g d.
+
+  set (d1 := mapdiagram (pr1_functor _ _) d).
+  set (d2 := mapdiagram (pr2_functor _ _) d).
+
+  set (cc1 := CC _ d1).
+  set (cc2 := CC _ d2).
+  
+  use tpair.
+  - exists (make_dirprod (colim cc1) (colim cc2)).
+    use tpair.
+    * intro v.
+      split.
+      + exact (colimIn cc1 v).
+      + exact (colimIn cc2 v).
+    * intros u v e.
+      use pathsdirprod.
+      + exact (colimInCommutes cc1 _ _ e).
+      + exact (colimInCommutes cc2 _ _ e).
+  - intros c cc.
+    destruct cc as [f ccf].
+    use unique_exists.
+    * split.
+      + use colimArrow.
+        exists (λ v, pr1 (f v)).
+        intros u v e.
+        exact (pr1 (pathsdirprodweq (ccf _ _ e))).
+      + use colimArrow.
+        exists (λ v, pr2 (f v)).
+        intros u v e.
+        exact (pr2 (pathsdirprodweq (ccf _ _ e))).
+    * abstract (
+        intro; apply pathsdirprod; [
+          apply (colimArrowCommutes cc1)|apply (colimArrowCommutes cc2) 
+        ]
+      ).
+    * abstract (
+        intro; apply impred; intro; apply homset_property
+      ).
+    * abstract (
+        intros y H;
+        apply pathsdirprod; apply colimArrowUnique; intro v; [
+          exact (pr1 (pathsdirprodweq (H v)))|exact (pr2 (pathsdirprodweq (H v)))
+        ]
+      ).
+Defined.
+
+Local Definition arrow_colimit {C : category} (CC : Colims C)
+    {g : graph} (d : diagram g (arrow C)) : arrow C.
+Proof.
+  set (dbase := mapdiagram (pr1_category _) d).
+  set (clbase := arrow_base_colims CC _ dbase).
+
+  (* dom / cod are colims of dom / cod *)
+  exists (colim clbase).
+
+  (* arrow colim is colim of arrows *)
+  use colimOfArrows.
+  - exact (dob d).
+  - intros u v e.
+    exact (arrow_mor_comm (dmor d e)).
+Defined.
+
+Definition arrow_colims {C : category} (CC : Colims C) :
+    Colims (arrow C).
+Proof.
+  intros g d.
+  
+  set (dbase := mapdiagram (pr1_category _) d).
+  set (clbase := arrow_base_colims CC _ dbase).
+
+  use tpair.
+  - exists (arrow_colimit CC d).
+    use tpair.
+    * intro v.
+      exists (colimIn clbase v).
+      abstract (
+        use (colimOfArrowsIn _ _ (CC g (mapdiagram (pr1_functor C C) dbase)))
+      ).
+    * intros u v e.
+      (* cbn. *)
+      abstract (
+        apply subtypePath; [intro; apply homset_property|];
+        apply (colimInCommutes clbase)
+      ).
+  - intros c cc.
+    transparent assert (ccbase : (cocone dbase (pr1 c))).
+    {
+      exists (λ v, pr1 (coconeIn cc v)).
+      intros u v e.
+      exact (base_paths _ _ (coconeInCommutes cc _ _ e)).
+    }
+
+    use unique_exists.
+    * exists (colimArrow clbase _ ccbase).
+
+      (* cbn. *)
+      abstract (
+        etrans; [use postcompWithColimArrow|];
+        apply pathsinv0;
+        etrans; [use precompWithColimOfArrows|];
+  
+        apply maponpaths;
+        (apply subtypePath; [intro; do 3 (apply impred; intro); apply homset_property|]);
+        apply funextsec;
+        intro v;
+        exact (pathsinv0 (arrow_mor_comm (coconeIn cc v)))
+      ).
+    * abstract (
+        intro;
+        apply subtypePath; [intro; apply homset_property|];
+        exact (colimArrowCommutes clbase _ ccbase v)
+      ).
+    * abstract (
+        intro; apply impred; intro; apply homset_property
+      ).
+    * abstract (
+        intros y H;
+        apply subtypePath; [intro; apply homset_property|];
+        apply colimArrowUnique;
+        intro v;
+        exact (base_paths _ _ (H v))
+      ).
+Defined.
