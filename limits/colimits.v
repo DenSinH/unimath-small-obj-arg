@@ -219,6 +219,27 @@ Proof.
   apply H.
 Defined.
 
+Lemma connected_graph_zig_zag_strong_induction_symmetric
+    {g : graph}
+    (x : vertex g)
+    {y : vertex g}
+    (H : is_connected g)
+    (P : vertex g -> UU)
+    (Hsymm : ∏ [a b : vertex g], edge b a -> (edge a b -> P b) -> P b) :
+  (P x) ->
+    (∏ (a b : vertex g), P a -> edge a b -> P b) ->
+  P y.
+Proof.
+  intros Px IHn.
+  apply (connected_graph_zig_zag_strong_induction x H P Px).
+  intros a b Pa e.
+  destruct e.
+  - apply (IHn a b Pa e).
+  - apply (Hsymm a b e).
+    intro e'.
+    apply (IHn a b Pa e').
+Defined.
+
 Lemma is_connected_pointed (g : graph) (v0 : vertex g) :
     (∏ (v : vertex g), graph_zig_zag v0 v) ->
         is_connected g.

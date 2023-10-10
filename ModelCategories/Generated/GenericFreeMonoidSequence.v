@@ -329,33 +329,63 @@ Proof.
   exact (z_iso_from_colim_to_colim (CL c) (chain_shift_left_shl_colim_cocone c)).
 Defined.
 
+Local Lemma todo {A : UU} : A. Admitted.
+
 Definition colimσ_on (A : C) : 
-    colim (free_monoid_coeq_sequence_leftwhisker_colim_on T A) --> 
-      colim (CL (chain_shift_left (free_monoid_coeq_sequence_diagram_on A))).
+    z_iso
+      (colim (free_monoid_coeq_sequence_leftwhisker_colim_on T A))
+      (colim (CL (chain_shift_left (free_monoid_coeq_sequence_diagram_on A)))).
 Proof.
-  use colimOfArrows.
-  - intro n.
-    (* cbn. *)
-    set (σα := pair_diagram_arr (free_monoid_coeq_sequence_on A n)).
-    exact σα.
-  - intros m n e.
-  simpl.
-    (* cbn. *)
-    (* cbn. *)
-    (* unfold monoidal_cat_tensor_mor. *)
-    (* cbn. *)
-    etrans. do 2 apply cancel_postcomposition.
-            apply (bifunctor_rightid V).
-    etrans. apply cancel_postcomposition, id_left.
-    rewrite <- e.
-    etrans. apply cancel_postcomposition.
-            apply maponpaths.
-            apply id_right.
-    simpl.
-    unfold pair_diagram_horizontal_arrow.
-    unfold next_pair_diagram.
-    admit.
-Admitted. (* annoying, maybe not trivial *)
+  use tpair.
+  {
+    use colimOfArrows.
+    - intro α.
+      (* cbn. *)
+      set (σα := free_monoid_coeq_sequence_on A α).
+      exact σα.
+    - intros m n e.
+      simpl.
+      (* cbn. *)
+      (* cbn. *)
+      (* unfold monoidal_cat_tensor_mor. *)
+      (* cbn. *)
+      etrans. do 2 apply cancel_postcomposition.
+              apply (bifunctor_rightid V).
+      etrans. apply cancel_postcomposition, id_left.
+      rewrite <- e.
+      etrans. apply cancel_postcomposition.
+              apply maponpaths.
+              apply id_right.
+      clear e n.
+      apply todo.
+      (* induction m.
+      * cbn.
+        apply pathsinv0.
+        etrans. apply id_left.
+        apply pathsinv0.
+        show_id_type.
+        unfold monoidal_cat_tensor_pt in TYPE.
+        cbn in TYPE.
+        assert (luinv^{ V }_{ T} · pointed_pt V T ⊗^{ V}_{r} T = 
+                ruinv^{ V }_{ T} · T ⊗^{ V}_{l} pointed_pt V T).
+        {
+          (* can then use that coequalizer of equal arrows is id *)
+          admit.
+        }
+        admit.
+      * simpl.
+  
+      admit.
+  Admitted. annoying, maybe not trivial *)
+  }
+  use tpair.
+  {
+    apply todo.
+  }
+  split.
+  - apply todo.
+  - apply todo.
+Defined.
 
 (* canonical map 
 (colim (free_monoid_coeq_sequence_leftwhisker_colim_on T A) --> T ⊗_{V} colim (free_monoid_coeq_sequence_colim_on A))
@@ -363,8 +393,8 @@ is well defined
 i.e., map colim (T ⊗ X_α) --> T ⊗ colim X_α *)
 Lemma can_colimArrow_forms_cocone (A : C) :
     forms_cocone
-    (leftwhisker_chain_with T (free_monoid_coeq_sequence_diagram_on A))
-    (λ n : nat, T ⊗^{ V}_{l} colimIn (free_monoid_coeq_sequence_colim_on A) n).
+      (leftwhisker_chain_with T (free_monoid_coeq_sequence_diagram_on A))
+      (λ n : nat, T ⊗^{ V}_{l} colimIn (free_monoid_coeq_sequence_colim_on A) n).
 Proof.
   (* cbn. *)
   intros m n e.
@@ -394,31 +424,36 @@ Proof.
   apply id_right.
 Qed.
 
+Local Definition can (A : C) :
+    colim (free_monoid_coeq_sequence_leftwhisker_colim_on T A) --> T ⊗_{V} colim (free_monoid_coeq_sequence_colim_on A).
+Proof.
+  use colimArrow.
+  use tpair.
+  - intro n.
+    (* cbn. *)
+    set (arr := colimIn (free_monoid_coeq_sequence_colim_on A) n).
+    exact (T ⊗^{V}_{l} arr).
+  - exact (can_colimArrow_forms_cocone A).
+Defined.
+
+Local Definition top (A : C) :
+    colim (free_monoid_coeq_sequence_leftwhisker_colim_on T A) --> T ⊗_{V} colim (free_monoid_coeq_sequence_colim_on A).
+Proof.
+  apply (compose (pr1 (colimσ_on A))).
+  apply (compose (z_iso_inv (chain_shift_left_colim_iso _))).
+  apply (compose (luinv_{V} _)).
+  exact ((pointed_pt _ T) ⊗^{V}_{r} _).
+Defined.
+
+Local Definition free_monoid_coeq_sequence_limit_step_coeq (A : C) :=
+    CE _ _ (can A) (top A).
+
 Definition free_monoid_coeq_sequence_limit_ordinal_step_on (A : C) : 
     pair_diagram.
 Proof.
   exists (colim (free_monoid_coeq_sequence_colim_on A)).
 
-  transparent assert (can : (colim (free_monoid_coeq_sequence_leftwhisker_colim_on T A) --> T ⊗_{V} colim (free_monoid_coeq_sequence_colim_on A))).
-  {
-    use colimArrow.
-    use tpair.
-    - intro n.
-      (* cbn. *)
-      set (arr := colimIn (free_monoid_coeq_sequence_colim_on A) n).
-      exact (T ⊗^{V}_{l} arr).
-    - exact (can_colimArrow_forms_cocone A).
-  }
-
-  transparent assert (top : (colim (free_monoid_coeq_sequence_leftwhisker_colim_on T A) --> T ⊗_{V} colim (free_monoid_coeq_sequence_colim_on A))).
-  {
-    apply (compose (colimσ_on A)).
-    apply (compose (z_iso_inv (chain_shift_left_colim_iso _))).
-    apply (compose (luinv_{V} _)).
-    exact ((pointed_pt _ T) ⊗^{V}_{r} _).
-  }
-
-  set (coeq := CE _ _ can top).
+  set (coeq := free_monoid_coeq_sequence_limit_step_coeq A).
   exists (CoequalizerObject _ coeq).
   exact (CoequalizerArrow _ coeq).
 Defined.
@@ -428,6 +463,84 @@ Definition free_monoid_coeq_sequence_converges_on (A : C) :=
       pair_diagram_horizontal_arrow 
         (free_monoid_coeq_sequence_limit_ordinal_step_on A)
     ).
+
+(* Local Lemma coequalizer_colim_iso {g : graph} {d : diagram g C} (CC : ColimCocone d)
+    {a b : C} {f f' : a --> b} (E : Coequalizer _ f f') :
+  z_iso a (colim CC) -> z_iso b (colim CC) -> z_iso (colim E) (colim CC).
+Proof.
+  intros acc bcc.
+  use tpair.
+  - use (CoequalizerOut _ _ _ bcc).
+    apply (pre_comp_with_z_iso_is_inj (z_iso_inv_from_z_iso acc)).
+    use colimArrowUnique'.
+    intro.
+    cbn.
+    admit.
+  - exists ((z_iso_inv_from_z_iso bcc) · CoequalizerArrow _ E).
+    split; apply pathsinv0.
+    * use (CoequalizerEndo_is_identity).
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              use CoequalizerArrowComm.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply (is_inverse_in_precat1 bcc).
+      apply id_left.
+    * use (colim_endo_is_identity).
+      intro.
+      etra
+Qed. *)
+
+Lemma T_preserves_diagram_impl_convergence_on (A : C) :
+    preserves_colimit 
+        (monoidal_left_tensor (T : CMon)) 
+        (free_monoid_coeq_sequence_diagram_on A)
+        _ (colimCocone (free_monoid_coeq_sequence_colim_on A)) ->
+      free_monoid_coeq_sequence_converges_on A.
+Proof.
+  intro H.
+  cbn in H.
+  unfold preserves_colimit in H.
+  set (HCC := H (pr2 (free_monoid_coeq_sequence_colim_on A))).
+  set (test := isColim_is_z_iso _
+        (free_monoid_coeq_sequence_leftwhisker_colim_on T A)
+        _ _ HCC).
+  destruct test as [inv iso].
+  cbn in inv.
+  use tpair.
+  - use CoequalizerOut.
+    * apply (compose inv).
+      apply (compose (colimσ_on A)).
+      exact (z_iso_inv (chain_shift_left_colim_iso _)).
+    * use (colimArrowUnique').
+      intro u.
+      cbn.
+      show_id_type.
+      unfold can, top.
+      cbn.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              use (colimArrowCommutes ((free_monoid_coeq_sequence_leftwhisker_colim_on T A))).
+      apply pathsinv0.
+      etrans. apply assoc.
+      apply cancel_postcomposition.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              use (colimOfArrowsIn _ _ (free_monoid_coeq_sequence_leftwhisker_colim_on T A)).
+      (* cbn. *)
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply assoc'.
+      (* etrans. apply cancel_postcomposition. *)
+              (* apply cancel_precomposition. *)
+              (* apply (colimArrowCommutes (CL (chain_shift_left (free_monoid_coeq_sequence_diagram_on A))) _ _ u). *)
+      admit.
+  (* - split; apply pathsinv0.
+    * use colim_endo_is_identity.
+      intro v.
+      admit.
+    * admit. *)
+Admitted.
 
 Lemma free_monoid_coeq_sequence_converges_gives_adjoint_mon_alg 
     (Hconv: free_monoid_coeq_sequence_converges_on I_{V}) :
@@ -454,6 +567,65 @@ Proof.
       exact (pr12 Hconv)
     ).
 Defined.
+
+Lemma free_monoid_coeq_sequence_on_Tinf_all_Tinf 
+    (n : nat)
+    (HT : ∏ A, preserves_colimit 
+        (monoidal_left_tensor (T : CMon)) 
+        (free_monoid_coeq_sequence_diagram_on A)
+        _ (colimCocone (free_monoid_coeq_sequence_colim_on A)))
+    (Hconv : free_monoid_coeq_sequence_converges_on I_{V})
+    (p := free_monoid_coeq_sequence_on Tinf n) :
+  (z_iso (pair_diagram_rob p) Tinf) ×
+    is_z_isomorphism (pair_diagram_horizontal_arrow p).
+Proof.
+  set (Tinf_alg := free_monoid_coeq_sequence_converges_gives_adjoint_mon_alg Hconv).
+  
+  induction n.
+  - set (HCC := HT I_{V} (pr2 (free_monoid_coeq_sequence_colim_on I_{V}))).
+    set (TTinf := (_,, isColim_is_z_iso _
+          (free_monoid_coeq_sequence_leftwhisker_colim_on T I_{V})
+          _ _ HCC) : z_iso _ _).
+    split.
+    * (* cbn. *)
+      cbn.
+      exists (pr12 Tinf_alg).
+      use tpair.
+      exact (luinv_{V} _ · (pointed_pt _ T ⊗^{V}_{r} _)).
+      split.
+      + set (test := pr22 Tinf_alg).
+        cbn.
+        unfold pair_diagram_horizontal_arrow.
+        cbn.
+        apply todo. (* need precomp with point is injective *)
+      + exact (pr22 Tinf_alg).
+    * 
+      exists (pr12 Tinf_alg).
+      split.
+      + etrans. apply assoc.
+        etrans. do 2 apply cancel_postcomposition.
+                apply id_right.
+        exact (pr12 Hconv).
+      + cbn.
+        unfold pair_diagram_horizontal_arrow.
+        cbn.
+        apply todo. (* need precomp with point is injective *)
+  - repeat split.
+    destruct IHn as [prev_rob_iso prev_hor_iso].
+    use (λ f, z_iso_comp f prev_rob_iso).
+    enough (H : is_z_isomorphism (pair_diagram_horizontal_arrow p)).
+    {
+      apply z_iso_inv.
+      exact (_,, H).
+    }
+    {
+      use tpair.
+      - 
+    }
+    * 
+      exact (pr12 IHn).
+    * cbn.
+Qed.
 
 Definition free_monoid_coeq_sequence_converges_gives_adjoint_unit_data 
     (Hconv : free_monoid_coeq_sequence_converges_on I_{V}) :
@@ -489,9 +661,6 @@ Proof.
   use whiskerscommutes.
   exact (bifunctor_equalwhiskers V).
 Qed.
-
-Definition right_tensor_preserves_colimits :=
-    ∏ (A : CMon), is_omega_cocont (monoidal_right_tensor A).
 
 Definition free_monoid_coeq_sequence_converges_gives_adjoint_counit_data 
     (Hconv : free_monoid_coeq_sequence_converges_on I_{V})

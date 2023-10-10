@@ -41,9 +41,8 @@ Section Ff_composition.
 
 Context {C : category}.
 
-(* F ⊗ F' (compose left factors)
-   we flip the terms in Garner to be closer to · notation *)
-Definition Ff_lcomp_data (F F' : Ff C) : section_disp_data (three_disp C).
+(* F' ⊗ F (compose left factors) *)
+Definition Ff_lcomp_data (F' F : Ff C) : section_disp_data (three_disp C).
 Proof.
   use tpair.
   - intro f.
@@ -83,7 +82,7 @@ Proof.
     ).
 Defined.
 
-Lemma Ff_lcomp_axioms (F F' : Ff C) : section_disp_axioms (Ff_lcomp_data F F').
+Lemma Ff_lcomp_axioms (F' F : Ff C) : section_disp_axioms (Ff_lcomp_data F' F).
 Proof.
   split.
   - intro f.
@@ -115,10 +114,10 @@ Proof.
     * reflexivity.
 Qed.
 
-Definition Ff_lcomp (F F' : Ff C) : Ff C :=
-    (_,, Ff_lcomp_axioms F F').
+Definition Ff_lcomp (F' F : Ff C) : Ff C :=
+    (_,, Ff_lcomp_axioms F' F).
 
-Notation "F ⊗ F'" := (Ff_lcomp F F').
+Notation "F' ⊗ F" := (Ff_lcomp F' F).
 
 (* I *)
 Definition Ff_lcomp_unit_data : section_disp_data (three_disp C).
@@ -151,8 +150,8 @@ Qed.
 Definition Ff_lcomp_unit : Ff C :=
     (_,, Ff_lcomp_unit_axioms).
 
-Definition Ff_l_id_right_data (F : Ff C) : 
-    section_nat_trans_disp_data (F ⊗ Ff_lcomp_unit) F.
+Definition Ff_l_id_left_data (F : Ff C) : 
+    section_nat_trans_disp_data (Ff_lcomp_unit ⊗ F) F.
 Proof.
   intro f.
   cbn.
@@ -162,8 +161,8 @@ Proof.
   ).
 Defined.
 
-Definition Ff_l_id_right_axioms (F : Ff C) :
-    section_nat_trans_disp_axioms (Ff_l_id_right_data F).
+Definition Ff_l_id_left_axioms (F : Ff C) :
+    section_nat_trans_disp_axioms (Ff_l_id_left_data F).
 Proof.
   intros f f' γ.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
@@ -172,11 +171,11 @@ Proof.
   now rewrite id_left, id_right.
 Qed.
 
-Definition Ff_l_id_right (F : Ff C) : (F ⊗ Ff_lcomp_unit) --> F :=
-    (_,, Ff_l_id_right_axioms F).
+Definition Ff_l_id_left (F : Ff C) : (Ff_lcomp_unit ⊗ F) --> F :=
+    (_,, Ff_l_id_left_axioms F).
 
-Definition Ff_l_id_right_rev_data (F : Ff C) : 
-    section_nat_trans_disp_data F (F ⊗ Ff_lcomp_unit).
+Definition Ff_l_id_left_rev_data (F : Ff C) : 
+    section_nat_trans_disp_data F (Ff_lcomp_unit ⊗ F).
 Proof.
   intro f.
   cbn. 
@@ -186,8 +185,8 @@ Proof.
   ).
 Defined.
 
-Definition Ff_l_id_right_rev_axioms (F : Ff C) :
-    section_nat_trans_disp_axioms (Ff_l_id_right_rev_data F).
+Definition Ff_l_id_left_rev_axioms (F : Ff C) :
+    section_nat_trans_disp_axioms (Ff_l_id_left_rev_data F).
 Proof.
   intros f f' γ.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
@@ -196,11 +195,11 @@ Proof.
   now rewrite id_left, id_right.
 Qed.
 
-Definition Ff_l_id_right_rev (F : Ff C) : F --> (F ⊗ Ff_lcomp_unit) :=
-    (_,, Ff_l_id_right_rev_axioms F).
+Definition Ff_l_id_left_rev (F : Ff C) : F --> (Ff_lcomp_unit ⊗ F) :=
+    (_,, Ff_l_id_left_rev_axioms F).
 
-Definition Ff_l_id_left_data (F : Ff C) : 
-    section_nat_trans_disp_data (Ff_lcomp_unit ⊗ F) F.
+Definition Ff_l_id_right_data (F : Ff C) : 
+    section_nat_trans_disp_data (F ⊗ Ff_lcomp_unit) F.
 Proof.
   intro f.
   cbn.
@@ -210,8 +209,8 @@ Proof.
   ).
 Defined.
 
-Definition Ff_l_id_left_axioms (F : Ff C) :
-    section_nat_trans_disp_axioms (Ff_l_id_left_data F).
+Definition Ff_l_id_right_axioms (F : Ff C) :
+    section_nat_trans_disp_axioms (Ff_l_id_right_data F).
 Proof.
   intros f f' γ.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
@@ -230,11 +229,11 @@ Proof.
   use (section_disp_on_eq_morphisms F (γ := γ)); reflexivity.
 Qed.
 
-Definition Ff_l_id_left (F : Ff C) : (Ff_lcomp_unit ⊗ F) --> F :=
-    (_,, Ff_l_id_left_axioms F).
+Definition Ff_l_id_right (F : Ff C) : (F ⊗ Ff_lcomp_unit) --> F :=
+    (_,, Ff_l_id_right_axioms F).
 
-Definition Ff_l_id_left_rev_data (F : Ff C) : 
-    section_nat_trans_disp_data F (Ff_lcomp_unit ⊗ F).
+Definition Ff_l_id_right_rev_data (F : Ff C) : 
+    section_nat_trans_disp_data F (F ⊗ Ff_lcomp_unit).
 Proof.
   intro f.
   cbn.
@@ -244,8 +243,8 @@ Proof.
   ).
 Defined.
 
-Definition Ff_l_id_left_rev_axioms (F : Ff C) :
-    section_nat_trans_disp_axioms (Ff_l_id_left_rev_data F).
+Definition Ff_l_id_right_rev_axioms (F : Ff C) :
+    section_nat_trans_disp_axioms (Ff_l_id_right_rev_data F).
 Proof.
   intros f f' γ.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
@@ -261,11 +260,13 @@ Proof.
   use section_disp_on_eq_morphisms; reflexivity.
 Qed.
 
-Definition Ff_l_id_left_rev (F : Ff C) : F --> (Ff_lcomp_unit ⊗ F) :=
-    (_,, Ff_l_id_left_rev_axioms F).
+Definition Ff_l_id_right_rev (F : Ff C) : F --> (F ⊗ Ff_lcomp_unit) :=
+    (_,, Ff_l_id_right_rev_axioms F).
 
-Definition Ff_l_prewhisker_data (F : Ff C) {G G' : Ff C} (τ : section_nat_trans_disp G G') :
-    section_nat_trans_disp_data (F ⊗ G) (F ⊗ G').
+Definition Ff_l_rightwhisker_data 
+      {G G' : Ff C} (τ : section_nat_trans_disp G G')
+      (F : Ff C) :
+    section_nat_trans_disp_data (G ⊗ F) (G' ⊗ F).
 Proof.
   intro f.
   (* cbn. *)
@@ -286,8 +287,10 @@ Proof.
   ).
 Defined.
 
-Definition Ff_l_prewhisker_axioms (F : Ff C) {G G'} (τ : section_nat_trans_disp G G') :
-    section_nat_trans_disp_axioms (Ff_l_prewhisker_data F τ).
+Definition Ff_l_rightwhisker_axioms 
+      {G G'} (τ : section_nat_trans_disp G G') 
+      (F : Ff C) :
+    section_nat_trans_disp_axioms (Ff_l_rightwhisker_data τ F).
 Proof.
   intros f f' γ.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
@@ -302,24 +305,24 @@ Proof.
   reflexivity.
 Qed.
 
-Definition Ff_l_prewhisker (F : Ff C) {G G'} (τ : G --> G') :
-    (F ⊗ G) --> (F ⊗ G') :=
-  (_,, Ff_l_prewhisker_axioms F τ).
+Definition Ff_l_rightwhisker {G G'} (τ : G --> G') (F : Ff C) :
+    (G ⊗ F) --> (G' ⊗ F) :=
+  (_,, Ff_l_rightwhisker_axioms τ F).
 
-Notation "F ⊗pre τ" := (Ff_l_prewhisker F τ) (at level 50).
+Notation "τ ⊗post F" := (Ff_l_rightwhisker τ F) (at level 50).
 
 
-Lemma Ff_l_prewhisker_id (F G : Ff C) :
-    (F ⊗pre (identity G)) = identity _.
+Lemma Ff_l_rightwhisker_id (G F : Ff C) :
+    ((identity G) ⊗post F) = identity _.
 Proof.
   use section_nat_trans_eq; intro f.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
   reflexivity.
 Qed.
 
-Lemma Ff_l_prewhisker_comp (F : Ff C) {G G' G'' : Ff C}
-    (τ : G --> G') (τ' : G' --> G'') :
-  (F ⊗pre (τ · τ')) = (F ⊗pre τ) · (F ⊗pre τ').
+Lemma Ff_l_rightwhisker_comp {G G' G'' : Ff C}
+    (τ : G --> G') (τ' : G' --> G'') (F : Ff C)  :
+  ((τ · τ') ⊗post F) = (τ ⊗post F) · (τ' ⊗post F).
 Proof.
   use section_nat_trans_eq; intro f.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
@@ -332,8 +335,8 @@ Proof.
   reflexivity.
 Qed.
 
-Definition Ff_l_postwhisker_data {G G'} (τ : section_nat_trans_disp G G') (F : Ff C) :
-    section_nat_trans_disp_data (G ⊗ F) (G' ⊗ F).
+Definition Ff_l_leftwhisker_data (F : Ff C) {G G'} (τ : section_nat_trans_disp G G') :
+    section_nat_trans_disp_data (F ⊗ G) (F ⊗ G').
 Proof.
   intro f.
   
@@ -376,8 +379,8 @@ Proof.
   ).
 Defined.
 
-Definition Ff_l_postwhisker_axioms {G G'} (τ : section_nat_trans_disp G G') (F : Ff C) :
-    section_nat_trans_disp_axioms (Ff_l_postwhisker_data τ F).
+Definition Ff_l_leftwhisker_axioms (F : Ff C) {G G'} (τ : section_nat_trans_disp G G') :
+    section_nat_trans_disp_axioms (Ff_l_leftwhisker_data F τ).
 Proof.
   intros f f' γ.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
@@ -408,14 +411,14 @@ Proof.
     reflexivity.
 Qed.
 
-Definition Ff_l_postwhisker {G G'} (τ : G --> G') (F : Ff C) :
-    (G ⊗ F) --> (G' ⊗ F) :=
-  (_,, Ff_l_postwhisker_axioms τ F).
+Definition Ff_l_leftwhisker (F : Ff C) {G G'} (τ : G --> G') :
+    (F ⊗ G) --> (F ⊗ G') :=
+  (_,, Ff_l_leftwhisker_axioms F τ).
 
-Notation "τ ⊗post F" := (Ff_l_postwhisker τ F) (at level 50).
+Notation "F ⊗pre τ" := (Ff_l_leftwhisker F τ) (at level 50).
 
-Lemma Ff_l_postwhisker_id (G F : Ff C) :
-    ((identity G) ⊗post F) = identity _.
+Lemma Ff_l_leftwhisker_id (F G : Ff C) :
+    (F ⊗pre (identity G)) = identity _.
 Proof.
   use section_nat_trans_eq; intro f.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
@@ -435,9 +438,9 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma Ff_l_postwhisker_comp {G G' G'' : Ff C}
-    (τ : G --> G') (τ' : G' --> G'') (F : Ff C) :
-  ((τ · τ') ⊗post F) = (τ ⊗post F) · (τ' ⊗post F).
+Lemma Ff_l_leftwhisker_comp (F : Ff C) {G G' G'' : Ff C}
+    (τ : G --> G') (τ' : G' --> G'') :
+  (F ⊗pre (τ · τ')) = (F ⊗pre τ) · (F ⊗pre τ').
 Proof.
   use section_nat_trans_eq; intro f.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
@@ -456,8 +459,8 @@ Proof.
   - apply id_left.
 Qed.
 
-Definition Ff_l_assoc_data (F F' F'' : Ff C) :
-    section_nat_trans_disp_data ((F ⊗ F') ⊗ F'') (F ⊗ (F' ⊗ F'')).
+Definition Ff_l_assoc_rev_data (F F' F'' : Ff C) :
+    section_nat_trans_disp_data (F ⊗ (F' ⊗ F'')) ((F ⊗ F') ⊗ F'') .
 Proof.
   intro f.
   exists (identity _).
@@ -467,44 +470,6 @@ Proof.
        apply pathsinv0;
        etrans; [apply id_left|]); 
           [apply assoc|reflexivity]
-  ).
-Defined.
-
-Definition Ff_l_assoc_axioms (F F' F'' : Ff C) :
-    section_nat_trans_disp_axioms (Ff_l_assoc_data F F' F'').
-Proof.
-  intros f f' γ.
-  apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
-  
-  etrans. use pr1_transportf_const.
-  (* cbn makes it very slow *)
-  (* cbn. *)
-  etrans. apply id_right.
-  apply pathsinv0.
-  etrans. apply id_left.
-  
-  (* unfold three_mor11.
-  simpl. *)
-
-  use (section_disp_on_eq_morphisms F''); reflexivity.
-Qed.
-
-Definition Ff_l_assoc (F F' F'' : Ff C) :
-    ((F ⊗ F') ⊗ F'') --> (F ⊗ (F' ⊗ F'')) :=
-  (_,, Ff_l_assoc_axioms F F' F'').
-
-
-Definition Ff_l_assoc_rev_data (F F' F'' : Ff C) :
-    section_nat_trans_disp_data (F ⊗ (F' ⊗ F'')) ((F ⊗ F') ⊗ F'').
-Proof.
-  intro f.
-  exists (identity _).
-  abstract (
-    split; 
-      (etrans; [apply id_right|];
-       apply pathsinv0;
-       etrans; [apply id_left|]); 
-          [apply assoc'|reflexivity]
   ).
 Defined.
 
@@ -523,12 +488,50 @@ Proof.
   
   (* unfold three_mor11.
   simpl. *)
-  use section_disp_on_eq_morphisms; reflexivity.
+
+  use (section_disp_on_eq_morphisms F); reflexivity.
 Qed.
 
 Definition Ff_l_assoc_rev (F F' F'' : Ff C) :
     (F ⊗ (F' ⊗ F'')) --> ((F ⊗ F') ⊗ F'') :=
   (_,, Ff_l_assoc_rev_axioms F F' F'').
+
+
+Definition Ff_l_assoc_data (F F' F'' : Ff C) :
+    section_nat_trans_disp_data ((F ⊗ F') ⊗ F'') (F ⊗ (F' ⊗ F'')).
+Proof.
+  intro f.
+  exists (identity _).
+  abstract (
+    split; 
+      (etrans; [apply id_right|];
+       apply pathsinv0;
+       etrans; [apply id_left|]); 
+          [apply assoc'|reflexivity]
+  ).
+Defined.
+
+Definition Ff_l_assoc_axioms (F F' F'' : Ff C) :
+    section_nat_trans_disp_axioms (Ff_l_assoc_data F F' F'').
+Proof.
+  intros f f' γ.
+  apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
+  
+  etrans. use pr1_transportf_const.
+  (* cbn makes it very slow *)
+  (* cbn. *)
+  etrans. apply id_right.
+  apply pathsinv0.
+  etrans. apply id_left.
+  
+  (* unfold three_mor11.
+  simpl. *)
+  use section_disp_on_eq_morphisms; reflexivity.
+Qed.
+
+Definition Ff_l_assoc (F F' F'' : Ff C) :
+    ((F ⊗ F') ⊗ F'') --> (F ⊗ (F' ⊗ F'')) :=
+  (_,, Ff_l_assoc_axioms F F' F'').
 
 Definition Ff_l_mor_comp {F F' G G' : Ff C} 
     (τ : F --> F') (ρ : G --> G') :
@@ -572,8 +575,8 @@ End Ff_composition.
 
 (* redefine notation *)
 Notation "F ⊗ F'" := (Ff_lcomp F F').
-Notation "F ⊗pre τ" := (Ff_l_prewhisker F τ) (at level 50).
-Notation "τ ⊗post F" := (Ff_l_postwhisker τ F) (at level 50).
+Notation "F ⊗pre τ" := (Ff_l_leftwhisker F τ) (at level 50).
+Notation "τ ⊗post F" := (Ff_l_rightwhisker τ F) (at level 50).
 Notation "τ ⊗prod ρ" := (Ff_l_mor_comp τ ρ) (at level 50).
 
 
@@ -588,8 +591,8 @@ Proof.
   use tpair.
   - exact (Ff_lcomp).
   - split.
-    * exact (Ff_l_prewhisker).
-    * exact (λ b _ _ γ, Ff_l_postwhisker γ b).
+    * exact (Ff_l_leftwhisker).
+    * exact (λ b _ _ γ, Ff_l_rightwhisker γ b).
 Defined.
 
 Definition Ff_monoidal_data : monoidal_data (Ff C).
@@ -610,18 +613,12 @@ Proof.
   repeat split.
   - intros F F'.
     functorial_factorization_eq f.
-    reflexivity.
-  - intros F F'.
-    functorial_factorization_eq f.
     cbn.
     etrans. use (section_disp_on_eq_morphisms F (γ' := identity _)); reflexivity. 
     etrans. apply maponpaths. apply (section_disp_id F).
     reflexivity.
-  - intros A F F' F'' γ γ'.
+  - intros F F'.
     functorial_factorization_eq f.
-    etrans. use pr1_transportf_const.
-    apply pathsinv0.
-    etrans. use pr1_transportf_const.
     reflexivity.
   - intros A F F' F'' γ γ'.
     functorial_factorization_eq f.
@@ -637,23 +634,27 @@ Proof.
     * apply id_left.
   - intros A F F' F'' γ γ'.
     functorial_factorization_eq f.
+    etrans. use pr1_transportf_const.
+    apply pathsinv0.
+    etrans. use pr1_transportf_const.
+    reflexivity.
+  - intros A F F' F'' γ γ'.
+    apply pathsinv0.
+    functorial_factorization_eq f.
     (* cbn. *)
     etrans. use pr1_transportf_const.
     apply pathsinv0.
     etrans. use pr1_transportf_const.
     (* cbn. *)
-    set (mor := three_mor_mor12 (section_nat_trans γ f) : fact_R A f --> fact_R F f).
+    set (mor := three_mor_mor12 (section_nat_trans γ' f) : fact_R F' f --> fact_R F'' f).
 
-    set (γ'naturality := section_nt_disp_axioms_from_section_nt_disp γ').
-    set (γ'natf := γ'naturality _ _ mor).
-    set (γ'natfb := base_paths _ _ γ'natf).
-    etrans. apply cancel_precomposition.
-            use (section_disp_on_eq_morphisms F'' (γ' := mor)); reflexivity.
-            
-    etrans. exact (pathsinv0 γ'natfb).
+    set (γnaturality := section_nt_disp_axioms_from_section_nt_disp γ).
+    set (γnatf := γnaturality _ _ mor).
+    set (γnatfb := base_paths _ _ γnatf).
+    etrans. exact (pathsinv0 γnatfb).
     etrans. use pr1_transportf_const.
     apply cancel_postcomposition.
-    use (section_disp_on_eq_morphisms F'); reflexivity.
+    use (section_disp_on_eq_morphisms A); reflexivity.
   - intros F F' γ.
     functorial_factorization_eq f.
     etrans. use pr1_transportf_const.
@@ -692,6 +693,15 @@ Proof.
     etrans. use pr1_transportf_const.
     etrans. apply id_right.
     apply pathsinv0.
+    etrans. apply id_left.
+    use (section_disp_on_eq_morphisms A); reflexivity.
+  - intros A F F' F'' γ.
+    functorial_factorization_eq f.
+    etrans. use pr1_transportf_const.
+    apply pathsinv0.
+    etrans. use pr1_transportf_const.
+    etrans. apply id_right.
+    apply pathsinv0.
     apply id_left.
   - intros A F F' F'' γ.
     functorial_factorization_eq f.
@@ -701,16 +711,7 @@ Proof.
     etrans. apply id_right.
     apply pathsinv0.
     etrans. apply id_left.
-    use (section_disp_on_eq_morphisms F''); reflexivity.
-  - intros A F F' F'' γ.
-    functorial_factorization_eq f.
-    etrans. use pr1_transportf_const.
-    apply pathsinv0.
-    etrans. use pr1_transportf_const.
-    etrans. apply id_right.
-    apply pathsinv0.
-    etrans. apply id_left.
-    use (section_disp_on_eq_morphisms F''); reflexivity.
+    use (section_disp_on_eq_morphisms A); reflexivity.
   - functorial_factorization_eq f. 
     etrans. use pr1_transportf_const.
     apply id_left.
@@ -721,28 +722,28 @@ Proof.
     functorial_factorization_eq f.
     etrans. use pr1_transportf_const.
     etrans. apply id_left.
-    apply pathsinv0.
-    (* cbn. *)
-    etrans. use (section_disp_on_eq_morphisms F' (γ' := identity _)); reflexivity.
+    etrans. use (section_disp_on_eq_morphisms F (γ' := identity _)); reflexivity.
     etrans. apply maponpaths.
-            apply (section_disp_id F').
+            apply (section_disp_id F).
     reflexivity.
   - intros A F F' F''.
     functorial_factorization_eq f.
     etrans. use pr1_transportf_const.
     etrans. apply cancel_postcomposition.
             use pr1_transportf_const.
+    
+    etrans. apply cancel_precomposition.
+    {
+      etrans. apply (section_disp_on_eq_morphisms A (γ' := identity _)); reflexivity.
+      apply maponpaths.
+      apply (section_disp_id A).
+    }
     etrans. apply id_right.
     etrans. apply id_right.
 
     apply pathsinv0.
     etrans. use pr1_transportf_const.
     etrans. apply id_left.
-    apply pathsinv0.
-
-    etrans. use (section_disp_on_eq_morphisms F'' (γ' := identity _)); reflexivity.
-    etrans. apply maponpaths.
-            apply (section_disp_id F'').
     reflexivity.
 Qed.
 
@@ -805,30 +806,23 @@ Proof.
   induction e1. induction e2. apply e3.
 Qed.
 
-Definition Ff_monoid_RNWFS_base_condition 
-    {F : Ff C} (R : monoid (Ff_monoidal) F) : UU :=
-  ∏ f, pr1 (section_nat_trans_data_from_section_nat_trans_disp_funclass (monoid_data_unit Ff_monoidal R) f) = fact_L F f.
-
-Definition Ff_monoid_RNWFS_condition 
-    {F : Ff C} (R : monoid (Ff_monoidal) F) : UU :=
-  monoid_data_unit Ff_monoidal R = Ff_l_point F.
-
-Lemma Ff_monoid_RNWFS_base_condition_iff_cond 
-    {F : Ff C} (R : monoid (Ff_monoidal) F) :
-  Ff_monoid_RNWFS_base_condition R <-> Ff_monoid_RNWFS_condition R.
+Lemma Ff_point_unique 
+    {F : Ff C} 
+    (γ : Ff_lcomp_unit --> F) :
+  γ = Ff_l_point F.
 Proof.
-  split.
-  - intro H.
-    functorial_factorization_eq f.
-    exact (H f).
-  - intros H f.
-    set (Hf := eq_section_nat_trans_disp_on_morphism H f).
-    exact (base_paths _ _ Hf).
+  apply subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|].
+  use funextsec.
+  intro f.
+  use subtypePath; [intro; apply isapropdirprod; apply homset_property|].
+  set (test := three_mor_comm (section_nat_trans γ f)).
+  use (pathscomp1 (pr1 (three_mor_comm (section_nat_trans γ f)))).
+  - apply id_left.
+  - apply id_left.
 Qed.
 
 Lemma Ff_monoid_is_RNWFS_monad_laws 
-    {F : Ff C} (R : monoid (Ff_monoidal) F) 
-    (H : Ff_monoid_RNWFS_condition R) :
+    {F : Ff C} (R : monoid (Ff_monoidal) F) :
   Monad_laws (R_monad_data F (Ff_monoid_is_RNWFS_mul R)).
 Proof.
   set (μ := monoid_data_multiplication _ R).
@@ -838,7 +832,7 @@ Proof.
     apply subtypePath; [intro; apply homset_property|].
     apply pathsdirprod; [|apply id_left].
     
-    set (μax := monoid_to_unit_right_law _ R).
+    set (μax := monoid_to_unit_left_law _ R).
     set (μf := (section_nat_trans_data_from_section_nat_trans_disp_funclass μ) f).
     set (μaxf := eq_section_nat_trans_disp_on_morphism μax f).
     set (μaxfb := base_paths _ _ μaxf).
@@ -846,16 +840,15 @@ Proof.
     apply pathsinv0.
     etrans. exact (pathsinv0 μaxfb).
     etrans. use pr1_transportf_const.
-
+    
     apply cancel_postcomposition.
-    (* cbn. *)
-    (* this is the unit condition we need, applied to fact_R F f *)
-    exact (pr2 (Ff_monoid_RNWFS_base_condition_iff_cond R) H (fact_R F f)).
+    rewrite (Ff_point_unique _).
+    reflexivity.
   - intro f.
     apply subtypePath; [intro; apply homset_property|].
     apply pathsdirprod; [|apply id_left].
 
-    set (μax := monoid_to_unit_left_law _ R).
+    set (μax := monoid_to_unit_right_law _ R).
     set (μf := (section_nat_trans_data_from_section_nat_trans_disp_funclass μ) f).
     set (μaxf := eq_section_nat_trans_disp_on_morphism μax f).
     set (μaxfb := base_paths _ _ μaxf).
@@ -865,13 +858,10 @@ Proof.
     etrans. use pr1_transportf_const.
 
     apply cancel_postcomposition.
-    set (mor := Λ F f).
-    etrans. use (section_disp_on_eq_morphisms F (γ' := mor)).
-    * (* this is the unit condition we need *)
-      (* cbn. *)
-      exact (pr2 (Ff_monoid_RNWFS_base_condition_iff_cond R) H f).
-    * reflexivity.
-    * reflexivity.
+    rewrite (Ff_point_unique (monoid_data_unit Ff_monoidal R)).
+    apply pathsinv0.
+    etrans. apply (section_disp_on_eq_morphisms F (γ' := three_mor_mor12 (section_nat_trans (Ff_l_point F) f))); reflexivity.
+    reflexivity.
   - intro f.
     apply subtypePath; [intro; apply homset_property|].
     apply pathsdirprod; [|reflexivity].
@@ -881,379 +871,26 @@ Proof.
     set (μaxf := eq_section_nat_trans_disp_on_morphism μax f).
     set (μaxfb := base_paths _ _ μaxf).
 
-    use (pathscomp1 (pathsinv0 μaxfb)).
+    use (pathscomp1 μaxfb).
     * etrans. use pr1_transportf_const.
       (* cbn.
       unfold three_mor11.
       cbn. *)
       apply cancel_postcomposition.
-      use (section_disp_on_eq_morphisms F); reflexivity.
-    * etrans. use pr1_transportf_const.
-      etrans. apply cancel_postcomposition.
-              use pr1_transportf_const.
-      
-      etrans. apply assoc'.
+      etrans. use pr1_transportf_const.
       etrans. apply id_left.
-      
+      reflexivity.
+    * etrans. use pr1_transportf_const.
+      apply cancel_postcomposition.
       reflexivity.
 Qed.
 
 Definition Ff_monoid_is_RNWFS 
-      {F : Ff C} (R : monoid (Ff_monoidal) F)
-      (H : Ff_monoid_RNWFS_condition R) :
+      {F : Ff C} (R : monoid (Ff_monoidal) F) :
     rnwfs_over F.
 Proof.
   exists (Ff_monoid_is_RNWFS_mul R).
-  exact (Ff_monoid_is_RNWFS_monad_laws R H).
+  exact (Ff_monoid_is_RNWFS_monad_laws R).
 Defined.
 
 End Ff_monoid_is_RNWFS.
-
-Section Ff_cocomplete.
-
-Context {C : category}.
-Context (CC : Colims C).
-
-Section Ff_cocomplete_diagram.
-
-Context {g : graph} (D : diagram g (Ff C)).
-Context (H : is_connected g).
-
-(* diagram of middle objects *)
-Local Definition diagram_pointwise (a : arrow C) : diagram g C.
-Proof.
-  use tpair.
-  - intro v.
-    exact (pr1 (pr1 (dob D v) a)).
-  - intros u v e.
-    exact (pr1 (pr1 (dmor D e) a)).
-Defined.
-
-Local Definition HCg : ∏ (a : arrow C), ColimCocone (diagram_pointwise a) :=
-    λ a, CC _ _.
-
-(* this construction only works for non-empty graphs, since
-   we need an arrow arrow_dom a --> colim (HCg a), 
-   but we can only find this for a non-empty graph *)
-Definition ColimFf_ob (v0 : vertex g) (a : arrow C) : three_disp C a.
-Proof.
-  exists (colim (HCg a)).
-
-  exists (pr12 (pr1 (dob D v0) a) · (colimIn (HCg a) v0)).
-  use tpair.
-  - use colimArrow.
-    use make_cocone.
-    + intro v.
-      exact (pr122 (pr1 (dob D v) a)).
-    + intros u v e.
-      etrans. exact (pathsinv0 (pr22 (pr1 (dmor D e) a))).
-      apply id_right.
-  - (* cbn. *)
-    abstract (
-      etrans; [apply assoc'|];
-      etrans; [apply cancel_precomposition;
-              use (colimArrowCommutes (HCg a))|];
-      (* cbn. *)
-      exact (three_comp (fact_functor (dob D v0) a))
-    ).
-Defined.
-
-Definition ColimFf_mor (v0 : vertex g)
-    {a b : arrow C} (f : a --> b) :
-  ColimFf_ob v0 a -->[f] ColimFf_ob v0 b.
-Proof.
-  use tpair.
-  - use colimOfArrows.
-    * intro v.
-      (* cbn. *)
-      set (Dv := (dob D v)).
-      exact (pr1 ((section_disp_on_morphisms (section_disp_data_from_section_disp Dv)) f)).
-    * intros u v e.
-      (* cbn. *)
-      abstract (
-        set (De := (dmor D e));
-        set (Deax := section_nt_disp_axioms_from_section_nt_disp De _ _ f);
-        etrans; [exact (pathsinv0 (base_paths _ _ Deax))|];
-        etrans; [apply pr1_transportf_const|];
-        reflexivity
-      ).
-  - (* functorality of dob D v *)
-    split.
-    * (* cbn. *)
-      abstract (
-        set (Dv0f := ((section_disp_on_morphisms (section_disp_data_from_section_disp (dob D v0))) f));
-        set (Dv0fax := pr2 Dv0f);
-        etrans; [apply assoc'|];
-        etrans; [apply cancel_precomposition;
-                 use (colimArrowCommutes (HCg a))|];
-        
-        etrans; [apply assoc|];
-        apply pathsinv0;
-        etrans; [apply assoc|];
-        apply cancel_postcomposition;
-        exact (pathsinv0 (pr1 Dv0fax))
-      ).
-    * (* cbn. *)
-
-      abstract (
-        etrans; [use postcompWithColimArrow|];
-        apply pathsinv0;
-        etrans; [use precompWithColimOfArrows|];
-        apply maponpaths;
-        use cocone_paths;
-        intro v;
-        (* cbn. *)
-        set (Dvf := ((section_disp_on_morphisms (section_disp_data_from_section_disp (dob D v))) f));
-        set (Dvfax := pr2 Dvf);
-  
-        exact (pathsinv0 (pr2 Dvfax))
-      ).
-Defined.
-
-Definition ColimFf_data (v0 : vertex g) : section_disp_data (three_disp C) :=
-    (_,, @ColimFf_mor v0).
-
-Lemma ColimFf_axioms (v0 : vertex g) : section_disp_axioms (ColimFf_data v0).
-Proof.
-  split.
-  - intro a.
-    use subtypePath; [intro; apply isapropdirprod; apply homset_property|].
-    apply pathsinv0, colim_endo_is_identity; intro u.
-    (* cbn. *)
-    etrans. use (colimOfArrowsIn _ _ (HCg a)).
-    (* cbn. *)
-    etrans. apply cancel_postcomposition.
-            apply maponpaths.
-            exact (section_disp_id (dob D u) _).
-    apply id_left.
-  - intros a b c fab fbc.
-    use subtypePath; [intro; apply isapropdirprod; apply homset_property|].
-    (* cbn. *)
-    apply pathsinv0.
-    etrans. apply precompWithColimOfArrows.
-    apply pathsinv0, colimArrowUnique.
-    intro u.
-    etrans. apply colimOfArrowsIn.
-
-    apply pathsinv0.
-    etrans. apply assoc.
-    apply cancel_postcomposition.
-
-    etrans. apply pr1_section_disp_on_morphisms_comp.
-    reflexivity.
-Qed.
-
-Definition ColimFf (v0 : vertex g) : Ff C := 
-    (_,, ColimFf_axioms v0).
-
-(* we need an edge from v0 to v for this to work,
-   regarding equality of (arrow_dom v/v0 · colimIn v/v0) *)
-Local Definition colim_nat_trans_in_data 
-      {v0 : vertex g} {v : vertex g} : 
-    dob D v --> ColimFf v0.
-Proof.
-  use tpair.
-  - intro a.
-    exists (colimIn (HCg a) v).
-    split.
-    * (* unfold ColimFf. *)
-      (* cbn. *)
-      abstract (
-        apply pathsinv0;
-        etrans; [apply id_left|];
-        set (predicate := λ v, pr12 (pr1 (ColimFf v0) a) = pr12 (pr1 (dob D v) a) · colimIn (HCg a) v);
-        use (connected_graph_zig_zag_strong_induction v0 H predicate); [reflexivity|];
-        intros u u' Hu uu';
-        induction uu' as [e|e]; (etrans; [exact Hu|]);
-          [|apply pathsinv0];
-          (etrans; [apply cancel_precomposition;
-                 exact (pathsinv0 (colimInCommutes (HCg a) _ _ e))|];
-           etrans; [apply assoc|];
-           apply cancel_postcomposition;
-           etrans; [exact (pr12 (pr1 (dmor D e) a))|];
-           apply id_left)
-      ).
-    * abstract (
-        etrans; [apply id_right|];
-        apply pathsinv0;
-        etrans; [apply (colimArrowCommutes (HCg a))|];
-        reflexivity
-      ).
-  - abstract (
-      intros a b f;
-      apply subtypePath; [intro; apply isapropdirprod; apply homset_property|];
-      etrans; [use pr1_transportf_const|];
-      apply pathsinv0;
-      (* cbn. *)
-      etrans; [apply (colimOfArrowsIn _ _ (HCg a))|];
-      reflexivity
-    ).
-Defined.
-
-Local Definition cocone_pointwise (F : Ff C) (cc : cocone D F) a :
-  cocone (diagram_pointwise a) (pr1 (pr1 F a)).
-Proof.
-  use make_cocone.
-  - intro v.
-    exact (pr1 (pr1 (coconeIn cc v) a)).
-  - abstract (
-      intros u v e;
-      (* cbn. *)
-      set (cccomm_pointwise := eq_section_nat_trans_disp_on_morphism (coconeInCommutes cc _ _ e) a);
-      apply pathsinv0;
-      etrans; [exact (pathsinv0 (base_paths _ _ cccomm_pointwise))|];
-      etrans; [use pr1_transportf_const|];
-      reflexivity
-    ).
-Defined.
-
-Definition ColimFf_unique_mor
-    (v0: vertex g)
-    (F : Ff C) (cc : cocone D F) :
-  ColimFf v0 --> F.
-Proof.
-  use tpair.
-  * intro a.
-    exists (colimArrow (HCg a) _ (cocone_pointwise F cc a)).
-    split.
-    + abstract (
-        (* cbn. *)
-        etrans; [apply assoc'|];
-        etrans; [apply cancel_precomposition;
-                 apply (colimArrowCommutes (HCg a))|];
-        apply pathsinv0;
-        etrans; [apply id_left|];
-        apply pathsinv0;
-        (* cbn. *)
-        etrans; [exact (pr12 (pr1 (coconeIn cc v0) a))|];
-        apply id_left
-      ).
-    + abstract (
-        etrans; [apply id_right|];
-        apply pathsinv0;
-        etrans; [apply postcompWithColimArrow|];
-        apply maponpaths;
-        use cocone_paths;
-        intro u;
-        (* cbn. *)
-        (* naturality of coconeIn cc at u *)
-        etrans; [exact (pathsinv0 (pr22 (pr1 (coconeIn cc u) a)))|];
-        apply id_right
-      ).
-  * abstract (
-      intros a b f;
-      apply subtypePath; [intro; apply isapropdirprod; apply homset_property|];
-      etrans; [use pr1_transportf_const|];
-      etrans; [apply precompWithColimOfArrows|];
-      apply pathsinv0;
-      etrans; [apply postcompWithColimArrow|];
-
-      use colimArrowUnique;
-      intro u;
-      etrans; [apply (colimArrowCommutes (HCg a))|];
-      (* cbn. *)
-  
-      set (ccuf := (section_nt_disp_axioms_from_section_nt_disp (coconeIn cc u)) _ _ f);
-      etrans; [exact (pathsinv0 (base_paths _ _ ccuf))|];
-      etrans; [use pr1_transportf_const|];
-      reflexivity
-    ).
-Defined.
-
-Lemma ColimFf_unique
-    {v0 : vertex g}
-    (F : Ff C) (cc : cocone D F) :
-  ∃! x : ColimFf v0 --> F,
-            ∏ v, colim_nat_trans_in_data · x = coconeIn cc v.
-Proof.
-  use unique_exists.
-  - exact (ColimFf_unique_mor v0 F cc).
-  - abstract (
-      intro v;
-      functorial_factorization_eq a;
-      etrans; [use pr1_transportf_const|];
-      etrans; [apply (colimArrowCommutes (HCg a))|];
-      reflexivity
-    ).
-  - abstract (
-      intro; apply impred; intro; apply homset_property
-    ).
-  - abstract (
-      intros f t;
-      functorial_factorization_eq a;
-      apply colimArrowUnique;
-      intro u;
-      (* cbn. *)
-      set (tax := eq_section_nat_trans_disp_on_morphism (t u) a);
-      apply pathsinv0;
-      etrans; [exact (pathsinv0 (base_paths _ _ tax))|];
-      etrans; [use pr1_transportf_const|];
-      reflexivity
-    ).
-Defined.
-
-Lemma ColimFfCocone
-    {v0 : vertex g} :
-  ColimCocone D.
-Proof.
-  use make_ColimCocone.
-  - exact (ColimFf v0).
-  - use make_cocone.
-    * intro v. exact (colim_nat_trans_in_data).
-    * abstract (
-        intros u v e;
-        functorial_factorization_eq a;
-        etrans; [use pr1_transportf_const|];
-        (* cbn. *)
-        apply (colimInCommutes (HCg a))
-      ).
-  - intros F cc; exact (ColimFf_unique _ cc).
-Defined.
-
-End Ff_cocomplete_diagram.
-
-Lemma ChainsFf (HC : Colims C) : 
-    Chains (Ff C).
-Proof.
-  intros d.
-  use (ColimFfCocone d).
-  - use (is_connected_pointed nat_graph 0).
-    intro v.
-    induction v as [|v Hv].
-    * exists 0.
-      reflexivity.
-    * use (append_graph_zig_zag Hv).
-      exists 1.
-      exists (S v).
-      split.
-      + apply inl.
-        reflexivity.
-      + reflexivity.
-  - exact 0.
-Defined.
-
-
-Lemma CoequalizersFf (HC : Colims C) :
-    Coequalizers (Ff C).
-Proof.
-  intros F G f g.
-  use (ColimFfCocone).
-  - use (is_connected_pointed Coequalizer_graph (● 0)%stn).
-    intro v.
-    induction v as [v v2].
-    induction v as [|v Hv].
-    * exists 0.
-      apply subtypePath; [intro; apply propproperty|].
-      reflexivity.
-    * induction v as [|v Hv2]; [|induction (nopathsfalsetotrue v2)].
-      exists 1.
-      exists (● 1)%stn.
-      split.
-      + do 2 apply inl.
-        exact tt.
-      + apply subtypePath; [intro; apply propproperty|].
-        reflexivity.
-  - exact (● 0)%stn.
-Defined.
-
-End Ff_cocomplete.
