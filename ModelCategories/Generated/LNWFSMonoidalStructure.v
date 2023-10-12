@@ -58,7 +58,7 @@ Lemma lnwfs_Σ_top_map_id {F : Ff C} (L : lnwfs_over F) (f : arrow C) :
     arrow_mor00 (pr1 L f) = identity _.
 Proof.
   set (law1 := Monad_law1 (T:=lnwfs_L_monad L) f).
-  set (top := top_square law1).
+  set (top := arrow_mor00_eq law1).
   apply pathsinv0.
   etrans.
   exact (pathsinv0 top).
@@ -69,7 +69,7 @@ Lemma lnwfs_Σ_bottom_map_inv {F : Ff C} (L : lnwfs_over F) (f : arrow C) :
     arrow_mor11 (pr1 L f) · arrow_mor (fact_R F (fact_L F f)) = identity _.
 Proof.
   set (law1 := Monad_law1 (T:=lnwfs_L_monad L) f).
-  set (bottom := bottom_square law1).
+  set (bottom := arrow_mor11_eq law1).
   exact bottom.
 Qed.
 
@@ -106,19 +106,20 @@ Proof.
   ).
 Defined.
 
+Local Definition LNWFS_lcomp_comp_helper
+    (F F' : Ff C) (f : arrow C) :=
+  fact_L F f · fact_L F' (fact_R F f).
+
 Definition LNWFS_lcomp_comul_L_lp 
     {F : Ff C} 
     (L : lnwfs_over F)
     (F' : Ff C)
-    (f : arrow C)
-      (λf := fact_L F f)
-      (λ'ρf := fact_L F' (fact_R F f))
-      (comp := λf · λ'ρf) : 
-  fact_L F f --> comp.
+    (f : arrow C) : 
+  fact_L F f --> LNWFS_lcomp_comp_helper F F' f.
 Proof.
   use mors_to_arrow_mor.
   - exact (identity _).
-  - exact (λ'ρf).
+  - exact (fact_L F' (fact_R F f)).
   - abstract (apply id_left).
 Defined.
 
@@ -126,14 +127,10 @@ Definition LNWFS_lcomp_comul_L'_lp
     {F' F : Ff C} 
     (L' : lnwfs_over F')
     (L : lnwfs_over F)
-    (f : arrow C)
-      (λf := fact_L F f)
-      (λ'ρf := fact_L F' (fact_R F f))
-      (comp := λf · λ'ρf)
-      (ρcomp := fact_R F comp) :
-  λ'ρf --> ρcomp.
+    (f : arrow C) :
+  fact_L F' (fact_R F f) --> fact_R F (LNWFS_lcomp_comp_helper F F' f).
 Proof.
-  set (L_lp := LNWFS_lcomp_comul_L_lp L F' f : (fact_L F f --> comp)).
+  set (L_lp := LNWFS_lcomp_comul_L_lp L F' f : (fact_L F f --> (LNWFS_lcomp_comp_helper F F' f))).
   set (L_lift := left_reduced_lp_lift L L_lp).
   destruct L_lift as [L_lift [L_comm1 L_comm2]].
 
@@ -155,7 +152,7 @@ Proof.
 
   set (λf := fact_L F f).
   set (λ'ρf := fact_L F' (fact_R F f)).
-  set (comp := λf · λ'ρf).
+  set (comp := LNWFS_lcomp_comp_helper F F' f).
   set (λcomp := fact_L F comp).
   set (ρcomp := fact_R F comp).
 
@@ -198,7 +195,7 @@ Lemma LNWFS_lcomp_comul_axioms {F' F : Ff C} (L' : lnwfs_over F') (L : lnwfs_ove
     is_nat_trans _ _ (LNWFS_lcomp_comul_data L' L).
 Proof.
   intros f g γ.
-  apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod;
+  use arrow_mor_eq;
       [etrans; [apply id_right|]; apply pathsinv0; apply id_left|].
   (* work away left side (final step of comul_data was
      to use L' to get a lift in a specific diagram) *)
@@ -259,16 +256,99 @@ Definition LNWFS_lcomp_comul {F' F : Ff C} (L' : lnwfs_over F') (L : lnwfs_over 
     (fact_L (F' ⊗ F)) ⟹ ((fact_L (F' ⊗ F)) ∙ (fact_L (F' ⊗ F))) :=
   (_,, LNWFS_lcomp_comul_axioms L' L).
 
-Local Definition pathscomp1 {X : UU} {a b x y : X} (e1 : a = b) (e2 : a = x) (e3 : b = y) : x = y.
+Lemma LNWFS_lcomp_comul_mul_law11 {F' F : Ff C} 
+    (L' : lnwfs_over F') (L : lnwfs_over F) (a : arrow C) :
+    arrow_mor11
+      (# (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L))
+        (μ (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L)) a)
+      · μ (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L)) a) =
+    arrow_mor11
+      (μ (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L))
+        (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L) a)
+      · μ (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L)) a).
 Proof.
-  induction e1. induction e2. apply e3.
+  set (law3 := @Monad_law3 _ (L_monad _ _ (pr2 L))).
+  set (law3' := @Monad_law3 _ (L_monad _ _ (pr2 L'))).
+  
+  apply pathsinv0.
+  etrans. apply assoc'.
+  etrans. apply cancel_precomposition, assoc.
+  apply pathsinv0.
+  etrans. apply assoc'.
+  etrans. apply cancel_precomposition.
+  {
+    apply (pr1_section_disp_on_morphisms_comp F').
+  }
+  set (natL'L'_lp := nat_trans_ax (pr1 L') _ _ (LNWFS_lcomp_comul_L'_lp L' L a)).
+  apply pathsinv0.
+  etrans. apply cancel_precomposition, cancel_postcomposition.
+          exact (pr2 (pathsdirprodweq (base_paths _ _ (natL'L'_lp)))).
+  etrans. apply assoc.
+  etrans. apply cancel_postcomposition, assoc.
+  etrans. apply assoc'.
+  etrans. apply cancel_postcomposition.
+          exact (pathsinv0 (pr2 (pathsdirprodweq (base_paths _ _ (law3' (fact_R F a)))))).
+  etrans. apply assoc'.
+  apply cancel_precomposition.
+  etrans. apply cancel_precomposition.
+          apply (pr1_section_disp_on_morphisms_comp F').
+  etrans. apply (pr1_section_disp_on_morphisms_comp F').
+  use (section_disp_on_eq_morphisms F').
+  - etrans. apply assoc.
+    apply pathsinv0.
+    etrans. apply assoc'.
+    apply pathsinv0.
+    etrans. do 2 apply cancel_postcomposition.
+            exact (lnwfs_Σ_top_map_id L' (fact_R F a)).
+    etrans. apply cancel_postcomposition, id_left.
+    etrans. apply assoc'.
+    
+    set (natLL_lp := nat_trans_ax (pr1 L) _ _ (LNWFS_lcomp_comul_L_lp L F' a)).
+    etrans. apply cancel_precomposition.
+            apply assoc.
+    etrans. apply cancel_precomposition, cancel_postcomposition.
+            exact (pr2 (pathsdirprodweq (base_paths _ _ natLL_lp))).
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition, assoc.
+    etrans. apply assoc'.
+    etrans. apply cancel_postcomposition.
+            exact (pathsinv0 (pr2 (pathsdirprodweq (base_paths _ _ (law3 a))))).
+    etrans. apply assoc'.
+    apply cancel_precomposition.
+    etrans. apply cancel_precomposition.
+            apply (pr1_section_disp_on_morphisms_comp F).
+    etrans. apply (pr1_section_disp_on_morphisms_comp F).
+    apply pathsinv0.
+    etrans. apply (pr1_section_disp_on_morphisms_comp F).
+    apply (section_disp_on_eq_morphisms F).
+    * apply pathsinv0.
+      etrans. apply cancel_postcomposition.
+              exact (lnwfs_Σ_top_map_id L a).
+      apply id_left.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+      {
+        set (Σ'ρa := pr1 L' (fact_R F a)).
+        etrans. exact (pathsinv0 (arrow_mor_comm Σ'ρa)).
+        etrans. apply cancel_postcomposition.
+                exact (lnwfs_Σ_top_map_id L' (fact_R F a)).
+        apply id_left.
+      }
+      apply pathsinv0.
+      (* cbn in t. *)
+      etrans. apply assoc.
+      exact (arrow_mor_comm (#(fact_L F') (LNWFS_lcomp_comul_L'_lp L' L a))).
+  - etrans. apply cancel_precomposition.
+            apply id_right.
+    apply pathsinv0.
+    apply id_left.
 Qed.
 
 Definition LNWFS_lcomp_comul_monad_laws {F' F : Ff C} (L' : lnwfs_over F') (L : lnwfs_over F) :
     Monad_laws (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L)).
 Proof.
   repeat split; intro a.
-  - apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod; [apply id_left|].
+  - use arrow_mor_eq; [apply id_left|].
     etrans. apply assoc'.
     apply pathsinv0.
     etrans. exact (pathsinv0 (lnwfs_Σ_bottom_map_inv L' (fact_R F a))).
@@ -278,34 +358,29 @@ Proof.
     set (F'L'_lp := #(fact_functor F') (LNWFS_lcomp_comul_L'_lp L' L a)).
     etrans. apply (pathsinv0 (pr2 (three_mor_comm F'L'_lp))).
     apply id_right.
-  - apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod; [apply id_left|].
+  - use arrow_mor_eq; [apply id_left|].
     set (law2 := @Monad_law2 _ (L_monad _ (pr1 L') (pr2 L'))).
-    (* todo: use law2? *)
-
-    etrans. apply assoc'.
     apply pathsinv0.
-    etrans. exact (pathsinv0 (lnwfs_Σ_bottom_map_inv L' (fact_R F a))).
+    etrans. exact (pathsinv0 (pr2 (pathsdirprodweq (base_paths _ _ (law2 (fact_R F a)))))).
+    (* cbn. *)
+    apply pathsinv0.
+    etrans. apply assoc'.
     apply cancel_precomposition.
-    (* cbn.
-    unfold three_mor12, three_mor11.
-    cbn. *)
-    (* etrans.
-    {
-      cbn.
-      unfold three_mor12.
-      cbn.
-    } *)
-    set (F'L'_lp := # (fact_functor F') (LNWFS_lcomp_comul_L'_lp L' L a)).
-    apply (pathscomp1 (pr2 (three_mor_comm F'L'_lp))); [apply id_right|].
+    etrans. use (pr1_section_disp_on_morphisms_comp F').
+    use (section_disp_on_eq_morphisms F'); [|apply id_left].
+    etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+            apply (pr1_section_disp_on_morphisms_comp F).
+    apply pathsinv0.
+    set (law2F := @Monad_law2 _ (L_monad _ _ (pr2 L))).
+    etrans. exact (pathsinv0 (pr2 (pathsdirprodweq (base_paths _ _ (law2F a))))).
     apply cancel_precomposition.
-    admit.
-  - 
-    admit.
-    (* apply (cancel_postcomposition _ _ (μ (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L)) a)).
-    apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod.
-    * reflexivity.
-    * cbn *)
-Admitted. (* Qed *)
+    use (section_disp_on_eq_morphisms F); [apply pathsinv0; apply id_left|].
+    apply pathsinv0.
+    exact (three_comp (fact_functor F' (fact_R F a))).
+  - use arrow_mor_eq; [reflexivity|].
+    exact (LNWFS_lcomp_comul_mul_law11 L' L a).
+Qed.
 
 Definition LNWFS_lcomp {F' F : Ff C} (L' : LNWFS C F') (L : LNWFS C F) :
     LNWFS C (F' ⊗ F) :=
@@ -331,10 +406,13 @@ Definition LNWFS_lcomp_unit_comul_axioms :
     is_nat_trans _ _ LNWFS_lcomp_unit_comul_data.
 Proof.
   intros f g γ.
-  apply subtypePath; [intro; apply homset_property|].
-  apply pathsdirprod.
-  - now rewrite id_right, id_left.
-  - now rewrite id_right, id_left.
+  use arrow_mor_eq.
+  - etrans. apply id_right.
+    apply pathsinv0.
+    apply id_left.
+  - etrans. apply id_right.
+    apply pathsinv0.
+    apply id_left.
 Qed.
 
 Definition LNWFS_lcomp_unit_comul : 
@@ -363,17 +441,16 @@ Definition LNWFS_tot_lcomp_unit :
 Definition LNWFS_l_id_left {F : Ff C} (L : LNWFS _ F) : 
     (LNWFS_lcomp_unit L⊗ L) -->[Ff_l_id_left F] L.
 Proof.
-  split; (intro; apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod).
+  split; (intro; use arrow_mor_eq).
   - etrans. apply id_left.
     (* cbn. *)
     apply pathsinv0.
-    etrans. apply maponpaths.
-            apply id_right.
+    etrans. apply id_left.
     etrans. apply id_right.
     exact (pathsinv0 (lnwfs_Σ_top_map_id L a)).
   - etrans. apply id_left.
     apply pathsinv0.
-    etrans. apply maponpaths.
+    etrans. apply cancel_precomposition.
             apply id_right.
     etrans. apply cancel_postcomposition.
             apply id_left.
@@ -401,18 +478,18 @@ Definition LNWFS_tot_l_id_left (L : total_category (LNWFS C)) :
 Definition LNWFS_l_id_left_rev {F : Ff C} (L : LNWFS _ F) : 
     L -->[Ff_l_id_left_rev F] (LNWFS_lcomp_unit L⊗ L).
 Proof.
-  split; (intro; apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod).
+  split; (intro; use arrow_mor_eq).
   - etrans. apply id_left.
     (* cbn. *)
     apply pathsinv0.
-    etrans. apply maponpaths.
+    etrans. apply cancel_precomposition.
             apply id_right.
     etrans. apply id_right.
     exact (lnwfs_Σ_top_map_id L a).
   - etrans. apply id_left.
     etrans. apply id_left.
     apply pathsinv0.
-    etrans. apply maponpaths.
+    etrans. apply cancel_precomposition.
             apply id_right.
     (* cbn.
     unfold three_mor11.
@@ -431,17 +508,17 @@ Definition LNWFS_tot_l_id_left_rev (L : total_category (LNWFS C)) :
 Definition LNWFS_l_id_right {F : Ff C} (L : LNWFS _ F) : 
     (L L⊗ LNWFS_lcomp_unit) -->[Ff_l_id_right F] L.
 Proof.
-  split; (intro; apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod).
+  split; (intro; use arrow_mor_eq).
   - etrans. apply id_left.
     apply pathsinv0.
     (* cbn. *)
-    etrans. apply maponpaths.
+    etrans. apply cancel_precomposition.
             apply id_left.
     etrans. apply id_right.
     exact (pathsinv0 (lnwfs_Σ_top_map_id L a)).
   - etrans. apply id_left.
     apply pathsinv0.
-    etrans. apply maponpaths.
+    etrans. apply cancel_precomposition.
             apply id_right.
     etrans. apply assoc'.
     etrans. apply cancel_precomposition.
@@ -469,7 +546,7 @@ Definition LNWFS_tot_l_id_right (L : total_category (LNWFS C)) :
 Definition LNWFS_l_id_right_rev {F : Ff C} (L : LNWFS _ F) : 
     L -->[Ff_l_id_right_rev F] (L L⊗ LNWFS_lcomp_unit).
 Proof.
-  split; (intro; apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod).
+  split; (intro; use arrow_mor_eq).
   - etrans. apply id_left.
     apply pathsinv0.
     etrans. apply cancel_precomposition.
@@ -492,12 +569,137 @@ Definition LNWFS_tot_l_id_right_rev (L : total_category (LNWFS C)) :
     L --> (L Ltot⊗ LNWFS_tot_lcomp_unit) :=
   (_,, LNWFS_l_id_right_rev (pr2 L)).
 
+
+Definition LNWFS_l_assoc_rev {F F' F'' : Ff C} 
+    (L : LNWFS _ F) (L' : LNWFS _ F') (L'' : LNWFS _ F'') :
+  (L L⊗ (L' L⊗ L'')) -->[Ff_l_assoc_rev F F' F''] ((L L⊗ L') L⊗ L'').
+Proof.
+  split; (intro; use arrow_mor_eq).
+  - etrans. apply id_left.
+    apply pathsinv0.
+    etrans. apply id_left.
+    apply id_left.
+  - etrans. apply id_left.
+    apply pathsinv0.
+    etrans. apply cancel_precomposition.
+            apply id_right.
+    
+    etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+            apply (pr1_section_disp_on_morphisms_comp F).
+    apply pathsinv0.
+    etrans. apply assoc'.
+    apply cancel_precomposition.
+    etrans. apply (pr1_section_disp_on_morphisms_comp F).
+    use (section_disp_on_eq_morphisms F).
+    * etrans. apply assoc'.
+      apply pathsinv0.
+      etrans. apply assoc'.
+      etrans. apply assoc'.
+      apply cancel_precomposition.
+      etrans. apply cancel_precomposition.
+              apply (pr1_section_disp_on_morphisms_comp F').
+      etrans. apply (pr1_section_disp_on_morphisms_comp F').
+      apply pathsinv0.
+      etrans. apply (pr1_section_disp_on_morphisms_comp F').
+      apply (section_disp_on_eq_morphisms F').
+      + etrans. apply id_left.
+        apply pathsinv0.
+        etrans. apply assoc'.
+        apply cancel_precomposition.
+        etrans. apply cancel_precomposition.
+                apply (pr1_section_disp_on_morphisms_comp F'').
+        etrans. apply (pr1_section_disp_on_morphisms_comp F'').
+        apply (section_disp_on_eq_morphisms F'').
+        -- etrans. apply id_left.
+           apply id_left.
+        -- apply cancel_precomposition.
+           apply id_right.
+      + etrans. apply id_right.
+        apply pathsinv0.
+        etrans. apply cancel_precomposition.
+                apply id_right.
+        apply id_left.
+    * etrans. apply id_right.
+      apply pathsinv0.
+      apply id_left.
+  - apply id_left.
+  - apply id_left.
+Qed.
+
+Definition LNWFS_tot_l_assoc_rev (L L' L'' : total_category (LNWFS C)) :
+    (L Ltot⊗ (L' Ltot⊗ L'')) --> ((L Ltot⊗ L') Ltot⊗ L'') :=
+  (_,, LNWFS_l_assoc_rev (pr2 L) (pr2 L') (pr2 L'')).
+
+Definition LNWFS_l_assoc {F F' F'' : Ff C} 
+    (L : LNWFS _ F) (L' : LNWFS _ F') (L'' : LNWFS _ F'') :
+  ((L L⊗ L') L⊗ L'') -->[Ff_l_assoc F F' F''] (L L⊗ (L' L⊗ L'')).
+Proof.
+  split; (intro; use arrow_mor_eq).
+  - etrans. apply id_left.
+    apply pathsinv0.
+    etrans. apply id_left.
+    apply id_left.
+  - etrans. apply id_left.
+    apply pathsinv0.
+    etrans. apply cancel_precomposition.
+            apply id_right.
+    
+    etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+            apply (pr1_section_disp_on_morphisms_comp F).
+    etrans. apply assoc'.
+    apply cancel_precomposition.
+    etrans. apply (pr1_section_disp_on_morphisms_comp F).
+    use (section_disp_on_eq_morphisms F).
+    * etrans. apply assoc'.
+      apply pathsinv0.
+      etrans. apply assoc'.
+      apply cancel_precomposition.
+      etrans. apply (pr1_section_disp_on_morphisms_comp F').
+      apply pathsinv0.
+      etrans. apply cancel_precomposition.
+              apply (pr1_section_disp_on_morphisms_comp F').
+      etrans. apply (pr1_section_disp_on_morphisms_comp F').
+      apply (section_disp_on_eq_morphisms F').
+      + etrans. apply assoc.
+        etrans. apply assoc'.
+        etrans. apply id_left.
+        etrans. apply assoc'.
+        apply pathsinv0.
+        etrans. apply assoc'.
+        apply cancel_precomposition.
+        etrans. apply (pr1_section_disp_on_morphisms_comp F'').
+        apply pathsinv0.
+        etrans. apply (pr1_section_disp_on_morphisms_comp F'').
+        apply (section_disp_on_eq_morphisms F''); [reflexivity|].
+        etrans. apply assoc'.
+        apply pathsinv0.
+        apply cancel_precomposition.
+        apply pathsinv0.
+        apply id_right.
+      + etrans. apply cancel_precomposition.
+                apply id_right.
+        etrans. apply id_right.
+        apply pathsinv0.
+        apply id_left.
+    * etrans. apply assoc.
+      etrans. apply id_right.
+      apply id_right.
+  - apply id_left.
+  - apply id_left.
+Qed.
+
+Definition LNWFS_tot_l_assoc (L L' L'' : total_category (LNWFS C)) :
+    ((L Ltot⊗ L') Ltot⊗ L'' ) --> (L Ltot⊗ (L' Ltot⊗ L'')) :=
+  (_,, LNWFS_l_assoc (pr2 L) (pr2 L') (pr2 L'')). 
+
 Definition LNWFS_l_rightwhisker {F G G': Ff C}
     {Λ : LNWFS _ G} {Λ' : LNWFS _ G'} {τG : G --> G'} 
     (τ : Λ -->[τG] Λ') (L : LNWFS _ F) :
   (Λ L⊗ L) -->[τG ⊗post F] (Λ' L⊗ L).
 Proof.
-  split; (intro; apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod).
+  split; (intro; use arrow_mor_eq).
   - etrans. apply id_left.
     apply pathsinv0.
     etrans. apply cancel_precomposition.
@@ -596,7 +798,7 @@ Definition LNWFS_l_leftwhisker {F G G': Ff C}
     (L : LNWFS _ F) (τ : Λ -->[τG] Λ') :
   (L L⊗ Λ) -->[F ⊗pre τG] (L L⊗ Λ').
 Proof.
-  split; (intro; apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod).
+  split; (intro; use arrow_mor_eq).
   - etrans. apply id_left.
     apply pathsinv0.
     etrans. apply cancel_precomposition.
@@ -701,51 +903,6 @@ Proof.
   reflexivity.
 Qed.
 
-Definition LNWFS_l_assoc_rev {F F' F'' : Ff C} 
-    (L : LNWFS _ F) (L' : LNWFS _ F') (L'' : LNWFS _ F'') :
-  (L L⊗ (L' L⊗ L'')) -->[Ff_l_assoc_rev F F' F''] ((L L⊗ L') L⊗ L'').
-Proof.
-  split; (intro; apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod).
-  - etrans. apply id_left.
-    apply pathsinv0.
-    etrans. apply id_left.
-    apply id_left.
-  - etrans. apply id_left.
-    apply pathsinv0.
-    etrans. apply cancel_precomposition.
-            apply id_right.
-            
-    admit.
-  - apply id_left.
-  - apply id_left.
-Admitted.  (* Qed *)
-
-Definition LNWFS_tot_l_assoc_rev (L L' L'' : total_category (LNWFS C)) :
-    (L Ltot⊗ (L' Ltot⊗ L'')) --> ((L Ltot⊗ L') Ltot⊗ L'') :=
-  (_,, LNWFS_l_assoc_rev (pr2 L) (pr2 L') (pr2 L'')).
-
-Definition LNWFS_l_assoc {F F' F'' : Ff C} 
-    (L : LNWFS _ F) (L' : LNWFS _ F') (L'' : LNWFS _ F'') :
-  ((L L⊗ L') L⊗ L'') -->[Ff_l_assoc F F' F''] (L L⊗ (L' L⊗ L'')).
-Proof.
-  split; (intro; apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod).
-  - etrans. apply id_left.
-    apply pathsinv0.
-    etrans. apply id_left.
-    apply id_left.
-  - etrans. apply id_left.
-    apply pathsinv0.
-    etrans. apply cancel_precomposition.
-            apply id_right.
-    admit.
-  - apply id_left.
-  - apply id_left.
-Admitted.  (* Qed *)
-
-Definition LNWFS_tot_l_assoc (L L' L'' : total_category (LNWFS C)) :
-    ((L Ltot⊗ L') Ltot⊗ L'' ) --> (L Ltot⊗ (L' Ltot⊗ L'')) :=
-  (_,, LNWFS_l_assoc (pr2 L) (pr2 L') (pr2 L'')). 
-
 Definition LNWFS_l_mor_comp {F F' G G' : Ff C} 
     {τF : F --> F'} {ρG : G --> G'}
     {L : LNWFS _ F} {L' : LNWFS _ F'}
@@ -764,7 +921,7 @@ Definition LNWFS_tot_l_mor_comp {L L' Λ Λ' : total_category (LNWFS C)}
 Definition LNWFS_l_point {F : Ff C} (L : LNWFS _ F) :
     LNWFS_lcomp_unit -->[Ff_l_point F] L.
 Proof.
-  split; (intro; apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod).
+  split; (intro; use arrow_mor_eq).
   - etrans. apply id_left.
     apply pathsinv0.
     etrans. apply id_left.

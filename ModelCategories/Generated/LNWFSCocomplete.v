@@ -480,6 +480,15 @@ Proof.
     ).
 Defined.
 
+Local Definition ccμ_cod_arrow (a : arrow C) :
+    arrow_dom a --> arrow_cod (colim (ccμ a)).
+Proof.
+  set (ccμinv0 := colimIn (ccμ a) v0).
+  set (ccμinv011 := arrow_mor11 ccμinv0).
+  set (λλav0 := fact_L (pr1 (dob d v0)) (fact_L (pr1 (dob d v0)) a)).
+  exact (λλav0 · ccμinv011).
+Defined.
+
 Local Lemma LNWFS_colim_comul_data_subproof
     (v : vertex g)
     (f : arrow C)
@@ -513,29 +522,62 @@ Proof.
   apply id_left.
 Qed.
 
+Definition LNWFS_colim_comul_data_first_mor (a : arrow C) :
+  fact_L (colim Finf) a --> ccμ_cod_arrow a.
+Proof.
+  use mors_to_arrow_mor.
+  - exact (identity _).
+  - exact (colim (ccμ a)).
+  - abstract (
+      etrans; [apply id_left|];
+      apply pathsinv0;
+      etrans; [apply assoc'|];
+      etrans; [apply cancel_precomposition;
+              apply (colimOfArrowsIn _ _ (CCFf_pt_ob1 CC dbase a))|];
+      etrans; [apply assoc|];
+      apply cancel_postcomposition;
+      set (Σf := lnwfs_Σ (pr2 (dob d v0)) a);
+      set (Σfcomm := arrow_mor_comm Σf);
+      etrans; [exact (pathsinv0 Σfcomm)|];
+      etrans; [apply cancel_postcomposition;
+              exact (lnwfs_Σ_top_map_id _ a)|];
+      apply id_left
+    ).
+Defined.
+
+Definition LNWFS_colim_comul_data_second_mor (a : arrow C) :
+    ccμ_cod_arrow a --> (fact_L (colim Finf) ∙ fact_L (colim Finf)) a.
+Proof.
+  use mors_to_arrow_mor.
+  - exact (identity _).
+  - exact (ccμ_cod_preservation_mor a).
+  - abstract (
+      etrans; [apply id_left|];
+      apply pathsinv0;
+      etrans; [apply assoc'|];
+      etrans; [apply cancel_precomposition;
+              apply (colimOfArrowsIn _ _ (CC g
+                  (mapdiagram (PrecategoryBinProduct.pr2_functor C C)
+                    (mapdiagram (pr1_category (arrow_disp C))
+                        (LNWFS_diagram_pointwise_comul_mor a)))))|];
+      etrans; [apply assoc|];
+      apply cancel_postcomposition;
+      set (LcolimIn := (# (fact_functor (pr1 (dob d v0))) (three_mor_mor01 (section_nat_trans (colimIn Finf v0) a))));
+      set (LcolimIncomm01 := pr1 (three_mor_comm LcolimIn));
+      etrans; [exact LcolimIncomm01|];
+      apply id_left
+    ).
+Defined.
+
+
 Definition LNWFS_colim_comul_data :
   nat_trans_data (fact_L (colim Finf)) ((fact_L (colim Finf)) ∙ (fact_L (colim Finf))).
 Proof.
   intro a.
-  use mors_to_arrow_mor.
-  - exact (identity _).
-  - exact ((colim (ccμ a)) · (ccμ_cod_preservation_mor a)).
-  - abstract (
-      etrans; [apply id_left|];
-      apply pathsinv0;
-      etrans; [apply assoc|];
-      etrans; [apply cancel_postcomposition, assoc'|];
-      etrans; [apply cancel_postcomposition, cancel_precomposition;
-              apply (colimOfArrowsIn _ _ (CCFf_pt_ob1 CC dbase a))|];
-      etrans; [apply cancel_postcomposition, assoc|];
-      etrans; [apply assoc'|];
-      etrans; [apply cancel_precomposition;
-              apply (colimOfArrowsIn)|];
-      (* cbn. *)
-      etrans; [apply assoc|];
-      apply cancel_postcomposition;
-      exact (LNWFS_colim_comul_data_subproof v0 a)
-    ).
+  exact (
+    LNWFS_colim_comul_data_first_mor a
+    · LNWFS_colim_comul_data_second_mor a
+  ).
 Defined.
 
 Definition LNWFS_colim_comul_ax :
@@ -543,96 +585,218 @@ Definition LNWFS_colim_comul_ax :
 Proof.
   intros f f' γ.
   apply subtypePath; [intro; apply homset_property|].
-  apply pathsdirprod; [etrans; [apply id_right|]; apply pathsinv0; apply id_left|].
-  use colimArrowUnique'.
-  intro v.
-  (* cbn. *)
-  etrans; [apply assoc|].
-  etrans; [apply cancel_postcomposition;
-           apply (colimOfArrowsIn _ _ (CCFf_pt_ob1 CC dbase f))|].
-  (* cbn. *)
-  etrans; [apply assoc|].
-  etrans; [apply assoc4|].
-  etrans; [apply cancel_postcomposition, cancel_precomposition;
-          apply (colimOfArrowsIn _ _ (CCFf_pt_ob1 CC dbase f'))|].
-  etrans; [apply cancel_postcomposition, assoc|].
-  etrans; [apply assoc'|].
-  etrans; [apply cancel_precomposition, colimOfArrowsIn|].
-  etrans; [apply assoc|].
-  apply pathsinv0.
-  etrans; [apply assoc|].
-  (* cbn. *)
-  etrans; [apply cancel_postcomposition, assoc|].
-  etrans; [do 2 apply cancel_postcomposition;
-           apply (colimOfArrowsIn _ _ (CCFf_pt_ob1 CC dbase f))|].
-  (* cbn. *)
-  etrans; [apply assoc4|].
-  (* unfold ccμ_cod_preservation_mor. *)
-  set (ccbase := (CC g
-        (mapdiagram (PrecategoryBinProduct.pr2_functor C C)
-          (mapdiagram (pr1_category (arrow_disp C))
-              (LNWFS_diagram_pointwise_comul_mor f))))).
-  etrans; [apply cancel_postcomposition, cancel_precomposition;
-           apply (colimOfArrowsIn _ _ ccbase)|].
-  clear ccbase.
-  (* cbn. *)
-  etrans; [apply assoc'|].
-  etrans; [apply cancel_precomposition, assoc'|].
-  etrans; [do 2 apply cancel_precomposition;
-           apply (colimOfArrowsIn _ _ (CCFf_pt_ob1 CC dbase _))|].
-  (* cbn. *)
-  etrans; [apply assoc|].
-  etrans; [apply assoc|].
-  apply cancel_postcomposition.
-  apply pathsinv0.
-  set (Σnat := nat_trans_ax (lnwfs_Σ (pr2 (dob d v))) _ _ γ).
-  set (Σnat11 := pr2 (pathsdirprodweq (base_paths _ _ Σnat))).
-  etrans; [apply cancel_postcomposition; exact (Σnat11)|].
-  etrans; [apply assoc'|].
-  apply pathsinv0.
-  etrans; [apply assoc'|].
-  apply cancel_precomposition.
-  (* cbn. *)
-  etrans; [apply pr1_section_disp_on_morphisms_comp|].
-  apply pathsinv0.
-  etrans; [apply pr1_section_disp_on_morphisms_comp|].
-  use (section_disp_on_eq_morphisms (pr1 (dob d v))).
-  - etrans; [apply id_right|].
+  apply pathsdirprod.
+  - etrans; [apply assoc|].
+    etrans; [apply id_right|].
+    etrans; [apply id_right|].
     apply pathsinv0.
+    etrans. apply assoc'.
+    etrans. apply id_left.
     apply id_left.
-  - apply pathsinv0.
-    etrans; [apply (colimOfArrowsIn _ _ (CCFf_pt_ob1 CC dbase f))|].
-    reflexivity.
+  -  use colimArrowUnique'.
+    intro v.
+    (* cbn. *)
+    etrans; [apply assoc|].
+    etrans; [apply cancel_postcomposition;
+            apply (colimOfArrowsIn _ _ (CCFf_pt_ob1 CC dbase f))|].
+    (* cbn. *)
+    etrans; [apply assoc|].
+    etrans; [apply assoc4|].
+    etrans; [apply cancel_postcomposition, cancel_precomposition;
+            apply (colimOfArrowsIn _ _ (CCFf_pt_ob1 CC dbase f'))|].
+    etrans; [apply cancel_postcomposition, assoc|].
+    etrans; [apply assoc'|].
+    etrans; [apply cancel_precomposition, colimOfArrowsIn|].
+    etrans; [apply assoc|].
+    apply pathsinv0.
+    etrans; [apply assoc|].
+    (* cbn. *)
+    etrans; [apply cancel_postcomposition, assoc|].
+    etrans; [do 2 apply cancel_postcomposition;
+            apply (colimOfArrowsIn _ _ (CCFf_pt_ob1 CC dbase f))|].
+    (* cbn. *)
+    etrans; [apply assoc4|].
+    (* unfold ccμ_cod_preservation_mor. *)
+    set (ccbase := (CC g
+          (mapdiagram (PrecategoryBinProduct.pr2_functor C C)
+            (mapdiagram (pr1_category (arrow_disp C))
+                (LNWFS_diagram_pointwise_comul_mor f))))).
+    etrans; [apply cancel_postcomposition, cancel_precomposition;
+            apply (colimOfArrowsIn _ _ ccbase)|].
+    clear ccbase.
+    (* cbn. *)
+    etrans; [apply assoc'|].
+    etrans; [apply cancel_precomposition, assoc'|].
+    etrans; [do 2 apply cancel_precomposition;
+            apply (colimOfArrowsIn _ _ (CCFf_pt_ob1 CC dbase _))|].
+    (* cbn. *)
+    etrans; [apply assoc|].
+    etrans; [apply assoc|].
+    apply cancel_postcomposition.
+    apply pathsinv0.
+    set (Σnat := nat_trans_ax (lnwfs_Σ (pr2 (dob d v))) _ _ γ).
+    set (Σnat11 := pr2 (pathsdirprodweq (base_paths _ _ Σnat))).
+    etrans; [apply cancel_postcomposition; exact (Σnat11)|].
+    etrans; [apply assoc'|].
+    apply pathsinv0.
+    etrans; [apply assoc'|].
+    apply cancel_precomposition.
+    (* cbn. *)
+    etrans; [apply pr1_section_disp_on_morphisms_comp|].
+    apply pathsinv0.
+    etrans; [apply pr1_section_disp_on_morphisms_comp|].
+    use (section_disp_on_eq_morphisms (pr1 (dob d v))).
+    * etrans; [apply id_right|].
+      apply pathsinv0.
+      apply id_left.
+    * apply pathsinv0.
+      etrans; [apply (colimOfArrowsIn _ _ (CCFf_pt_ob1 CC dbase f))|].
+      reflexivity.
 Qed.
 
 Definition LNWFS_colim_comul :
     (fact_L (colim Finf)) ⟹ ((fact_L (colim Finf)) ∙ (fact_L (colim Finf))) :=
   (_,, LNWFS_colim_comul_ax).
 
+Local Lemma LNWFS_colim_comul_monad_ax_subproof1
+    (f : arrow C)
+    (v : vertex g) :
+  fact_L (pr1 (dob d v0)) (fact_L (pr1 (dob d v0)) f)
+  · arrow_mor11 (colimIn (ccμ f) v0) =
+  fact_L (pr1 (dob d v)) (fact_L (pr1 (dob d v)) f)
+  · arrow_mor11 (colimIn (ccμ f) v).
+Proof.
+  set (predicate := λ v, 
+      fact_L (pr1 (dob d v0)) (fact_L (pr1 (dob d v0)) f)
+      · arrow_mor11 (colimIn (ccμ f) v0) =
+      fact_L (pr1 (dob d v)) (fact_L (pr1 (dob d v)) f)
+      · arrow_mor11 (colimIn (ccμ f) v)).
+  
+  enough (He : ∏ (u u' : vertex g) (e : edge u u'), 
+            fact_L (pr1 (dob d u)) (fact_L (pr1 (dob d u)) f)
+            · arrow_mor11 (colimIn (ccμ f) u) =
+            fact_L (pr1 (dob d u')) (fact_L (pr1 (dob d u')) f)
+            · arrow_mor11 (colimIn (ccμ f) u')).
+  {
+    use (connected_graph_zig_zag_strong_induction v0 H predicate); [reflexivity|].
+    
+    intros u u' Hu e.
+    destruct e.
+    - etrans. exact Hu.
+      exact (He _ _ e).
+    - etrans. exact Hu.
+      apply pathsinv0.
+      exact (He _ _ e).
+  }
+  intros u u' e.
+  set (cinc := colimInCommutes (ccμ f) _ _ e).
+  etrans. apply cancel_precomposition.
+          exact (pathsinv0 (pr2 (pathsdirprodweq (base_paths _ _ cinc)))).
+  etrans. apply assoc.
+  apply cancel_postcomposition.
+  
+  etrans. apply assoc.
+  etrans. apply cancel_postcomposition.
+  {
+    set (e01 := three_mor_mor01 (section_nat_trans (pr1 (dmor d e)) f)).
+    set (Lue01 := #(fact_L (pr1 (dob d u))) e01).
+    etrans. apply cancel_precomposition.
+            use (section_disp_on_eq_morphisms (pr1 (dob d u)) (γ' := e01)); reflexivity.
+    etrans. exact (pathsinv0 (arrow_mor_comm Lue01)).
+    apply id_left.
+  }
+  set (e01 := three_mor_mor01 (section_nat_trans (pr1 (dmor d e)) (fact_L (pr1 (dob d u')) f))).
+  etrans. exact (pathsinv0 (arrow_mor_comm e01)).
+  apply id_left.
+Qed.
+
 Local Lemma LNWFS_colim_comul_monad_ax_subproof 
     (f : arrow C) 
     (v : vertex g) :
-    arrow_mor11 (lnwfs_Σ (pr2 (dob d v)) (fact_L (colim Finf) f)) ·
-    three_mor11 (
-      # (fact_functor (pr1 (dob d v)))
-          (
-            three_mor_mor01 (
-              section_nat_trans (colimIn Finf v) (fact_L (colim Finf) f)
-            )
-          )
-    ) =
-    three_mor11 (# (fact_functor (pr1 (dob d v))) (LNWFS_colim_comul_data f)).
+  arrow_mor11 (lnwfs_Σ (pr2 (dob d v)) f)
+  · three_mor11 (
+      #(fact_functor (pr1 (dob d v))) 
+      (three_mor_mor01 ((section_nat_trans_data (colim_nat_trans_in_data CC dbase H) f)))
+    )
+  · three_mor11 (#(fact_functor (pr1 (dob d v))) (LNWFS_colim_comul_data f))
+  =
+  arrow_mor11 (lnwfs_Σ (pr2 (dob d v)) f)
+  · three_mor11 (
+      #(fact_functor (pr1 (dob d v))) 
+      (three_mor_mor01 ((section_nat_trans_data (colim_nat_trans_in_data CC dbase H) f)))
+    )
+  · arrow_mor11 (lnwfs_Σ (pr2 (dob d v)) (fact_L (colim Finf) f))
+  · three_mor11 (
+      #(fact_functor (pr1 (dob d v)))
+      (three_mor_mor01 ((section_nat_trans_data (colim_nat_trans_in_data CC dbase H) (fact_L (colim Finf) f))))
+    ).
 Proof.
-  (* same as the previous subproof *)
   set (Lv := dob d v).
   set (law3 := @Monad_law3 _ (L_monad _ _ (pr22 Lv))).
-  set (t := base_paths _ _ (law3 (fact_L (colim Finf) f))).
-  set (t11 := pr2 (pathsdirprodweq t)).
+
+  etrans. apply cancel_precomposition.
+  {
+    apply maponpaths.
+    apply (functor_comp (fact_functor (pr1 Lv))).
+  }
+  etrans. apply assoc'.
+  etrans. apply cancel_precomposition.
+  {
+    etrans. apply assoc.
+    apply cancel_postcomposition.
+    etrans. apply pr1_section_disp_on_morphisms_comp.
+    use (section_disp_on_eq_morphisms (pr1 Lv)).
+    - use (compose (lnwfs_Σ (pr2 (dob d v)) f)).
+      use mors_to_arrow_mor.
+      * exact (identity _).
+      * exact (arrow_mor11 (colimIn (ccμ f) v)).
+      * abstract (
+          etrans; [apply id_left|];
+          exact (LNWFS_colim_comul_monad_ax_subproof1 f v)
+        ).
+    - apply pathsinv0.
+      etrans. apply cancel_postcomposition.
+              exact (lnwfs_Σ_top_map_id (pr2 Lv) f).
+      reflexivity.
+    - etrans. apply (colimOfArrowsIn _ _ (CCFf_pt_ob1 CC dbase f)).
+      reflexivity.
+  }
+  etrans. apply cancel_precomposition.
+          apply cancel_postcomposition.
+          exact (pathsinv0 (pr1_section_disp_on_morphisms_comp (pr1 Lv) _ _)).
+  etrans. apply assoc.
+  etrans. apply cancel_postcomposition, assoc.
+  etrans. apply assoc'.
+  etrans. apply cancel_postcomposition.
+          exact (pr2 (pathsdirprodweq (base_paths _ _ (law3 f)))).
   
+  etrans. apply assoc'.
+  apply pathsinv0.
+  etrans. apply assoc'.
+  etrans. apply assoc'.
+  apply cancel_precomposition.
+  
+  set (mor := (three_mor_mor01
+                (section_nat_trans_data (colim_nat_trans_in_data CC dbase H) f))).
+  set (LΣnatFinff := nat_trans_ax (pr12 Lv) _ _ mor).
+  etrans. apply assoc.
+  etrans. apply cancel_postcomposition.
+          exact (pr2 (pathsdirprodweq (base_paths _ _ LΣnatFinff))).
+  etrans. apply assoc'.
+  apply cancel_precomposition.
+  etrans. apply (pr1_section_disp_on_morphisms_comp (pr1 Lv)).
+  apply pathsinv0.
+  etrans. apply (pr1_section_disp_on_morphisms_comp (pr1 Lv)).
+  apply (section_disp_on_eq_morphisms (pr1 Lv)); [reflexivity|].
+  (* cbn. *)
+  etrans. apply (colimOfArrowsIn _ _ (CC g
+                  (mapdiagram (PrecategoryBinProduct.pr2_functor C C)
+                    (mapdiagram (pr1_category (arrow_disp C))
+                        (LNWFS_diagram_pointwise_comul_mor f))))).
+  reflexivity.
+Qed.
 
-Admitted.
-
-Lemma LNWFS_colim_comul_data_subproof1
+Local Lemma LNWFS_colim_comul_data_subproof1
     (f : arrow C) 
     (v : vertex g) :
   three_mor11
@@ -642,16 +806,18 @@ Lemma LNWFS_colim_comul_data_subproof1
     · colimIn (CCFf_pt_ob1 CC dbase f) v.
 Proof.
   set (Lv := dob d v).
-  show_id_type.
-  unfold three_ob2 in TYPE.
-Admitted.
+  set (Lcin := # (fact_functor (pr1 Lv)) (three_mor_mor01 (section_nat_trans (colimIn Finf v) f))).
+  set (comm12 := pr2 (three_mor_comm Lcin)).
+  apply pathsinv0.
+  exact comm12.
+Qed.
 
 Lemma LNWFS_colim_comul_monad_ax :
     Monad_laws (L_monad_data (colim Finf) LNWFS_colim_comul).
 Proof.
   repeat split; intro f.
   - apply subtypePath; [intro; apply homset_property|].
-    apply pathsdirprod; [apply id_left|].
+    apply pathsdirprod; [etrans; [apply assoc'|]; etrans; [apply id_left|]; apply id_left|].
     apply pathsinv0.
     apply colim_endo_is_identity.
     intro v.
@@ -679,7 +845,7 @@ Proof.
             exact (pr2 (pathsdirprodweq (base_paths _ _ law1v))).
     apply id_left.
   - apply subtypePath; [intro; apply homset_property|].
-    apply pathsdirprod; [apply id_left|].
+    apply pathsdirprod; [etrans; [apply assoc'|]; etrans; [apply id_left|]; apply id_left|].
     apply pathsinv0.
     apply colim_endo_is_identity.
     intro v.
@@ -721,35 +887,60 @@ Proof.
     etrans. apply pr1_section_disp_on_morphisms_comp.
     apply section_disp_on_eq_morphisms; [apply id_left|].
     apply (colimArrowCommutes (CCFf_pt_ob1 CC dbase f)).
-  - admit.
-    (* todo: the below proof works, it is just very slow *)
-    (* apply (cancel_postcomposition _ _ (μ (L_monad_data (colim Finf) LNWFS_colim_comul) f)).
-    apply subtypePath; [intro; apply homset_property|].
+  - apply subtypePath; [intro; apply homset_property|].
     apply pathsdirprod; [reflexivity|].
     use colimArrowUnique'.
     intro v.
-    set (ccinf := CCFf_pt_ob1 CC dbase ((L_monad_data (colim Finf) LNWFS_colim_comul) f)).
-    etrans. apply (colimOfArrowsIn _ _ ccinf).
-    (* cbn. *)
-    apply pathsinv0.
     etrans. apply assoc.
     etrans. apply cancel_postcomposition.
-            apply (colimOfArrowsIn _ _ ccinf).
-    (* cbn. *)
+            apply assoc.
+    etrans. do 2 apply cancel_postcomposition.
+            apply (colimOfArrowsIn _ _ (CCFf_pt_ob1 CC dbase f)).
+    etrans. apply assoc'.
     etrans. apply assoc'.
     etrans. apply cancel_precomposition.
     {
-      set (ccmap := (CC g
-          (mapdiagram (PrecategoryBinProduct.pr2_functor C C)
-            (mapdiagram (pr1_category (arrow_disp C))
-                (LNWFS_diagram_pointwise_comul_mor
-                  (L_monad_data (colim Finf) LNWFS_colim_comul f)))))).
-      apply (colimOfArrowsIn _ _ ccmap).
-    }        
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply (colimOfArrowsIn).
+      etrans. apply assoc'.
+      apply cancel_precomposition.
+      set (ccinf := CCFf_pt_ob1 CC dbase (fact_L (colim Finf) f)).
+      apply (colimArrowCommutes ccinf).
+    }
+    apply pathsinv0.
+    (* cbn. *)
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+            apply assoc.
+    etrans. do 2 apply cancel_postcomposition.
+            apply (colimOfArrowsIn _ _ (CCFf_pt_ob1 CC dbase f)).
+    etrans. apply assoc'.
+    etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+    {
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply (colimOfArrowsIn).
+      etrans. apply assoc'.
+      apply cancel_precomposition.
+      set (ccinf := CCFf_pt_ob1 CC dbase (fact_L (colim Finf) f)).
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply (colimArrowCommutes ccinf).
+      etrans. apply assoc'.
+      apply cancel_precomposition.
+      apply (colimOfArrowsIn).
+    }
+    etrans. apply assoc.
+    etrans. apply assoc.
+    etrans. apply assoc.
+    apply pathsinv0.
+    etrans. apply assoc.
     etrans. apply assoc.
     apply cancel_postcomposition.
-    exact (LNWFS_colim_comul_monad_ax_subproof f v). *)
-Admitted.
+    exact (LNWFS_colim_comul_monad_ax_subproof f v).
+Qed.
 
 Definition ColimLNWFS_disp : LNWFS C (colim Finf) :=
     (LNWFS_colim_comul,, LNWFS_colim_comul_monad_ax).
@@ -762,6 +953,7 @@ Definition ColimLNWFS_disp_in (v : vertex g) :
 Proof.
   split; intro f; (apply subtypePath; [intro; apply homset_property|]); apply pathsdirprod.
   - etrans. apply id_left.
+    etrans. apply id_left.
     apply pathsinv0.
     etrans. apply cancel_precomposition.
             apply id_right.
@@ -789,7 +981,7 @@ Definition ColimLNWFS_in (v : vertex g) :
 
 Local Open Scope mor_disp.
 
-Local Lemma project_cocone 
+Lemma project_cocone 
     (L : total_category (LNWFS C))
     (cc : cocone d L) :
   cocone dbase (pr1 L).
@@ -814,6 +1006,8 @@ Proof.
     apply pathsdirprod.
     * etrans. apply id_left.
       apply pathsinv0.
+      etrans. apply assoc'.
+      etrans. apply id_left.
       etrans. apply id_left.
       etrans. apply id_left.
       (* cbn. *)
@@ -887,15 +1081,16 @@ Proof.
   - abstract (
       intro y; apply impred; intro; apply homset_property
     ).
-  - intros y ccy.
-    destruct y as [Fy Ly].
-    use total2_paths2_f.
-    * set (Ff_uniqueness := λ t, base_paths _ _ (iscontr_uniqueness Ff_unique t)).
-      use (Ff_uniqueness (Fy,, _)).
-      intro v.
-      exact (base_paths _ _ (ccy v)).
-    * apply isaprop_lnwfs_mor_axioms.
-Qed.
+  - abstract (
+      intros y ccy;
+      destruct y as [Fy Ly];
+      use total2_paths2_f; [|apply isaprop_lnwfs_mor_axioms];
+      set (Ff_uniqueness := λ t, base_paths _ _ (iscontr_uniqueness Ff_unique t));
+      use (Ff_uniqueness (Fy,, _));
+      intro v;
+      exact (base_paths _ _ (ccy v))
+    ).
+Defined.
 
 Lemma ColimLNWFSCocone :
   ColimCocone d.

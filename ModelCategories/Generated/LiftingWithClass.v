@@ -213,7 +213,7 @@ Proof.
 
   simpl in Sisalg.
   unfold is_Algebra_mor in Sisalg.
-  set (top_line := top_square Sisalg).
+  set (top_line := arrow_mor00_eq Sisalg).
   simpl in top_line.
   exact (pathsinv0 top_line).
 Qed.
@@ -670,8 +670,8 @@ Proof.
       + now rewrite id_left.
   - destruct H as [γ γcomm].
     exists (arrow_mor00 γ).
-    set (γcomm1 := top_square γcomm).
-    set (γcomm2 := bottom_square γcomm).
+    set (γcomm1 := arrow_mor00_eq γcomm).
+    set (γcomm2 := arrow_mor11_eq γcomm).
     split.
     * exact γcomm1.
     * etrans. exact (arrow_mor_comm γ).

@@ -57,6 +57,16 @@ Definition arrow_mor00 {C : category} {f g : arrow C} (F : f --> g) := pr11 F.
 Definition arrow_mor11 {C : category} {f g : arrow C} (F : f --> g) := pr21 F. 
 Definition arrow_mor_comm {C : category} {f g : arrow C} (F : f --> g) := pr2 F. 
 
+Lemma arrow_mor_eq {C : category} {f g : arrow C} 
+    (γ γ' : f --> g) 
+    (H00 : arrow_mor00 γ = arrow_mor00 γ')
+    (H11 : arrow_mor11 γ = arrow_mor11 γ') :
+  γ = γ'.
+Proof.  
+  apply subtypePath; [intro; apply homset_property|].
+  apply pathsdirprod; assumption.
+Qed.
+
 Coercion mor_to_arrow_ob {C : category} {x y : C} (f : x --> y) : arrow C :=
     (make_dirprod x y,, f).
 
@@ -82,12 +92,19 @@ Qed. *)
 (* base_paths : equality in pr1 of ∑-type (paths in base category)
     pathsdirprodweq : _ × _ = _ × _ -> equality of terms
 *)
-Definition top_square {C : category}
-    {f f' : arrow C} {mor mor1' : f --> f'} (H : mor = mor1') := 
-  dirprod_pr1 (pathsdirprodweq (base_paths _ _ H)).
-Definition bottom_square {C : category}
-    {f f' : arrow C} {mor mor1' : f --> f'} (H : mor = mor1') := 
-  dirprod_pr2 (pathsdirprodweq (base_paths _ _ H)).
+Definition arrow_mor00_eq {C : category}
+    {f f' : arrow C} {mor mor' : f --> f'} (H : mor = mor') :
+  arrow_mor00 mor = arrow_mor00 mor'.
+Proof. 
+  exact (dirprod_pr1 (pathsdirprodweq (base_paths _ _ H))).
+Qed.
+
+Definition arrow_mor11_eq {C : category}
+    {f f' : arrow C} {mor mor' : f --> f'} (H : mor = mor') :
+  arrow_mor11 mor = arrow_mor11 mor'.
+Proof.
+  exact (dirprod_pr2 (pathsdirprodweq (base_paths _ _ H))).
+Qed.
 
 Definition arrow_base_colims {C : category} (CC : Colims C) :
     Colims (arrow_base C).

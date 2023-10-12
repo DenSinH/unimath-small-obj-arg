@@ -345,8 +345,8 @@ Lemma LNWFS_right_tensor_preserves_colimit_mor_inv_disp
     pr2 ((monoidal_right_tensor A) (colim (LNWFSCC d))).
 Proof.
   split; intro.
-  - apply subtypePath; [intro; apply homset_property|].
-    apply pathsdirprod; [apply pathsinv0, id_left|].
+  - use arrow_mor_eq; 
+    [apply pathsinv0; etrans; [apply cancel_postcomposition, id_left|]; apply id_left|].
     use colimArrowUnique'.
     intro v.
     
@@ -429,41 +429,43 @@ Proof.
               apply (pr1_section_disp_on_morphisms_comp (pr1 (dob d v))).
       apply (pr1_section_disp_on_morphisms_comp (pr1 (dob d v))).
     }
-    apply (section_disp_on_eq_morphisms (pr1 (dob d v))).
-    * etrans. apply assoc'.
-      apply pathsinv0.
-      etrans. apply id_left.
-      apply cancel_precomposition.
-      apply pathsinv0.
-      etrans.
-      {
-        etrans. apply cancel_precomposition.
-                apply (pr1_section_disp_on_morphisms_comp (pr1 A)).
-        apply (pr1_section_disp_on_morphisms_comp (pr1 A)).
-      }
-      apply section_disp_on_eq_morphisms.
-      + etrans. apply id_left. apply id_left.
-      + (* cbn. *)
-        etrans. apply cancel_precomposition.
-        {
+
+    abstract (
+      apply (section_disp_on_eq_morphisms (pr1 (dob d v))); [
+        etrans; [apply assoc'|];
+        apply pathsinv0;
+        etrans; [apply id_left|];
+        apply cancel_precomposition;
+        apply pathsinv0;
+        etrans; [
+          etrans; [apply cancel_precomposition|];
+            apply (pr1_section_disp_on_morphisms_comp (pr1 A));
+          apply (pr1_section_disp_on_morphisms_comp (pr1 A))
+        |];
+        apply section_disp_on_eq_morphisms; [
+          etrans; [apply id_left|]; apply id_left|
+        ];
+        etrans; [
+          apply cancel_precomposition;
           set (ccin := (CCFf_pt_ob1 CC
-            (mapdiagram (pr1_category (LNWFS C)) (mapdiagram (monoidal_right_tensor A) d))
-          a)).
-          apply (colimArrowCommutes ccin).
-        }
-        (* cbn. *)
-        apply pathsinv0.
-        exact (LNWFS_right_tensor_preserves_colimit_mor_inv_disp_subproof A d a v).
-    * etrans. apply id_left.
-      etrans. 
-      {
-        set (ccin := (CCFf_pt_ob1 CC
-            (mapdiagram (pr1_category (LNWFS C)) (mapdiagram (monoidal_right_tensor A) d))
-        a)).
-        apply (colimArrowCommutes ccin).
-      }
-      apply pathsinv0.
-      apply id_right.
+                  (mapdiagram (pr1_category (LNWFS C)) (mapdiagram (monoidal_right_tensor A) d))
+                a));
+          apply (colimArrowCommutes ccin)
+        |];
+        apply pathsinv0;
+        exact (LNWFS_right_tensor_preserves_colimit_mor_inv_disp_subproof A d a v)
+      
+      | etrans; [apply id_left|];
+        etrans; [
+          set (ccin := (CCFf_pt_ob1 CC
+                  (mapdiagram (pr1_category (LNWFS C)) (mapdiagram (monoidal_right_tensor A) d))
+              a));
+          apply (colimArrowCommutes ccin)
+        |];
+        apply pathsinv0;
+        apply id_right
+      ]
+    ).
   - apply subtypePath; [intro; apply homset_property|].
     apply pathsdirprod; [apply id_left|].
     use colimArrowUnique.
@@ -557,8 +559,7 @@ Lemma LNWFS_right_tensor_preserves_colimit_mor_disp
       pr2 (colim (LNWFSCC (mapdiagram (monoidal_right_tensor A) d))).
 Proof.
   split; intro f.
-  - apply subtypePath; [intro; apply homset_property|].
-    apply pathsdirprod; [apply pathsinv0, id_left|].
+  - use arrow_mor_eq; [reflexivity|].
     use colimArrowUnique'.
     intro v.
     etrans. apply assoc.
@@ -638,7 +639,7 @@ Proof.
     etrans. apply cancel_precomposition.
             apply (pr1_section_disp_on_morphisms_comp (pr1 (dob d v))).
     etrans. apply (pr1_section_disp_on_morphisms_comp (pr1 (dob d v))).
-    apply section_disp_on_eq_morphisms.
+    apply (section_disp_on_eq_morphisms (pr1 (dob d v))).
     * etrans. apply id_left.
       etrans. apply assoc'.
       apply pathsinv0.

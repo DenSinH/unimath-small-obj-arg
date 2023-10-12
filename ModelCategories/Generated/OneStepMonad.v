@@ -418,7 +418,7 @@ Proof.
          property with the following maps. *)
     set (Kγ := (#morcls_coprod_functor)%cat γ).
     set (φγ := nat_trans_ax morcls_coprod_nat_trans g g' γ).
-    set (φγ00 := top_square φγ).
+    set (φγ00 := arrow_mor00_eq φγ).
 
     use mors_to_arrow_mor.
     * exact (arrow_mor00 γ).
@@ -620,8 +620,8 @@ Proof.
       (* this is just the commutativity of the bottom square of the
          commutative cube of φ *)
       set (φax := nat_trans_ax morcls_coprod_nat_trans g g' γ).
-      set (bottom_square := bottom_square φax).
-      (* exact (pathsinv0 bottom_square). *)
+      set (bottom_square := arrow_mor11_eq φax).
+      (* exact (pathsinv0 arrow_mor11_eq). *)
       exact (bottom_square).
     * 
       (* rewrite assoc.
@@ -1219,14 +1219,14 @@ Proof.
     (* behavior of commuting cube construction on identity follows from
        identity axiom of the one_step_comonad_functor *)
     set (one_step_comonad_id := functor_id (one_step_comonad_functor J CC POs) g).
-    set (bottom := bottom_square one_step_comonad_id).
+    set (bottom := arrow_mor11_eq one_step_comonad_id).
     exact bottom.
   - intros g1 g2 g3 γ12 γ23.
     (* behavior of commuting cube construction on composition follows from
       identity axiom of the one_step_comonad_functor *)
     apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
     set (one_step_comonad_comp := functor_comp (one_step_comonad_functor J CC POs) γ12 γ23).
-    set (bottom := bottom_square one_step_comonad_comp).
+    set (bottom := arrow_mor11_eq one_step_comonad_comp).
     exact bottom.
 Qed.
 
