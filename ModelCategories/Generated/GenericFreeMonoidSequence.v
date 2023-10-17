@@ -16,10 +16,13 @@ Require Import UniMath.CategoryTheory.FunctorCategory.
 Require Import UniMath.CategoryTheory.whiskering.
 Require Import UniMath.CategoryTheory.Chains.Chains.
 
+Require Import UniMath.Combinatorics.StandardFiniteSets.
+
 Require Import CategoryTheory.Chains.Chains.
 
 Require Import CategoryTheory.Monoidal.Categories.
 Require Import CategoryTheory.Monoidal.WhiskeredBifunctors.
+Require Import CategoryTheory.Monoidal.CategoriesOfMonoids.
 
 Require Import CategoryTheory.ModelCategories.Generated.GenericFreeMonoid.
 
@@ -520,72 +523,145 @@ Local Definition TinfM := free_monoid_coeq_sequence_converges_gives_adjoint_mon_
 
 Definition Tinf_pd_Tinf_map
     (n : nat)
-    (p := free_monoid_coeq_sequence_on Tinf n) :=
-  ∑ (τn : pair_diagram_lob p --> Tinf) (τn1 : pair_diagram_rob p --> Tinf),
-    pair_diagram_arr p · τn1 = (T ⊗^{V}_{l} τn) · Mon_alg_map _ (pr2 TinfM).
+    (p := free_monoid_coeq_sequence_on I_{V} n) :=
+  ∑ (τn : pair_diagram_lob p ⊗_{V} Tinf --> Tinf) (τn1 : pair_diagram_rob p ⊗_{V} Tinf --> Tinf),
+    (pair_diagram_arr p ⊗^{V}_{r} Tinf) · τn1 = α_{V} _ _ _ · (T ⊗^{V}_{l} τn) · (Mon_alg_map _ (pr2 TinfM)).
 
 
 Lemma free_monoid_coeq_sequence_on_Tinf_pd_Tinf_map_coeqout_rel
     (n : nat)
     (Hn : Tinf_pd_Tinf_map n)
-    (Xn := free_monoid_coeq_sequence_on Tinf n) :
-  next_pair_diagram_coeq_arr0 Xn · (T ⊗^{ V}_{l} (pr12 Hn) · Mon_alg_map _ (pr2 TinfM)) =
-  next_pair_diagram_coeq_arr1 Xn · (T ⊗^{ V}_{l} (pr12 Hn) · Mon_alg_map _ (pr2 TinfM)).
+    (Xn := free_monoid_coeq_sequence_on I_{V} n) :
+  next_pair_diagram_coeq_arr0 (free_monoid_coeq_sequence_on I_{ V} n) ⊗^{ V}_{r} Tinf
+  · (α_{ V } _ _ _
+     · T ⊗^{ V}_{l} pr12 Hn · Mon_alg_map _ (pr2 TinfM)) =
+  next_pair_diagram_coeq_arr1 (free_monoid_coeq_sequence_on I_{ V} n) ⊗^{ V}_{r} Tinf
+  · (α_{ V } _ _ _
+      · T ⊗^{ V}_{l} pr12 Hn · Mon_alg_map _ (pr2 TinfM)).
 Proof.
   destruct Hn as [τn [τn1 τcomm]].
-
-  (* unfold next_pair_diagram_coeq_arr0, next_pair_diagram_coeq_arr1. *)
-  
   apply pathsinv0.
   
   etrans. apply cancel_postcomposition.
+          apply maponpaths.
           apply (bifunctor_leftcomp V).
+  etrans. apply cancel_postcomposition.
+          apply (bifunctor_rightcomp V).
   etrans. apply assoc.
+  (* etrans. apply cancel_postcomposition, assoc. *)
+  (* etrans. apply assoc'. *)
   etrans. apply assoc4.
   etrans. apply cancel_postcomposition, cancel_precomposition.
-          exact (pathsinv0 (bifunctor_leftcomp V _ _ _ _ _ _)).
-  etrans. apply cancel_postcomposition, cancel_precomposition.
-          apply maponpaths.
-          exact τcomm.
-  
-  etrans. apply cancel_postcomposition.
-          exact (pathsinv0 (bifunctor_leftcomp V _ _ _ _ _ _)).
-  etrans. apply cancel_postcomposition.
-          apply maponpaths.
   {
     etrans. apply assoc.
-    etrans. apply assoc4.
-    etrans. apply cancel_postcomposition, cancel_precomposition.
-            apply (whiskerscommutes V (bifunctor_equalwhiskers V)).
-    etrans. apply cancel_postcomposition, assoc.
+    etrans. apply cancel_postcomposition.
+            exact (pathsinv0 (monoidal_associatornatleftright V _ _ _ _ _)).
     etrans. apply assoc'.
-    etrans. apply cancel_precomposition.
+    apply cancel_precomposition.
+    etrans. exact (pathsinv0 (bifunctor_leftcomp V _ _ _ _ _ _)).
+    apply maponpaths.
+    exact τcomm.
+  }
+  
+  etrans. do 2 apply cancel_postcomposition.
+  {
+    etrans. apply maponpaths.
+            apply (bifunctor_leftcomp V).
+    apply (bifunctor_rightcomp V).
+  }
+  etrans. apply cancel_postcomposition, assoc.
+  etrans. apply assoc'.
+  etrans. apply assoc4.
+  etrans. apply cancel_postcomposition, cancel_precomposition.
+          apply (pathsinv0 (monoidal_associatornatleftright V _ _ _ _ _)).
+  etrans. apply cancel_postcomposition, assoc.
+  etrans. apply assoc'.
+  etrans. apply cancel_precomposition.
+  {
+    etrans. apply assoc.
+    apply cancel_postcomposition.
+    etrans. exact (pathsinv0 (bifunctor_leftcomp V _ _ _ _ _ _)).
+    etrans. apply maponpaths.
     {
-      etrans. exact (pathsinv0 (id_left _)).
+      etrans. apply assoc.
+      apply cancel_postcomposition.
+      etrans. apply assoc.
       etrans. apply cancel_postcomposition.
-              exact (pathsinv0 (pr1 (monoidal_leftunitorisolaw V _))).
+              exact (pathsinv0 (monoidal_associatornatright V _ _ _ _ _)).
+      etrans. apply assoc'.
+      apply cancel_precomposition.
+      apply (whiskerscommutes V (bifunctor_equalwhiskers V)).
+    }
+    etrans. apply maponpaths.
+    {
+      etrans. apply cancel_postcomposition, assoc.
       etrans. apply assoc'.
       etrans. apply cancel_precomposition.
-              apply assoc.
-      etrans. apply cancel_precomposition.
-              exact (pr22 TinfM).
-      apply id_right.
+      {
+        etrans. exact (pathsinv0 (id_left _)).
+        etrans. apply cancel_postcomposition.
+                exact (pathsinv0 (pr1 (monoidal_leftunitorisolaw V _))).
+        etrans. apply assoc'.
+        etrans. apply cancel_precomposition.
+                apply assoc.
+        etrans. apply cancel_precomposition.
+                exact (pr22 TinfM).
+        apply id_right.
+      }
+      etrans. apply assoc'.
+      apply cancel_precomposition.
+      apply (monoidal_leftunitornat V).
     }
-    etrans. apply assoc'.
-    etrans. apply cancel_precomposition.
-            apply (monoidal_leftunitornat V).
+    reflexivity.
+  }
+  etrans. apply cancel_postcomposition.
+          exact (pathsinv0 (monoidal_associatornatleftright V _ _ _ _ _)).
+  etrans. apply assoc'.
+  etrans. apply cancel_precomposition.
+  {
+    etrans. apply assoc.
+    apply cancel_postcomposition.
+    etrans. exact (pathsinv0 (bifunctor_leftcomp V _ _ _ _ _ _)).
+    apply maponpaths.
+    etrans. apply cancel_postcomposition.
+            exact (pathsinv0 (monoidal_triangle_identity'_inv V _ _)).
+    etrans. apply assoc.
+    etrans. apply assoc4.
+    etrans. apply cancel_postcomposition.
+            etrans. apply cancel_precomposition.
+                    apply (monoidal_associatorisolaw V).
+            apply id_right.
     etrans. apply assoc.
     etrans. apply cancel_postcomposition.
-            exact (pr2 (monoidal_leftunitorisolaw V _)).
+            apply (monoidal_leftunitorisolaw V).
     apply id_left.
   }
+  etrans. apply assoc.
+  etrans. exact (pathsinv0 τcomm).
 
   apply pathsinv0.
-  etrans. apply cancel_postcomposition, assoc.
+  etrans. apply cancel_postcomposition.
+  {
+    etrans. apply (bifunctor_rightcomp V).
+    apply cancel_precomposition.
+    apply (bifunctor_rightcomp V).
+  }
+  etrans. apply assoc'.
+  apply cancel_precomposition.
+
   etrans. apply assoc.
   etrans. apply assoc4.
   etrans. apply cancel_postcomposition, cancel_precomposition.
-          apply (whiskerscommutes V (bifunctor_equalwhiskers V)).
+  {
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+            apply (pathsinv0 (monoidal_associatornatright V _ _ _ _ _)).
+    etrans. apply assoc'.
+    apply cancel_precomposition.
+    apply (whiskerscommutes V (bifunctor_equalwhiskers V)).
+  }
+          
+  etrans. apply cancel_postcomposition, assoc.
   etrans. apply cancel_postcomposition, assoc.
   etrans. apply assoc'.
   etrans. apply cancel_precomposition.
@@ -601,27 +677,116 @@ Proof.
     }
     apply id_right.
   }
+  etrans. do 3 apply cancel_postcomposition.
+          exact (pathsinv0 (monoidal_triangle_identity'_inv V _ _)).
+  etrans. apply cancel_postcomposition, assoc4.
+  etrans. do 2 apply cancel_postcomposition.
+          etrans. apply cancel_precomposition.
+                  apply (monoidal_associatorisolaw V).
+          apply id_right.
   etrans. apply assoc'.
   etrans. apply cancel_precomposition.
           apply (monoidal_leftunitornat V).
   etrans. apply assoc.
-  etrans. apply assoc4.
-  etrans. apply cancel_postcomposition, cancel_precomposition.
-          exact (pr2 (monoidal_leftunitorisolaw V _)).
   etrans. apply cancel_postcomposition.
-          apply id_right.
-  exact τcomm.
+          apply (monoidal_leftunitorisolaw V).
+  apply id_left.
 Qed.
+
+Definition rt_coeq_coequalizer
+    {A : C}
+    (rt_coeq : preserves_colimits_of_shape 
+          (monoidal_right_tensor (A : CMon)) Coequalizer_graph)
+    {a b : C} {f g : a --> b}
+    (coeq : Coequalizer _ f g) :
+  Coequalizer _ (f ⊗^{V}_{r} A) (g ⊗^{V}_{r} A).
+Proof.
+  set (mapped_colimcocone := rt_coeq _ _ _ (isColimCocone_from_ColimCocone coeq)).
+
+  use make_Coequalizer.
+  - exact (CoequalizerObject _ coeq ⊗_{V} A).
+  - exact (CoequalizerArrow _ coeq ⊗^{V}_{r} A).
+  - abstract (
+      etrans; [exact (pathsinv0 (bifunctor_rightcomp V _ _ _ _ _ _))|];
+      apply pathsinv0;
+      etrans; [exact (pathsinv0 (bifunctor_rightcomp V _ _ _ _ _ _))|];
+      apply maponpaths;
+      exact (pathsinv0 (CoequalizerArrowEq _ coeq))
+    ).
+  - use make_isCoequalizer.
+    intros e h' H.
+    transparent assert (cc : (cocone
+            (mapdiagram (monoidal_right_tensor (A : CMon))
+              (Coequalizer_diagram C f g)) e)).
+    {
+      use make_cocone.
+      - use two_rec_dep.
+        * exact ((f ⊗^{V}_{r} A) · h').
+        * exact h'.
+      - use two_rec_dep; use two_rec_dep.
+        * exact (empty_rect _).
+        * intro e'. induction e'.
+          + etrans. apply assoc'.
+            etrans. apply cancel_precomposition, cancel_postcomposition.
+                    apply (bifunctor_leftid V).
+            apply cancel_precomposition, id_left.
+          + etrans. apply assoc'.
+            etrans. apply cancel_precomposition, cancel_postcomposition.
+                    apply (bifunctor_leftid V).
+            etrans. apply cancel_precomposition, id_left.
+            apply (! H).
+        * exact (empty_rect _).
+        * exact (empty_rect _).
+    }
+
+    destruct (mapped_colimcocone e cc) as [x uniqueness].
+    use unique_exists.
+    * exact (pr1 x).
+    * abstract (
+        etrans; [|exact (pr2 x (● 1)%stn)];
+        apply pathsinv0;
+        etrans; [apply assoc'|];
+        apply cancel_precomposition;
+        etrans; [apply cancel_postcomposition;
+                apply (bifunctor_leftid V)|];
+        apply id_left
+      ).
+    * abstract (
+        intro y; apply homset_property
+      ).
+    * abstract (
+        intros y ccy;
+        etrans; [use (λ t, base_paths _ _ (uniqueness (y,, t)))|]; [|reflexivity];
+        use two_rec_dep; (
+          etrans; [apply cancel_postcomposition;
+                  etrans; [apply cancel_precomposition, (bifunctor_leftid V)|];
+                  apply id_right|]
+        ); [|exact ccy];
+        apply pathsinv0;
+        etrans; [apply cancel_precomposition;
+                exact (pathsinv0 ccy)|];
+        etrans; [apply assoc|];
+        apply cancel_postcomposition;
+        etrans; [exact (pathsinv0 (bifunctor_rightcomp V _ _ _ _ _ _))|];
+        apply maponpaths;
+        exact (coconeInCommutes (pr21 coeq) (stnpr 0) (stnpr 1) (inl tt))
+      ).
+Defined.
+
+Context (rt_coeq : ∏ A, preserves_colimits_of_shape 
+          (monoidal_right_tensor (A : CMon)) Coequalizer_graph).
 
 Definition free_monoid_coeq_sequence_on_Tinf_pd_Tinf_map_coeqout
     (n : nat)
     (Hn : Tinf_pd_Tinf_map n) 
-    (Xn1 := free_monoid_coeq_sequence_on Tinf (S n)):
-  pair_diagram_rob Xn1 --> Tinf.
+    (Xn1 := free_monoid_coeq_sequence_on I_{V} (S n)) :
+  pair_diagram_rob Xn1 ⊗_{V} Tinf --> Tinf.
 Proof.  
   set (τn1 := pr12 Hn).
-  use CoequalizerOut.
-  - exact ((T ⊗^{V}_{l} τn1) · Mon_alg_map _ (pr2 TinfM)).
+  set (coeq := next_pair_diagram_coeq (free_monoid_coeq_sequence_on I_{V} n)).
+  set (rt_coequalizer := rt_coeq_coequalizer (rt_coeq Tinf) coeq).
+  use (CoequalizerOut _ rt_coequalizer).
+  - exact (α_{V} _ _ _ · (T ⊗^{V}_{l} τn1) · Mon_alg_map _ (pr2 TinfM)).
   - exact (free_monoid_coeq_sequence_on_Tinf_pd_Tinf_map_coeqout_rel n Hn).
 Defined.
 
@@ -630,60 +795,110 @@ Definition free_monoid_coeq_sequence_on_Tinf_pd_Tinf_map
   Tinf_pd_Tinf_map n.
 Proof.
   induction n as [|n Hn].
-  - exists (identity _).
-    exists (Mon_alg_map _ (pr2 TinfM)).
+  - exists (lu_{V} _).
+    exists (ru_{V} T ⊗^{V}_{r} Tinf · Mon_alg_map _ (pr2 TinfM)).
     abstract (
+      etrans; [apply cancel_postcomposition;
+              apply (bifunctor_rightid V)|];
       etrans; [apply id_left|];
       apply pathsinv0;
-      etrans; [apply cancel_postcomposition;
-              apply (bifunctor_leftid V)|];
-      apply id_left
+      apply cancel_postcomposition;
+      apply (monoidal_triangleidentity V)
     ).
   - set (τn1 := pr12 Hn).
     exists τn1.
     exists (free_monoid_coeq_sequence_on_Tinf_pd_Tinf_map_coeqout n Hn).
     abstract (
-      apply CoequalizerArrowComm
+      set (coeq := next_pair_diagram_coeq (free_monoid_coeq_sequence_on I_{V} n));
+      set (rt_coequalizer := rt_coeq_coequalizer (rt_coeq Tinf) coeq);
+      apply (CoequalizerArrowComm _ rt_coequalizer)
     ).
 Defined.
 
 Definition free_monoid_coeq_sequence_diagram_on_Tinf_Tinf_map
     (n : vertex nat_graph) : 
-  dob (free_monoid_coeq_sequence_diagram_on Tinf) n --> Tinf.
+  dob (free_monoid_coeq_sequence_diagram_on I_{V}) n ⊗_{V} Tinf --> Tinf.
 Proof.
   exact (pr1 (free_monoid_coeq_sequence_on_Tinf_pd_Tinf_map n)).
 Defined.
 
 Lemma free_monoid_coeq_sequence_colim_on_Tinf_Tinf_map_formscocone
     (m : vertex nat_graph) :
-  pair_diagram_horizontal_arrow (free_monoid_coeq_sequence_on Tinf m) 
+  pair_diagram_horizontal_arrow (free_monoid_coeq_sequence_on I_{V} m) ⊗^{V}_{r} Tinf 
   · free_monoid_coeq_sequence_diagram_on_Tinf_Tinf_map (S m)
   = free_monoid_coeq_sequence_diagram_on_Tinf_Tinf_map m.
 Proof.
   set (pdTinfmap_rel := pr22 (free_monoid_coeq_sequence_on_Tinf_pd_Tinf_map m)).
-
+  (* simpl in pdTinfmap_rel. *)
+  simpl.
+  etrans. apply cancel_postcomposition.
+          apply (bifunctor_rightcomp V).
   etrans. apply assoc'.
   etrans. apply cancel_precomposition.
           exact pdTinfmap_rel.
+
+  etrans. apply cancel_postcomposition.
+          apply (bifunctor_rightcomp V).
+  etrans. apply assoc.
+  etrans. apply cancel_postcomposition, assoc.
+  etrans. apply assoc'.
+  etrans. apply assoc4.
+  etrans. apply cancel_postcomposition, cancel_precomposition.
+          exact (pathsinv0 (monoidal_associatornatright V _ _ _ _ _)).
+  etrans. apply cancel_postcomposition, assoc.
   etrans. apply assoc.
   etrans. apply assoc4.
   etrans. apply cancel_postcomposition, cancel_precomposition.
           apply (whiskerscommutes V (bifunctor_equalwhiskers V)).
   etrans. apply cancel_postcomposition, assoc.
   etrans. apply assoc'.
-  etrans. apply cancel_postcomposition.
-          apply (monoidal_leftunitorinvnat V).
-  etrans. apply assoc'.
   etrans. apply cancel_precomposition.
   {
-    etrans. apply assoc.
-    exact (pr22 TinfM).
+    etrans. exact (pathsinv0 (id_left _)).
+    etrans. apply cancel_postcomposition.
+            exact (pathsinv0 (pr1 (monoidal_leftunitorisolaw V _))).
+    etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+            etrans. apply assoc.
+            exact (pr22 TinfM).
+    apply id_right.
   }
-  apply id_right.
+  etrans. apply assoc'.
+  etrans. apply cancel_precomposition.
+          apply (monoidal_leftunitornat V).
+  etrans. apply assoc.
+  etrans. apply cancel_postcomposition.
+  {
+    etrans. do 2 apply cancel_postcomposition.
+            exact (pathsinv0 (monoidal_triangle_identity'_inv V _ _)).
+    etrans. apply assoc4.
+    etrans. apply cancel_postcomposition, cancel_precomposition.
+            apply (monoidal_associatorisolaw V).
+    etrans. apply cancel_postcomposition.
+            apply id_right.
+    apply (monoidal_leftunitorisolaw V).
+  }
+  apply id_left.
 Qed.
 
+(* We define the map from free_monoid_coeq_sequence_rightwhisker_colim_on, 
+   i.e. from the chain on I_{V} rightwhiskered with T∞.
+   It is possible, and in fact cleaner, to define a map
+   colim (chain_on T∞) --> T∞,
+   however, for this we need a morphism
+   T∞ ⊗ T∞ --> colim (chain_on T∞),
+   which is harder to define than 
+   T∞ ⊗ T∞ --> colim ((chain_on I_{V}) ⊗ T∞),
+   using the preservation of colimits of the right-
+   whiskering functor. The two chains are in fact the same though,
+   as they start with 
+   I ⊗ T∞ --> T ⊗ T∞ --> ...
+   and
+   T∞ --> T ⊗ T∞ --> ...
+   respectively.
+   *)
 Definition free_monoid_coeq_sequence_colim_on_Tinf_Tinf_map :
-    colim (free_monoid_coeq_sequence_colim_on Tinf) --> Tinf.
+    colim (free_monoid_coeq_sequence_rightwhisker_colim_on Tinf I_{V}) --> Tinf.
 Proof.
   use colimArrow.
   use tpair.
@@ -692,279 +907,287 @@ Proof.
   - abstract (
       intros m n e;
       induction e;
-      exact (free_monoid_coeq_sequence_colim_on_Tinf_Tinf_map_formscocone m)
+      etrans; [apply cancel_postcomposition, cancel_precomposition;
+              apply (bifunctor_leftid V)|];
+      etrans; [apply cancel_postcomposition, id_right|];
+      exact (free_monoid_coeq_sequence_colim_on_Tinf_Tinf_map_formscocone m) 
     ).
 Defined.
 
-Definition TTinf_free_monoid_coeq_sequence_colim_on_Tinf 
-    (HA : ∏ A, preserves_colimits_of_shape 
-                (monoidal_right_tensor (A : CMon)) nat_graph) :
-  (Tinf ⊗_{V} Tinf) --> colim (free_monoid_coeq_sequence_colim_on Tinf).
-Proof.
-  set (cc := free_monoid_coeq_sequence_colim_on I_{V}).
-  set (ccI := free_monoid_coeq_sequence_colim_on I_{V}).
-  set (test := HA Tinf _ _ _ (isColimCocone_from_ColimCocone cc)).
-  set (t := free_monoid_coeq_sequence_rightwhisker_colim_on Tinf I_{V}).
-  set (x := isColim_is_z_iso _ t _ _ test).
-  set (iso := (_,, x) : z_iso _ _).
-  apply (compose (z_iso_inv iso)).
-  use colimOfArrows.
-  - intro n.
-    induction n.
-    * exact (lu_{V} _).
-    * cbn.
-      admit.
-  - intros m n e.
-    induction e.
-    cbn.
-    admit.
-Admitted.
+Context (rt_chain : ∏ A, preserves_colimits_of_shape 
+            (monoidal_right_tensor (A : CMon)) nat_graph).
 
-
-Definition Tinf_monoid_mul 
-    (HT : ∏ A, preserves_colimit 
-        (monoidal_left_tensor (T : CMon)) 
-        (free_monoid_coeq_sequence_diagram_on A)
-        _ (colimCocone (free_monoid_coeq_sequence_colim_on A))) :
-    (Tinf ⊗_{V} Tinf) --> Tinf.
+Definition Tinf_monoid_mul_iso 
+    (rt_colim := free_monoid_coeq_sequence_rightwhisker_colim_on Tinf I_{V}) :
+  z_iso (colim (rt_colim)) (Tinf ⊗_{V} Tinf).
 Proof.
-  set (cc := free_monoid_coeq_sequence_colim_on Tinf).
-  set (ccI := free_monoid_coeq_sequence_colim_on I_{V}).
-  set (test := HT Tinf (isColimCocone_from_ColimCocone cc)).
-  set (t := isColim_is_z_iso _ cc _ _ test).
+  set (ccTinf := free_monoid_coeq_sequence_colim_on I_{V}).
+  set (rt_ccTinf := rt_chain Tinf _ _ _ (isColimCocone_from_ColimCocone ccTinf)).
+  set (iso := (_,, isColim_is_z_iso _ rt_colim _ _ rt_ccTinf) : z_iso _ _).
+  exact iso.
 Defined.
 
-
-Lemma free_monoid_coeq_sequence_on_Tinf_all_Tinf 
-    (n : nat)
-    (HT : ∏ A, preserves_colimit 
-        (monoidal_left_tensor (T : CMon)) 
-        (free_monoid_coeq_sequence_diagram_on A)
-        _ (colimCocone (free_monoid_coeq_sequence_colim_on A)))
-    (Hconv : free_monoid_coeq_sequence_converges_on I_{V})
-    (p := free_monoid_coeq_sequence_on Tinf n) :
-  (z_iso (pair_diagram_rob p) Tinf) ×
-    is_z_isomorphism (pair_diagram_horizontal_arrow p).
+Definition Tinf_monoid_mul  :
+  (Tinf ⊗_{V} Tinf) --> Tinf.
 Proof.
-  set (Tinf_alg := free_monoid_coeq_sequence_converges_gives_adjoint_mon_alg Hconv).
-  
-  induction n.
-  - set (HCC := HT I_{V} (pr2 (free_monoid_coeq_sequence_colim_on I_{V}))).
-    set (TTinf := (_,, isColim_is_z_iso _
-          (free_monoid_coeq_sequence_leftwhisker_colim_on T I_{V})
-          _ _ HCC) : z_iso _ _).
-    split.
-    * (* cbn. *)
-      cbn.
-      exists (pr12 Tinf_alg).
-      use tpair.
-      exact (luinv_{V} _ · (pointed_pt _ T ⊗^{V}_{r} _)).
-      split.
-      + set (test := pr22 Tinf_alg).
-        cbn.
-        unfold pair_diagram_horizontal_arrow.
-        cbn.
-        apply todo. (* need precomp with point is injective *)
-      + exact (pr22 Tinf_alg).
-    * 
-      exists (pr12 Tinf_alg).
-      split.
-      + etrans. apply assoc.
-        etrans. do 2 apply cancel_postcomposition.
-                apply id_right.
-        exact (pr12 Hconv).
-      + cbn.
-        unfold pair_diagram_horizontal_arrow.
-        cbn.
-        apply todo. (* need precomp with point is injective *)
-  - repeat split.
-    destruct IHn as [prev_rob_iso prev_hor_iso].
-    use (λ f, z_iso_comp f prev_rob_iso).
-    enough (H : is_z_isomorphism (pair_diagram_horizontal_arrow p)).
-    {
-      apply z_iso_inv.
-      exact (_,, H).
-    }
-    {
-      use tpair.
-      - 
-    }
-    * 
-      exact (pr12 IHn).
-    * cbn.
+  apply ((z_iso_inv Tinf_monoid_mul_iso) · free_monoid_coeq_sequence_colim_on_Tinf_Tinf_map).
+Defined.
+
+Definition Tinf_monoid_data :
+    monoid_data V Tinf :=
+  (Tinf_monoid_mul,, colimIn free_monoid_coeq_sequence_colim_unit 0).
+
+Lemma Tinf_monoid_mul_iso_precomp_with_colimIn
+    (v : vertex nat_graph) :
+  colimIn free_monoid_coeq_sequence_colim_unit v ⊗^{V}_{r} Tinf
+  · z_iso_inv Tinf_monoid_mul_iso
+  = coconeIn (colimCocone (free_monoid_coeq_sequence_rightwhisker_colim_on Tinf I_{V})) v.
+Proof.
+  cbn.
+  match goal with 
+  |- _ · colimArrow ?CC_ _ _ = _ => set (CC := CC_)
+  end.
+  etrans; [|exact (colimArrowCommutes CC _ _ v)].
+  apply cancel_postcomposition.
+  apply pathsinv0.
+  etrans. apply cancel_precomposition.
+          apply (bifunctor_leftid V).
+  apply id_right.
 Qed.
 
-Definition free_monoid_coeq_sequence_converges_gives_adjoint_unit_data 
-    (Hconv : free_monoid_coeq_sequence_converges_on I_{V}) :
-  nat_trans_data (functor_identity _)
-                 (Mon_alg_right_action _
-                     (free_monoid_coeq_sequence_converges_gives_adjoint_mon_alg Hconv)
-                   ∙ Mon_alg_forgetful_functor _ T).
+Lemma Tinf_monoid_unit_left :
+    monoid_laws_unit_left V Tinf_monoid_data.
 Proof.
-  intro A.
-  (* cbn. *)
-  exact ((luinv_{V} A) · (pointed_pt _ Tinf) ⊗^{V}_{r} A).
+  etrans. apply assoc.
+  apply (pre_comp_with_z_iso_is_inj (is_inverse_in_precat_inv (monoidal_leftunitorisolaw V _))).
+  apply pathsinv0.
+  etrans. exact (pr2 (monoidal_leftunitorisolaw V _)).
+  use colim_endo_is_identity.
+  intro v.
+  etrans. do 2 apply cancel_precomposition.
+          apply cancel_postcomposition.
+          exact (Tinf_monoid_mul_iso_precomp_with_colimIn 0).
+
+  etrans. do 2 apply cancel_precomposition.
+  {
+    set (CC := free_monoid_coeq_sequence_rightwhisker_colim_on Tinf I_{ V}).
+    apply (colimArrowCommutes CC Tinf _ 0).
+  }
+  etrans. apply cancel_precomposition.
+          apply (pr2 (monoidal_leftunitorisolaw V _)).
+  apply id_right.
+Qed.
+
+Definition Tinf_rightwhisker_inclusion
+    (v : vertex nat_graph) :
+  dob (free_monoid_coeq_sequence_diagram_on I_{V}) v 
+  --> dob (rightwhisker_chain_with Tinf (free_monoid_coeq_sequence_diagram_on I_{V})) v.
+Proof.
+  exact (ruinv_{V} _ · _ ⊗^{V}_{l} colimIn free_monoid_coeq_sequence_colim_unit 0).
 Defined.
 
-Definition free_monoid_coeq_sequence_converges_gives_adjoint_unit_axioms
-    (Hconv : free_monoid_coeq_sequence_converges_on I_{V}) :
-  is_nat_trans _ _ 
-    (free_monoid_coeq_sequence_converges_gives_adjoint_unit_data Hconv).
-Proof.
-  intros A B f.
-
-  (* cbn.
-  unfold free_monoid_coeq_sequence_converges_gives_adjoint_unit_data.
-  cbn. *)
+Lemma Tinf_rightwhisker_inclusion_commutes
+    (v : vertex nat_graph) :
+  Tinf_rightwhisker_inclusion v
+  · dmor (free_monoid_coeq_sequence_diagram_on I_{ V}) (idpath (S v)) ⊗^{V}_{r} Tinf =
+  dmor (free_monoid_coeq_sequence_diagram_on I_{V}) (idpath (S v))
+  · Tinf_rightwhisker_inclusion (S v).
+Proof. 
+  etrans. apply assoc'.
+  etrans. apply cancel_precomposition.
+          exact (pathsinv0 (whiskerscommutes V (bifunctor_equalwhiskers V) _ _)).
   etrans. apply assoc.
   etrans. apply cancel_postcomposition.
-          apply (pathsinv0 (monoidal_leftunitorinvnat V _ _ f)).
-  
-  etrans. apply assoc'.
+          apply (monoidal_rightunitorinvnat V).
+  apply assoc'.
+Qed.
+
+Lemma Tinf_monoid_unit_right :
+    monoid_laws_unit_right V Tinf_monoid_data.
+Proof.
+  etrans. apply assoc.
+  apply (pre_comp_with_z_iso_is_inj (is_inverse_in_precat_inv (monoidal_rightunitorisolaw V _))).
   apply pathsinv0.
+  etrans. exact (pr2 (monoidal_rightunitorisolaw V _)).
+  use colim_endo_is_identity.
+  intro v.
+
+  etrans. apply assoc.
+  etrans. apply cancel_postcomposition.
+          exact (pathsinv0 (monoidal_rightunitorinvnat V _ _ _)).
   etrans. apply assoc'.
-  apply cancel_precomposition.
-  
-  use whiskerscommutes.
-  exact (bifunctor_equalwhiskers V).
-Qed.
-
-Definition free_monoid_coeq_sequence_converges_gives_adjoint_counit_data 
-    (Hconv : free_monoid_coeq_sequence_converges_on I_{V})
-    (rt_cocont : right_tensor_preserves_colimits) :
-  nat_trans_data (Mon_alg_forgetful_functor _ T
-                  ∙ Mon_alg_right_action _
-                      (free_monoid_coeq_sequence_converges_gives_adjoint_mon_alg Hconv))
-                 (functor_identity _).
-Proof.
-  intro A.
-  destruct A as [A a].
-  set (test := rt_cocont A
-          _ _ _ 
-          (isColimCocone_from_ColimCocone (free_monoid_coeq_sequence_colim_on I_{V}))).
-  unfold isColimCocone in test.
-  cbn.
-  assert (cocone
-          (mapdiagram (monoidal_right_tensor (A : CMon))
-            (free_monoid_coeq_sequence_diagram_on I_{ V})) A).
+  etrans. apply cancel_precomposition.
   {
-    use tpair.
-    - intro n.
-      cbn.
-      unfold monoidal_cat_tensor_pt.
-      cbn.
+    etrans. apply assoc.
+            apply cancel_postcomposition.
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+            apply (whiskerscommutes V (bifunctor_equalwhiskers V)).
+    etrans. apply assoc'.
+    apply cancel_precomposition.
+    exact (Tinf_monoid_mul_iso_precomp_with_colimIn v).
   }
-  set (t := test A).
   
-Defined.
+  (* cbn. *)
+  etrans. apply cancel_precomposition.
+          etrans. apply assoc'.
+          apply cancel_precomposition.
+  {
+    set (CC := free_monoid_coeq_sequence_rightwhisker_colim_on Tinf I_{ V}).
+    apply (colimArrowCommutes CC Tinf _ v).
+  }
+(*   
+  simpl.
+  set (t := pr22 (free_monoid_coeq_sequence_on_Tinf_pd_Tinf_map v)).
+  simpl in t.
+  set (abc := colimInCommutes free_monoid_coeq_sequence_colim_unit _ _ (idpath (S v))).
+  simpl in abc.
+  apply pathsinv0.
+  etrans. exact (pathsinv0 abc).
+  etrans. apply assoc'.
+
+  simpl.
+  set (test := Tinf_rightwhisker_inclusion_commutes v).
+  unfold Tinf_rightwhisker_inclusion in test.
+  simpl in test.
 
 
-Definition free_monoid_coeq_sequence_converges_gives_adjoint_unit 
-    (Hconv : free_monoid_coeq_sequence_converges_on I_{V}) : nat_trans _ _ :=
-  (_,, free_monoid_coeq_sequence_converges_gives_adjoint_unit_axioms Hconv).
+  set (test := free_monoid_coeq_sequence_colim_on_Tinf_Tinf_map_formscocone v).
+  simpl in test. *)
+  
+  induction v.
+  - etrans. apply cancel_precomposition.
+            apply (monoidal_leftunitornat V).
+    etrans. apply assoc.
+    etrans. do 2 apply cancel_postcomposition.
+            exact (pathsinv0 (unitorsinv_coincide_on_unit V)).
+    etrans. apply cancel_postcomposition.
+            apply (monoidal_leftunitorisolaw V).
+    apply id_left.
+  - induction v.
+    * cbn.
+      admit.
+    * set (Hn := free_monoid_coeq_sequence_on_Tinf_pd_Tinf_map v).
+      set (τn1 := pr12 Hn).
+      set (coeq := next_pair_diagram_coeq (free_monoid_coeq_sequence_on I_{V} v)).
+      set (arr := α_{V} _ _ _ · (T ⊗^{V}_{l} τn1) · Mon_alg_map _ (pr2 TinfM)).
+      set (comm := free_monoid_coeq_sequence_on_Tinf_pd_Tinf_map_coeqout_rel v Hn).
+      set (test := CoequalizerOutUnique _ coeq Tinf).
+      simpl.
+      set (x := pair_diagram_arr ((free_monoid_coeq_sequence_on I_{V} (S v)))).
+      simpl in x.
+      set (x' := x · colimIn free_monoid_coeq_sequence_colim_unit (S (S v))).
+      set (t := test x').
+      etrans. use (test x').
+      + admit.
+      + unfold x'.
+        unfold x.
+        simpl.
+        admit.
+      + simpl.
+        apply pathsinv0.
+        etrans. use (test x').
+        -- admit.
+        -- reflexivity.
+        -- reflexivity.
+Admitted.
 
-Lemma free_monoid_coeq_sequence_converges_gives_adjoint
-    (rt_cocont : right_tensor_preserves_colimits) :
-  free_monoid_coeq_sequence_converges_on I_{V}
-    -> ∑ (X : Mon_alg _ T), alg_forgetful_functor_right_action_is_adjoint _ X.
+Lemma Tinf_monoid_assoc :
+    monoid_laws_assoc V Tinf_monoid_data.
 Proof.
-  intro Hconv.
-  exists (free_monoid_coeq_sequence_converges_gives_adjoint_mon_alg Hconv).
-  (* rt_cocont gives us the (natural) isomorphisms *)
-  use tpair.
-  - split.
-    * exact (free_monoid_coeq_sequence_converges_gives_adjoint_unit Hconv).
-    * 
-Qed.
+  set (ccTinf := free_monoid_coeq_sequence_colim_on I_{V}).
+  set (rt_ccTinf := rt_chain (Tinf ⊗_{V} Tinf) _ _ _ (isColimCocone_from_ColimCocone ccTinf)).
+  set (rt_colim := free_monoid_coeq_sequence_rightwhisker_colim_on (Tinf ⊗_{V} Tinf) I_{V}).
+  set (iso := (_,, isColim_is_z_iso _ rt_colim _ _ rt_ccTinf) : z_iso _ _).
+  
+  apply (pre_comp_with_z_iso_is_inj (is_inverse_in_precat_inv (monoidal_associatorisolaw V _ _ _))).
+  apply (pre_comp_with_z_iso_is_inj iso).
+  
+  use colimArrowUnique'.
+  intro v.
+  etrans. apply assoc.
+  etrans. apply cancel_postcomposition.
+          apply colimArrowCommutes.
+  etrans. apply cancel_precomposition.
+  {
+    etrans. apply assoc.
+    apply cancel_postcomposition.
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+            apply (monoidal_associatorisolaw V).
+    apply id_left.
+  }
+  etrans. apply cancel_postcomposition.
+          etrans. apply cancel_precomposition.
+                  apply (bifunctor_leftid V).
+          apply id_right.
+  etrans. apply assoc.
+  etrans. apply cancel_postcomposition.
+          apply (whiskerscommutes V (bifunctor_equalwhiskers V)).
+  etrans. apply assoc'.
+  etrans. apply cancel_precomposition.
+          etrans. apply assoc.
+          etrans. apply cancel_postcomposition.
+                  exact (Tinf_monoid_mul_iso_precomp_with_colimIn v).
+          apply (colimArrowCommutes ((free_monoid_coeq_sequence_rightwhisker_colim_on Tinf I_{ V}))).
 
-(* using Proposition 23 in Garner, 2007 (long), can construct
-   free monoid from T-Mod that is left adjoint to forgetful functor.
-   
-   using Proposition*)
+  apply pathsinv0.
+  etrans. apply assoc.
+  etrans. apply cancel_postcomposition.
+          apply colimArrowCommutes.
+  etrans. apply cancel_postcomposition.
+  etrans. apply cancel_precomposition.
+          apply (bifunctor_leftid V).
+  apply id_right.
 
-
-(* 
-The rest of the construction:
-  - Want to create "T-module on A", in our case, we only care if
-    A = I (= id_C), since that is the sequence we are going to use
-    with R1.
-    This can be done with Proposition 27 in Garner, 2007 (long).
-    However, we need to construct a map T □ T∞ --> T∞. In 
-    Proposition 27, we assume that the module sequence rewri
-    for some α (as we assume the limit ordinal is α-small).
-    I guess in our case, this would boil down to only having a 
-    finite number of steps? As ω is not ω-small.
-    Garner gives the construction of the required map as 
-               θα       Xαα+^{-1}
-      T ⊗ Xα ----> Xα+ ---------> Xα
-    Where I am assuming the first map is one of the two branches
-    for the equalizer in the successor ordinal case, and the second
-    map exists because the sequence rewri. Just using the 
-    colimits as they are in UniMath would give me T∞, but then I 
-    cannot use it as if it was an element in this sequence so to say...
-
-    One thing I thought might be possible, but is not what we want to do,
-    is that for any β : ℕ, we have this cocone
-          Xβ ---> Xβ+1
-          |  \     / |
-          |   \   /  |
-          |    T∞    |
-           \    |   /
-             \  |  /
-               Xβ+1
-    which we can apply T to, to obtain a transformation
-    T □ T∞ --> T □ Xβ+1
-    which we can compose with xβ+1 and the inclusion of Xβ+2 into
-    T∞ to obtain a map, but this would factor though a chosen
-    Xβ, which seems odd, and not what we want.
-
-    He constructs the universal map from A (so I) to T∞ as X0α,
-    which is just the inclusion into the colimit, so that is 
-    easy to define.
-  - I'm guessing the next step is using Proposition 24, which says
-    that if the sequence on I (which is precisely the one we want) exists,
-    and we have some condition on the module action, then
-    we get an adjoint to the forgetful functor T-alg --> [C, C],
-    which I think gives us the fact that T∞-Alg = T-Alg?
-    
-  - Then the last step is giving the multiplication on (T∞, τ∞).
-    This should follow from the proof of Proposition 23, where we 
-    get a unit (which I guess should be the same as the one
-    we would find from the first point, the universal map from 
-    A (so I) to T∞).
-    
-    The multiplication comes from the adjunction, 
-    in combination with the action ⋆ described
-    before. To define this action, I may need to first add some 
-    more tools to work with whiskering. I can see how (X, x) ⋆ X
-    would give the map for the multiplication, and I guess the
-    adjunction gives us functorality of the map, but I am not 
-    entirely sure why the adjunction even works:
-
-    For (X, x) the free T-monoid over I (which is actually the one we
-    want), we define [C, C] --> T-Alg as (X, x) ⋆ (-): A ↦ (X ⊗ A, x ⊗ A)
-    Applying the forgetful functor would yield X ⊗ A, which is not the same
-    as A, unless X = I, which is not the case, since X would be T∞ in
-    our case. Okay, maybe these objects are isomorphic, but why?
-
-  Like before with Garner's construction, using this construction
-  may be too "generic" again. It seems like
-  in our specific case, with our specific ω-sequence, we
-  might be able to construct the unit and multiplication
-  on T∞ more directly, and show that the Algebra's are preserved.
-  I guess we'd still need to use the idea of the adjunction we obtain,
-  but thinking about it, I don't really see how we would obtain the
-  map T∞ ⊗ T∞ --> T∞...
-
-*)
+  etrans. apply assoc.
+  etrans. apply cancel_postcomposition.
+          apply (monoidal_associatorinvnatright V).
+  etrans. apply assoc'.
+  etrans. apply cancel_precomposition.
+  {
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+    {
+      etrans. exact (pathsinv0 (bifunctor_rightcomp V _ _ _ _ _ _)).
+      apply maponpaths.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              exact (Tinf_monoid_mul_iso_precomp_with_colimIn v).
+      
+      apply (colimArrowCommutes ((free_monoid_coeq_sequence_rightwhisker_colim_on Tinf I_{ V}))).
+    }
+    cbn.
+    reflexivity.
+  }
+  cbn.
+  induction v.
+  - cbn.
+    admit.
+  - admit.
 
 
-(* todo: up to iso? *)
-Definition preserves_chains (A : C) :=
-    colim (free_monoid_coeq_sequence_colim_on A) = 
-      Tinf ⊗_{V} A.
+  (* set (iso := Tinf_monoid_mul_iso).
+  set (Tiso := is_z_iso_rightwhiskering_z_iso V Tinf _ (pr2 iso)).
+  
+  apply (pre_comp_with_z_iso_is_inj (pr2 Tiso)).
+  show_id_type.
+  cbn in TYPE.
+  cbn in iso.
+  set (test := pr1 iso).
+  use (pre_comp_with_z_iso_is_inj (f := test))
+  cbn in test.
 
+  apply (pre_comp_with_z_iso_is_inj (pr22 iso)). *)
+Admitted.
+
+Definition Tinf_monoid_axioms :
+    monoid_laws V Tinf_monoid_data :=
+  (Tinf_monoid_unit_left,, Tinf_monoid_unit_right,, Tinf_monoid_assoc).
+
+Definition Tinf_monoid : monoid V Tinf :=
+    (_,, Tinf_monoid_axioms).
 
 End free_monoid_colim.
 
-(* Kelly: chapte 23, see prop 23.2 *)
+(* Check Tinf_monoid. *)
