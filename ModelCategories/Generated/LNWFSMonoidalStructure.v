@@ -256,6 +256,8 @@ Definition LNWFS_lcomp_comul {F' F : Ff C} (L' : lnwfs_over F') (L : lnwfs_over 
     (fact_L (F' ⊗ F)) ⟹ ((fact_L (F' ⊗ F)) ∙ (fact_L (F' ⊗ F))) :=
   (_,, LNWFS_lcomp_comul_axioms L' L).
 
+(* This is perhaps the most interesting proof, proving that
+   the comultiplication is associative on the middle morphisms. *)
 Lemma LNWFS_lcomp_comul_mul_law11 {F' F : Ff C} 
     (L' : lnwfs_over F') (L : lnwfs_over F) (a : arrow C) :
     arrow_mor11
@@ -270,6 +272,7 @@ Proof.
   set (law3 := @Monad_law3 _ (L_monad _ _ (pr2 L))).
   set (law3' := @Monad_law3 _ (L_monad _ _ (pr2 L'))).
   
+  (* First we want to rewrite the associativity law for F' *)
   apply pathsinv0.
   etrans. apply assoc'.
   etrans. apply cancel_precomposition, assoc.
@@ -290,6 +293,8 @@ Proof.
           exact (pathsinv0 (pr2 (pathsdirprodweq (base_paths _ _ (law3' (fact_R F a)))))).
   etrans. apply assoc'.
   apply cancel_precomposition.
+
+  (* What is left is F' applied to the associativity law of F *)
   etrans. apply cancel_precomposition.
           apply (pr1_section_disp_on_morphisms_comp F').
   etrans. apply (pr1_section_disp_on_morphisms_comp F').
@@ -315,13 +320,16 @@ Proof.
             exact (pathsinv0 (pr2 (pathsdirprodweq (base_paths _ _ (law3 a))))).
     etrans. apply assoc'.
     apply cancel_precomposition.
+
+    (* what is left is F applied to some morphism *)
     etrans. apply cancel_precomposition.
             apply (pr1_section_disp_on_morphisms_comp F).
     etrans. apply (pr1_section_disp_on_morphisms_comp F).
     apply pathsinv0.
     etrans. apply (pr1_section_disp_on_morphisms_comp F).
     apply (section_disp_on_eq_morphisms F).
-    * apply pathsinv0.
+    * (* 00 morphism is just identities, as always *)
+      apply pathsinv0.
       etrans. apply cancel_postcomposition.
               exact (lnwfs_Σ_top_map_id L a).
       apply id_left.
@@ -354,7 +362,7 @@ Proof.
     etrans. exact (pathsinv0 (lnwfs_Σ_bottom_map_inv L' (fact_R F a))).
     apply cancel_precomposition.
     apply pathsinv0.
-
+    
     set (F'L'_lp := #(fact_functor F') (LNWFS_lcomp_comul_L'_lp L' L a)).
     etrans. apply (pathsinv0 (pr2 (three_mor_comm F'L'_lp))).
     apply id_right.

@@ -95,6 +95,22 @@ Lemma Ff_right_tensor_preserves_colimit_mor11
   three_ob1 (fact_functor (monoidal_right_tensor A (colim (FfCC d))) f) -->
     three_ob1 (fact_functor (colim (FfCC (mapdiagram (monoidal_right_tensor A) d))) f).
 Proof.
+  (* use colimOfArrows.
+  * intro u.
+    exact (identity _).
+  * abstract (
+      intros u v e;
+      etrans; [apply id_right|];
+      apply pathsinv0;
+      etrans; [apply id_left|];
+      etrans; [use pr1_transportf_const|];
+      etrans; [apply cancel_precomposition;
+              use (section_disp_on_eq_morphisms (dob d v) (γ' := identity _)); reflexivity|];
+      etrans; [apply cancel_precomposition;
+              apply maponpaths;
+              apply (section_disp_id (dob d v))|];
+      apply id_right
+    ). *)
   use colimArrow.
   use tpair.
   - intro v.
@@ -117,7 +133,6 @@ Proof.
       apply id_right
     ).
 Defined.
-
 
 Lemma Ff_right_tensor_preserves_colimit_mor
     (A : Ff_mon)
