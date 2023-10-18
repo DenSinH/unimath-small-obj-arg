@@ -675,9 +675,10 @@ Proof.
     split.
     * exact γcomm1.
     * etrans. exact (arrow_mor_comm γ).
-      simpl in γcomm2.
-      rewrite id_left in γcomm2.
-      now rewrite γcomm2, id_right.
+      etrans. apply cancel_precomposition.
+              etrans. exact (pathsinv0 (id_left _)).
+              exact γcomm2.
+      apply id_right.
 Qed.
 
 End lifting_with_J.

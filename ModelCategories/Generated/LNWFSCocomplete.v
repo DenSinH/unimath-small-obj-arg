@@ -1112,7 +1112,7 @@ Defined.
 
 End LNWFS_cocomplete.
 
-Lemma ChainsLWFS {C : category} (HC : Colims C) : 
+Lemma ChainsLNWFS {C : category} (HC : Colims C) : 
     Chains (total_category (LNWFS C)).
 Proof.
   intros d.

@@ -14,7 +14,9 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Functors.
 Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 
 Require Import UniMath.CategoryTheory.limits.graphs.colimits.
+Require Import UniMath.CategoryTheory.limits.graphs.coequalizers.
 Require Import UniMath.CategoryTheory.Chains.Chains.
+Require Import UniMath.Combinatorics.StandardFiniteSets.
 
 Require Import CategoryTheory.Monoidal.Categories.
 Require Import CategoryTheory.Monoidal.WhiskeredBifunctors.
@@ -27,6 +29,7 @@ Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
 Require Import CategoryTheory.ModelCategories.NWFS.
 Require Import CategoryTheory.ModelCategories.Generated.Helpers.
+Require Import CategoryTheory.ModelCategories.Generated.MonoidalHelpers.
 Require Import CategoryTheory.ModelCategories.Generated.FFMonoidalStructure.
 Require Import CategoryTheory.ModelCategories.Generated.LNWFSMonoidalStructure.
 Require Import CategoryTheory.ModelCategories.Generated.LNWFSCocomplete.
@@ -34,7 +37,6 @@ Require Import CategoryTheory.ModelCategories.Generated.LNWFSCocomplete.
 Local Open Scope cat.
 Local Open Scope Cat.
 
-(* todo: move this *)
 Local Ltac functorial_factorization_eq f := (
   apply subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|];
   use funextsec;
@@ -46,7 +48,6 @@ Section Ff_closed.
 
 Import BifunctorNotations.
 Import MonoidalNotations.
-
 
 Lemma monoidal_right_tensor_cocone 
     {C : category}
@@ -298,9 +299,74 @@ Proof.
     ).
 Defined.
 
+Lemma Ff_rt_all_colimits 
+    (A : Ff_mon) :
+  preserves_colimits_of_shape (monoidal_right_tensor (A : Ff_mon)) g.
+Proof.
+  intros d cl cc.
+  intros isCC.
+  set (isCCAcl := Ff_right_tensor_cocone_isColimCocone A d).
+  set (CCAcl := ((_,, (monoidal_right_tensor_cocone Ff_mon A d (FfCC d))),, isCCAcl) : ColimCocone _).
+  set (base_iso := isColim_is_z_iso _ (FfCC d) _ _ isCC).
+  (* destruct base_iso as [base_iso base_is_iso]. *)
+
+
+  use (is_z_iso_isColim _ CCAcl).
+  exists ((pr1 base_iso) ⊗^{_}_{r} A).
+  abstract (
+    split; [
+      apply pathsinv0;
+      use colim_endo_is_identity;
+      intro u;
+      etrans; [apply assoc|];
+      etrans; [apply cancel_postcomposition;
+              apply colimArrowCommutes|];
+      etrans; [apply cancel_postcomposition, cancel_precomposition;
+              apply (bifunctor_leftid Ff_mon)|];
+      etrans; [apply cancel_postcomposition, id_right|];
+      etrans; [exact (pathsinv0 (bifunctor_rightcomp Ff_mon _ _ _ _ _ _))|];
+      etrans; [apply maponpaths;
+              apply (colimArrowCommutes (make_ColimCocone _ _ _ isCC))|];
+      reflexivity
+    |
+      apply pathsinv0;
+      etrans; [exact (pathsinv0 (bifunctor_rightid Ff_mon _ _))|];
+      etrans; [apply maponpaths;
+              exact (pathsinv0 (pr22 base_iso))|];
+      etrans; [apply (bifunctor_rightcomp Ff_mon)|];
+      apply cancel_precomposition;
+      use colimArrowUnique;
+      intro u;
+      apply pathsinv0;
+      etrans; [apply cancel_precomposition;
+              apply (bifunctor_leftid Ff_mon)|];
+      etrans; [apply id_right|];
+      apply pathsinv0;
+      etrans; [exact (pathsinv0 (bifunctor_rightcomp Ff_mon _ _ _ _ _ _))|];
+      apply maponpaths;
+      apply colimArrowCommutes
+    ]
+  ).
+Defined.
+
 End Ff_closed.
 
+Lemma Ff_rt_chain {C : category} (CC : Colims C): 
+    rt_preserves_chains (@Ff_monoidal C).
+Proof.
+  exact (Ff_rt_all_colimits CC is_connected_nat_graph 0).
+Defined.
+
+Lemma Ff_rt_coeq {C : category} (CC : Colims C): 
+    rt_preserves_coequalizers (@Ff_monoidal C).
+Proof.
+  exact (Ff_rt_all_colimits CC is_connected_coequalizer_graph (● 0)%stn).
+Defined.
+
 Section LNWFS_closed.
+
+Import BifunctorNotations.
+Import MonoidalNotations.
 
 Context {C : category}.
 Context (CC : Colims C).
@@ -733,4 +799,124 @@ Proof.
   exact (LNWFS_right_tensor_preserves_colimit_mor_are_inverses A d).
 Defined.
 
+(* these proofs are almost the exact same as their Ff-... counterparts *)
+Lemma LNWFS_right_tensor_cocone_isColimCocone
+    (A : LNWFS_mon)
+    (d : diagram g _)
+    (dbase := mapdiagram (pr1_category _) d) :
+  isColimCocone _ _ (monoidal_right_tensor_cocone LNWFS_mon A d (LNWFSCC d)).
+Proof.
+  intros cl cc.
+
+  set (mor := colimUnivProp (LNWFSCC (mapdiagram (monoidal_right_tensor A) d)) _ cc).
+  destruct mor as [mor uniqueness].
+  set (base_is_clcocone := Ff_right_tensor_cocone_isColimCocone CC H v0 (pr1 A) dbase).
+  set (base_clcocone := make_ColimCocone _ _ _ base_is_clcocone).
+
+  use unique_exists.
+  - apply (compose (LNWFS_right_tensor_preserves_colimit_mor A d)).
+    exact (pr1 mor).
+  - intro v.
+    etrans; [|exact (pr2 mor v)].
+    etrans. apply assoc.
+    apply cancel_postcomposition.
+    apply subtypePath; [intro; apply isaprop_lnwfs_mor_axioms|].
+    apply subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|].
+    apply funextsec.
+    intro f.
+    apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
+    etrans. apply pr1_transportf_const.
+    
+    apply (colimArrowCommutes (CCFf_pt_ob1 CC dbase (fact_R (pr1 A) f))).
+  - intro; apply impred; intro; apply homset_property.
+  - abstract (
+      intros y Hy;
+      apply subtypePath; [intro; apply isaprop_lnwfs_mor_axioms|];     
+      apply (pre_comp_with_z_iso_is_inj 
+        (z_iso_inv (Ff_right_tensor_preserves_colimit_mor_iso CC H v0 (pr1 A) dbase)));
+      apply pathsinv0;
+      etrans; [apply assoc|];
+      etrans; [apply cancel_postcomposition;
+              apply (is_inverse_in_precat2 (Ff_right_tensor_preserves_colimit_mor_are_inverses CC H v0 (pr1 A) dbase))|];
+      etrans; [apply id_left|];
+      apply pathsinv0;
+
+      etrans; [|
+        use (base_paths _ _ (base_paths _ _ (uniqueness (z_iso_inv (LNWFS_right_tensor_preserves_colimit_mor_iso A d) · y,, _))))
+      ]; [reflexivity|];
+      
+      intro v;
+      etrans; [apply assoc|];
+      etrans; [|exact (Hy v)];
+      apply cancel_postcomposition;
+      apply subtypePath; [intro; apply isaprop_lnwfs_mor_axioms|];
+      apply subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|];
+      apply funextsec;
+      intro f;
+      apply subtypePath; [intro; apply isapropdirprod; apply homset_property|];
+      etrans; [use pr1_transportf_const|];
+      apply (colimArrowCommutes (CCFf_pt_ob1 CC (mapdiagram (pr1_category (LNWFS C)) (mapdiagram (monoidal_right_tensor A) d)) f))
+    ).
+Defined.
+
+Lemma LNWFS_rt_all_colimits 
+    (A : LNWFS_mon) :
+  preserves_colimits_of_shape (monoidal_right_tensor (A : LNWFS_mon)) g.
+Proof.
+  intros d cl cc.
+  intros isCC.
+  set (isCCAcl := LNWFS_right_tensor_cocone_isColimCocone A d).
+  set (CCAcl := ((_,, (monoidal_right_tensor_cocone LNWFS_mon A d (LNWFSCC d))),, isCCAcl) : ColimCocone _).
+  set (base_iso := isColim_is_z_iso _ (LNWFSCC d) _ _ isCC).
+
+  use (is_z_iso_isColim _ CCAcl).
+  exists ((pr1 base_iso) ⊗^{ LNWFS_mon}_{r} A).
+  abstract (
+    split; [
+      apply pathsinv0;
+      use colim_endo_is_identity;
+      intro u;
+      etrans; [apply assoc|];
+      etrans; [apply cancel_postcomposition;
+              apply colimArrowCommutes|];
+      etrans; [apply cancel_postcomposition, cancel_precomposition;
+              apply (bifunctor_leftid LNWFS_mon)|];
+      etrans; [apply cancel_postcomposition, id_right|];
+      etrans; [exact (pathsinv0 (bifunctor_rightcomp LNWFS_mon _ _ _ _ _ _))|];
+      etrans; [apply maponpaths;
+              apply (colimArrowCommutes (make_ColimCocone _ _ _ isCC))|];
+      reflexivity
+    |
+      apply pathsinv0;
+      etrans; [exact (pathsinv0 (bifunctor_rightid LNWFS_mon _ _))|];
+      etrans; [apply maponpaths;
+              exact (pathsinv0 (pr22 base_iso))|];
+      etrans; [apply (bifunctor_rightcomp LNWFS_mon)|];
+      apply cancel_precomposition;
+      use colimArrowUnique;
+      intro u;
+      apply pathsinv0;
+      etrans; [apply cancel_precomposition;
+              apply (bifunctor_leftid LNWFS_mon)|];
+      etrans; [apply id_right|];
+      apply pathsinv0;
+      etrans; [exact (pathsinv0 (bifunctor_rightcomp LNWFS_mon _ _ _ _ _ _))|];
+      apply maponpaths;
+      apply colimArrowCommutes
+    ]
+  ).
+Defined.
+
 End LNWFS_closed.
+
+Lemma LNWFS_rt_chain {C : category} (CC : Colims C): 
+    rt_preserves_chains (@LNWFS_tot_monoidal C).
+Proof.
+  exact (LNWFS_rt_all_colimits CC is_connected_nat_graph 0).
+Defined.
+
+Lemma LNWFS_rt_coeq {C : category} (CC : Colims C): 
+    rt_preserves_coequalizers (@LNWFS_tot_monoidal C).
+Proof.
+  exact (LNWFS_rt_all_colimits CC is_connected_coequalizer_graph (● 0)%stn).
+Defined.

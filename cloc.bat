@@ -1,0 +1,1 @@
+powershell -Command "dir -Recurse *.v | Get-Content | Measure-Object -Line"

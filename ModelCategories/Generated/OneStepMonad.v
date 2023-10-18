@@ -479,21 +479,8 @@ Qed.
 Definition one_step_comonad_functor : functor (arrow C) (arrow C) :=
     (_,, one_step_comonad_functor_is_functor).
 
-(* Lemma E1_compat (g : arrow C) : E1 J g (CC _) POs = E1 J (opp_mor g) (CC _) POs.
-Proof.
-  reflexivity.
-Qed.
-
-Context (CCopp : ∏ (g : arrow (op_cat C)), Coproducts (morcls_lp (morphism_class_opp J) g) (op_cat C)) (POsopp : Pushouts (op_cat C)).
-
-Lemma λ1_ρ1_opp_compat (g : arrow C) :
-    arrow_cod (λ1 J g (CC _) POs) = arrow_dom (ρ1 (morphism_class_opp J) (opp_arrow g) (CCopp _) POsopp).
-Proof.
-  cbn.
-Defined. *)
-
 Lemma one_step_comonad_ρ1_compat {g g' : arrow C} (γ : g --> g') :
-    arrow_mor11 ((# one_step_comonad_functor)%Cat γ) · ρ1 J g' (CC _) POs =
+    arrow_mor11 (#(one_step_comonad_functor) γ)%Cat · ρ1 J g' (CC _) POs =
       ρ1 J g (CC _) POs · arrow_mor11 γ.
 Proof.
   use (MorphismsOutofPushoutEqual 
@@ -535,6 +522,63 @@ Proof.
     apply pathsinv0. *)
     exact (arrow_mor_comm γ).
 Qed.
+
+Definition one_step_factorization_data : section_disp_data (three_disp C).
+Proof.
+  use tpair.
+  - intro g.
+    exists (E1 J g (CC _) POs).
+    exists (λ1 J g (CC _) POs), (ρ1 J g (CC _) POs).
+    apply λ1_ρ1_compat.
+  - intros g g' γ.
+    cbn.
+    set (L1γ := (#(one_step_comonad_functor) γ)%Cat).
+    exists (arrow_mor11 L1γ).
+    split; apply pathsinv0.
+    * (* commutativity of λ1 and arrow_mor11 (#L1 γ) *)
+      exact (arrow_mor_comm L1γ).
+    * (* commutativity of ρ1 and arrow_mor11 (#L1 γ) = arrow_mor00 (#R1 γ) *)
+      apply one_step_comonad_ρ1_compat.
+Defined.
+
+Definition one_step_factorization_axioms : section_disp_axioms one_step_factorization_data.
+Proof.
+  (* these identities follow from the functorality of g -> λ1g (one_step_comonad_functor)
+  *)
+  
+  split.
+  - intro g.
+    apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
+    cbn.
+    (* behavior of commuting cube construction on identity follows from
+       identity axiom of the one_step_comonad_functor *)
+    set (one_step_comonad_id := functor_id (one_step_comonad_functor) g).
+    set (bottom := arrow_mor11_eq one_step_comonad_id).
+    exact bottom.
+  - intros g1 g2 g3 γ12 γ23.
+    (* behavior of commuting cube construction on composition follows from
+      identity axiom of the one_step_comonad_functor *)
+    apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
+    set (one_step_comonad_comp := functor_comp (one_step_comonad_functor) γ12 γ23).
+    set (bottom := arrow_mor11_eq one_step_comonad_comp).
+    exact bottom.
+Qed.
+
+Definition one_step_factorization : functorial_factorization C :=
+    (_,, one_step_factorization_axioms).
+
+(* Lemma E1_compat (g : arrow C) : E1 J g (CC _) POs = E1 J (opp_mor g) (CC _) POs.
+Proof.
+  reflexivity.
+Qed.
+
+Context (CCopp : ∏ (g : arrow (op_cat C)), Coproducts (morcls_lp (morphism_class_opp J) g) (op_cat C)) (POsopp : Pushouts (op_cat C)).
+
+Lemma λ1_ρ1_opp_compat (g : arrow C) :
+    arrow_cod (λ1 J g (CC _) POs) = arrow_dom (ρ1 (morphism_class_opp J) (opp_arrow g) (CCopp _) POsopp).
+Proof.
+  cbn.
+Defined. *)
 
 Definition one_step_monad_functor_data : functor_data (arrow C) (arrow C).
 Proof.
@@ -734,8 +778,8 @@ Defined.
 
 Definition one_step_comonad_mul_data : 
     nat_trans_data
-      (one_step_comonad_functor)
-      (functor_composite one_step_comonad_functor one_step_comonad_functor).
+      (fact_L one_step_factorization)
+      (functor_composite (fact_L one_step_factorization) (fact_L one_step_factorization)).
 Proof.
   intro g.
   (* The map on morphisms becomes the right face from the cube induced by
@@ -775,7 +819,7 @@ Proof.
         reflexivity
       ).
   - (* commutativity in right face *)
-    apply commuting_cube_right_face.
+    use commuting_cube_right_face.
 Defined.
 
 Definition one_step_comonad_mul_is_nat_trans : is_nat_trans _ _ one_step_comonad_mul_data.
@@ -787,9 +831,8 @@ Proof.
     etrans. apply id_right.
     apply pathsinv0.
     etrans. apply id_left.
-    reflexivity. (* wow... *)
-  - simpl.
-    (* equality of arrows E1 g --> E1 (λ1g) *)
+    reflexivity.
+  - (* equality of arrows E1 g --> E1 (λ1g) *)
     use (MorphismsOutofPushoutEqual 
       (isPushout_Pushout (morcls_lp_coprod_diagram_pushout J g (CC _) POs))).
     * 
@@ -815,7 +858,7 @@ Proof.
       etrans. apply assoc. *)
 
       apply cancel_postcomposition.
-      cbn.
+      (* cbn. *)
       etrans. use CoproductOfArrowsInclusion_comp.
       apply pathsinv0.
       etrans. use CoproductOfArrowsInclusion_comp.
@@ -823,7 +866,7 @@ Proof.
       (* unfold CoproductOfArrowsInclusion. *)
       use CoproductArrowUnique.
       intro.
-      simpl.
+      (* simpl. *)
       etrans. apply (CoproductInCommutes (morcls_lp_cod_coprod J g (CC _))).
       do 2 rewrite assoc'.
       do 2 (etrans; [apply id_left|]).
@@ -875,17 +918,15 @@ Qed.
 
 Definition one_step_comonad_mul : 
     nat_trans 
-      (one_step_comonad_functor)
-      (functor_composite one_step_comonad_functor one_step_comonad_functor) :=
+      (fact_L one_step_factorization)
+      (functor_composite (fact_L one_step_factorization) (fact_L one_step_factorization)) :=
   (_,, one_step_comonad_mul_is_nat_trans).
 
-Definition one_step_comonad_functor_with_μ : functor_with_μ (op_cat (arrow C)) :=
-    (functor_opp one_step_comonad_functor,, op_nt one_step_comonad_mul).
+(* Definition one_step_comonad_functor_with_μ : functor_with_μ (op_cat (arrow C)) :=
+    (functor_opp one_step_comonad_functor,, op_nt one_step_comonad_mul). *)
 
-Definition one_step_comonad_data : Monad_data (op_cat (arrow C)) :=
-    ((functor_opp one_step_comonad_functor,,
-      op_nt one_step_comonad_mul),,
-    op_nt one_step_comonad_counit).
+Definition one_step_comonad_data : Monad_data _ :=
+      L_monad_data one_step_factorization one_step_comonad_mul.
 
 Lemma test2 {g : arrow C} (S : morcls_lp J (λ1 J g (CC _) POs)) :
     arrow_mor11 (pr2 S) = CoproductIn (morcls_lp_cod_coprod J (λ1 J g (CC _) POs) (CC _)) S · arrow_mor11 (morcls_lp_coprod_diagram J (λ1 J g (CC _) POs) (CC _)).
@@ -910,7 +951,8 @@ Proof.
   admit.
 Admitted.
 
-Definition one_step_comonad_laws : Monad_laws one_step_comonad_data.
+Definition one_step_comonad_laws : 
+    Monad_laws one_step_comonad_data.
 Proof.
   (* repeat split.
   - admit.
@@ -937,42 +979,38 @@ Proof.
       reflexivity.
     + cbn.
       unfold commuting_cube_construction. *)
-  repeat split; intro g; (apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod); simpl.
-  - now rewrite id_left.
+  repeat split; intro g; (apply subtypePath; [intro; apply homset_property|]; apply pathsdirprod).
+  - apply id_left.
   - apply pathsinv0.
     use PushoutEndo_is_identity.
     * 
-      (* rewrite assoc.
+      etrans. apply assoc.
       etrans. apply maponpaths_2.
               apply PushoutArrow_PushoutIn1.
-      rewrite assoc'.
+      etrans. apply assoc'.
       etrans. apply maponpaths.
-              apply PushoutArrow_PushoutIn1. *)
-      pushout_dragthrough.
+              apply PushoutArrow_PushoutIn1.
       etrans. apply precompWithCoproductArrowInclusion.
       apply pathsinv0.
 
       use CoproductArrowUnique.
       intro.
-      cbn.
+      (* cbn. *)
       apply pathsinv0.
       etrans. apply id_left.
       reflexivity.
     * 
-      (* rewrite assoc.
+      etrans. apply assoc.
       etrans. apply maponpaths_2.
               apply PushoutArrow_PushoutIn2.
-      rewrite assoc'.
+      etrans. apply assoc'.
       etrans. apply maponpaths.
-              apply PushoutArrow_PushoutIn2. *)
-      pushout_dragthrough.
-      rewrite id_left.
-      reflexivity.
-  - now rewrite id_left.
+              apply PushoutArrow_PushoutIn2.
+      apply id_left.
+  - apply id_left.
   - apply pathsinv0.
     use PushoutEndo_is_identity.
-    * 
-      etrans. apply assoc.
+    * etrans. apply assoc.
       etrans. apply maponpaths_2.
               apply PushoutArrow_PushoutIn1.
       rewrite assoc'.
@@ -993,7 +1031,7 @@ Proof.
       use Coproduct_endo_is_identity.
       intro S.
       etrans. apply (CoproductOfArrowsInclusionIn _ (morcls_lp_cod_coprod J g (CC g))).
-      simpl.
+      (* simpl. *)
       etrans. apply maponpaths_2.
               apply id_left.
       etrans. apply id_left.
@@ -1019,34 +1057,40 @@ Proof.
       etrans. apply assoc.
       etrans. apply maponpaths_2.
               apply PushoutArrow_PushoutIn2.
-      rewrite assoc'.
+      etrans. apply assoc'.
       etrans. apply maponpaths.
               apply PushoutArrow_PushoutIn2.
       etrans. apply assoc.
       (* pushout_dragthrough. *)
-      rewrite id_left, id_left.
-      reflexivity.
-  - now rewrite id_left, id_left.
+      etrans. apply assoc'.
+      etrans. apply id_left.
+      apply id_left.
+  - etrans. apply id_left.
+    apply pathsinv0.
+    apply id_left.
   - apply cancel_precomposition.
     use commuting_cube_construction_eq.
     * (* bb = bb' *)
       (* i.e. ∑_λ1g B --> ∑_λ1λ1g B induced by
          δλ1g (from one_step_comonad_mul_data) = L1-incl *)
-      cbn.
+      (* cbn. *)
       (* this boils down to coproduct inclusions of 
          the lifting problems being equal *)
       use CoproductArrowUnique.
       intro S.
-      simpl.
+      (* simpl. *)
       etrans. apply (CoproductOfArrowsInclusionIn _ (morcls_lp_cod_coprod J (λ1 J g (CC g) POs) (CC _))).
-      simpl.
-      do 2 rewrite id_left.
+      (* simpl. *)
+      etrans. apply id_left.
+      apply pathsinv0.
+      etrans. apply id_left.
+      apply pathsinv0.
       morcls_lp_coproduct_in_eq.
 
       (* need to show that the included lifting problems are equal *)
       apply subtypePath; [intro; apply homset_property|].
       apply pathsdirprod; cbn.
-      + rewrite id_right.
+      + etrans. apply id_right.
         apply pathsinv0.
         etrans. apply (CoproductInCommutes (morcls_lp_dom_coprod J (λ1 J g (CC g) POs) (CC _))).
         reflexivity.
@@ -1056,7 +1100,16 @@ Proof.
         set (H := test2 (f,, S)).
         
         etrans. apply maponpaths_2. exact H.
-        rewrite assoc'.
+
+        etrans. apply cancel_postcomposition.
+                apply (CoproductInCommutes (morcls_lp_cod_coprod J (λ1 J g (CC g) POs) (CC _)) _ (f,, S)).
+        apply pathsinv0.
+        etrans. 
+        
+                
+
+        etrans. apply assoc'.
+        (* todo: do not cancel_precomposition? *)
         apply cancel_precomposition.
 
         etrans. apply postcompWithCoproductArrow.
@@ -1176,67 +1229,13 @@ Proof.
       reflexivity. *)
 Admitted. (* necessary! *)
 
-Definition one_step_comonad : Monad (op_cat (arrow C)) :=
-    (_,, one_step_comonad_laws).
-
-Definition one_step_R_ptd_endofunctor : pointed_endofunctor (arrow C) :=
-    (one_step_monad_functor,, one_step_monad_unit).
+Definition one_step_comonad : 
+    lnwfs_over one_step_factorization :=
+  (one_step_comonad_mul,, one_step_comonad_laws).
 
 End one_step_monad.
 
-Section one_step_factorization.
-(* the maps λ1 and ρ1 define a functorial factorization *)
-
-Context {C : category} (J : morphism_class C).
-Context (CC : ∏ (g : arrow C), Coproducts (morcls_lp J g) C) (POs : Pushouts C).
-
-Definition one_step_factorization_data : section_disp_data (three_disp C).
-Proof.
-  use tpair.
-  - intro g.
-    exists (E1 J g (CC _) POs).
-    exists (λ1 J g (CC _) POs), (ρ1 J g (CC _) POs).
-    apply λ1_ρ1_compat.
-  - intros g g' γ.
-    cbn.
-    set (L1γ := (#(one_step_comonad_functor J CC POs) γ)%cat).
-    exists (arrow_mor11 L1γ).
-    split; apply pathsinv0.
-    * (* commutativity of λ1 and arrow_mor11 (#L1 γ) *)
-      exact (arrow_mor_comm L1γ).
-    * (* commutativity of ρ1 and arrow_mor11 (#L1 γ) = arrow_mor00 (#R1 γ) *)
-      apply one_step_comonad_ρ1_compat.
-Defined.
-
-Definition one_step_factorization_axioms : section_disp_axioms one_step_factorization_data.
-Proof.
-  (* these identities follow from the functorality of g -> λ1g (one_step_comonad_functor)
-  *)
-  split.
-  - intro g.
-    apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
-    cbn.
-    (* behavior of commuting cube construction on identity follows from
-       identity axiom of the one_step_comonad_functor *)
-    set (one_step_comonad_id := functor_id (one_step_comonad_functor J CC POs) g).
-    set (bottom := arrow_mor11_eq one_step_comonad_id).
-    exact bottom.
-  - intros g1 g2 g3 γ12 γ23.
-    (* behavior of commuting cube construction on composition follows from
-      identity axiom of the one_step_comonad_functor *)
-    apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
-    set (one_step_comonad_comp := functor_comp (one_step_comonad_functor J CC POs) γ12 γ23).
-    set (bottom := arrow_mor11_eq one_step_comonad_comp).
-    exact bottom.
-Qed.
-
-Definition one_step_factorization : functorial_factorization C :=
-    (_,, one_step_factorization_axioms).
-
-End one_step_factorization.
-
-
-Section natural_bijections.
+(* Section natural_bijections.
 
 Context {C : category} (J : morphism_class C).
 Context (CC : ∏ (g : arrow C), Coproducts (morcls_lp J g) C) (POs : Pushouts C).
@@ -1391,4 +1390,4 @@ Proof.
 Admitted. (* unimportant *)
 
 
-End natural_bijections.
+End natural_bijections. *)
