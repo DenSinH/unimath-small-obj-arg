@@ -21,12 +21,9 @@ Lemma section_disp_on_eq_morphisms {C : category}
 Proof.
   assert (Heq : γ = γ').
   {
-    apply subtypePath; [intro; apply homset_property|].
-    apply pathsdirprod.
-    - exact H00.
-    - exact H11.
+    use arrow_mor_eq; assumption.
   }
-  rewrite Heq.
+  induction Heq.
   reflexivity.
 Qed.
 
@@ -37,9 +34,7 @@ Lemma section_disp_on_eq_morphisms' {C : category}
   pr1 (section_disp_on_morphisms F alternate) =
     pr1 (section_disp_on_morphisms F γ).
 Proof.
-  use section_disp_on_eq_morphisms.
-  - reflexivity.
-  - reflexivity.
+  use section_disp_on_eq_morphisms; reflexivity.
 Qed.
 
 Lemma pr1_section_disp_on_morphisms_comp {C : category}
@@ -60,7 +55,7 @@ Lemma eq_section_disp_on_morphism {C : category}
   F = F' -> ∏ f, F f = F' f.
 Proof.
   intro H.
-  now rewrite H.
+  now induction H.
 Qed.
 
 Lemma eq_section_nat_trans_disp_on_morphism {C : category}
@@ -69,7 +64,7 @@ Lemma eq_section_nat_trans_disp_on_morphism {C : category}
   γ = γ' -> ∏ f, γ f = γ' f. 
 Proof.
   intro H.
-  now rewrite H.
+  now induction H.
 Qed.
 
 Lemma pr1_transportf_const {A : UU} {B : UU} {P : ∏ (a : A), B -> UU}
@@ -79,4 +74,10 @@ Proof.
   rewrite pr1_transportf.
   rewrite transportf_const.
   reflexivity.
+Qed.
+
+(* double pathscomp0 for rewriting equalities on either side *)
+Definition pathscomp1 {X : UU} {a b x y : X} (e1 : a = b) (e2 : a = x) (e3 : b = y) : x = y.
+Proof.
+  induction e1. induction e2. apply e3.
 Qed.

@@ -53,7 +53,7 @@ Proof.
     exists (arrow_cod l'rf).
     exists (lf · l'rf), r'rf.
     abstract (
-      rewrite assoc';
+      etrans; [apply assoc'|];
       etrans; [apply maponpaths;
                apply (three_comp ((fact_functor F') rf))|];
       simpl;
@@ -69,11 +69,12 @@ Proof.
     
     abstract (
       split; [
-        rewrite assoc;
+        etrans; [apply assoc'|];
         apply pathsinv0;
+        etrans; [apply assoc|];
         etrans; [apply maponpaths_2;
                  exact (arrow_mor_comm lγ)|];
-        do 2 rewrite assoc';
+        etrans; [apply assoc'|];
         apply cancel_precomposition;
         exact (arrow_mor_comm l'rγ)
       | apply pathsinv0;
@@ -91,6 +92,7 @@ Proof.
     set (l'rf := fact_L F' rf).
     set (r'rf := fact_R F' rf).
     apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
+    (* complex rewrite *)
     cbn.
     rewrite (section_disp_id F).
     (* cbn.
@@ -126,13 +128,15 @@ Proof.
   - intro f.
     exists (arrow_dom f).
     exists (identity _), f.  
-    abstract (now rewrite id_left).
+    abstract (apply id_left).
   - intros f f' γ.
-    cbn.
     exists (arrow_mor00 γ).
     abstract (
-      rewrite id_left, id_right;
-      split; [reflexivity| apply pathsinv0; exact (arrow_mor_comm γ)]
+      split; [
+        etrans; [apply id_left|];
+        apply pathsinv0;
+        apply id_right
+        | apply pathsinv0; exact (arrow_mor_comm γ)]
     ).
 Defined.
 
@@ -154,10 +158,13 @@ Definition Ff_l_id_left_data (F : Ff C) :
     section_nat_trans_disp_data (Ff_lcomp_unit ⊗ F) F.
 Proof.
   intro f.
-  cbn.
   exists (identity _).
   abstract (
-    now split; rewrite id_right, id_left; [rewrite id_right|]
+    split; [etrans; [apply id_right|]|]; (
+      etrans; [apply id_right|];
+      apply pathsinv0;
+      apply id_left
+    )
   ).
 Defined.
 
@@ -167,8 +174,9 @@ Proof.
   intros f f' γ.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
   etrans. use pr1_transportf_const.
-  cbn.
-  now rewrite id_left, id_right.
+  etrans. apply id_right.
+  apply pathsinv0.
+  apply id_left.
 Qed.
 
 Definition Ff_l_id_left (F : Ff C) : (Ff_lcomp_unit ⊗ F) --> F :=
@@ -178,10 +186,13 @@ Definition Ff_l_id_left_rev_data (F : Ff C) :
     section_nat_trans_disp_data F (Ff_lcomp_unit ⊗ F).
 Proof.
   intro f.
-  cbn. 
   exists (identity _).
   abstract (
-    now split; rewrite id_right, id_left; [rewrite id_right|]
+    split; (
+      etrans; [apply id_right|];
+      apply pathsinv0;
+      etrans; [apply id_left|]
+    ); [apply id_right|reflexivity]
   ).
 Defined.
 
@@ -191,8 +202,9 @@ Proof.
   intros f f' γ.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
   etrans. use pr1_transportf_const.
-  cbn.
-  now rewrite id_left, id_right.
+  etrans. apply id_right.
+  apply pathsinv0.
+  apply id_left.
 Qed.
 
 Definition Ff_l_id_left_rev (F : Ff C) : F --> (Ff_lcomp_unit ⊗ F) :=
@@ -202,10 +214,13 @@ Definition Ff_l_id_right_data (F : Ff C) :
     section_nat_trans_disp_data (F ⊗ Ff_lcomp_unit) F.
 Proof.
   intro f.
-  cbn.
   exists (identity _).
   abstract (
-    now split; rewrite id_right, id_left; [rewrite id_left|]
+    split; (
+      etrans; [apply id_right|];
+      apply pathsinv0;
+      etrans; [apply id_left|]
+    ); [apply pathsinv0; apply id_left|reflexivity]
   ).
 Defined.
 
@@ -236,10 +251,13 @@ Definition Ff_l_id_right_rev_data (F : Ff C) :
     section_nat_trans_disp_data F (F ⊗ Ff_lcomp_unit).
 Proof.
   intro f.
-  cbn.
   exists (identity _).
   abstract (
-    now split; rewrite id_right, id_left; [rewrite id_left|]
+    split; (
+      etrans; [apply id_right|];
+      apply pathsinv0;
+      etrans; [apply id_left|]
+    ); [apply id_left|reflexivity]
   ).
 Defined.
 
@@ -274,15 +292,18 @@ Proof.
   destruct τρf as [mor [comm1 comm2]].
   exists (mor).
   abstract (
-    split; cbn; [
-      rewrite assoc, id_left, assoc';
+    split; [
+      etrans; [apply assoc'|];
+      apply pathsinv0;
+      etrans; [apply id_left|];
       apply cancel_precomposition;
+      apply pathsinv0;
       etrans; [exact comm1|];
-      now rewrite id_left|
-      rewrite id_right;
+      apply id_left
+    | etrans; [apply id_right|];
       apply pathsinv0;
       etrans; [exact (pathsinv0 comm2)|];
-      now rewrite id_right
+      apply id_right
     ]
   ).
 Defined.
@@ -430,14 +451,6 @@ Proof.
   reflexivity.
 Qed.
 
-Local Lemma three_disp11_comp {x x' x'' : arrow C} {γ : x --> x'} (γ' : x' --> x'')
-    {f : three_disp _ x} {f' : three_disp _ x'} {f'' : three_disp _ x''}
-    (Γ : f -->[γ] f') (Γ' : f' -->[γ'] f'') :
-  pr1 Γ · pr1 Γ' = pr1 (comp_disp Γ Γ').
-Proof.
-  reflexivity.
-Qed.
-
 Lemma Ff_l_leftwhisker_comp (F : Ff C) {G G' G'' : Ff C}
     (τ : G --> G') (τ' : G' --> G'') :
   (F ⊗pre (τ · τ')) = (F ⊗pre τ) · (F ⊗pre τ').
@@ -449,7 +462,6 @@ Proof.
   etrans. use (pr1_transportf_const).
   
   (* cbn. *)
-  etrans. apply three_disp11_comp.
   etrans. use (pr1_section_disp_on_morphisms_comp F).
   
   use (section_disp_on_eq_morphisms F).
@@ -547,7 +559,7 @@ Proof.
   exists (fact_L F f).
   abstract (
     split; [
-      now do 2 rewrite id_left|
+      reflexivity|
       rewrite id_right;
       apply pathsinv0;
       exact (three_comp (fact_functor F f))
@@ -560,9 +572,7 @@ Definition Ff_l_point_axioms (F : Ff C) :
 Proof.
   intros f g γ.
   apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
-  
-  etrans. use (pr1_transportf (id_right γ @ ! id_left γ) _).
-  cbn; rewrite transportf_const.
+  etrans. apply pr1_transportf_const.
   exact (arrow_mor_comm (#(fact_L F) γ)).
 Qed.
 
@@ -801,11 +811,6 @@ Definition Ff_monoid_is_RNWFS_mul
     (functor_composite (fact_R F) (fact_R F)) ⟹ (fact_R F) :=
   (_,, Ff_monoid_is_RNWFS_mul_axioms R).
 
-Local Definition pathscomp1 {X : UU} {a b x y : X} (e1 : a = b) (e2 : a = x) (e3 : b = y) : x = y.
-Proof.
-  induction e1. induction e2. apply e3.
-Qed.
-
 Lemma Ff_point_unique 
     {F : Ff C} 
     (γ : Ff_lcomp_unit --> F) :
@@ -842,6 +847,7 @@ Proof.
     etrans. use pr1_transportf_const.
     
     apply cancel_postcomposition.
+    (* rewrites in term *)
     rewrite (Ff_point_unique _).
     reflexivity.
   - intro f.
@@ -858,6 +864,7 @@ Proof.
     etrans. use pr1_transportf_const.
 
     apply cancel_postcomposition.
+    (* rewrites in term *)
     rewrite (Ff_point_unique (monoid_data_unit Ff_monoidal R)).
     apply pathsinv0.
     etrans. apply (section_disp_on_eq_morphisms F (γ' := three_mor_mor12 (section_nat_trans (Ff_l_point F) f))); reflexivity.
