@@ -33,4 +33,5 @@ ModelCategories/Generated/LNWFSCocomplete.v
 ModelCategories/Generated/LNWFSClosed.v
 ModelCategories/Generated/GenericFreeMonoid.v
 ModelCategories/Generated/GenericFreeMonoidSequence.v
+ModelCategories/Generated/LNWFSSmallnessReduction.v
 ModelCategories/Generated/SmallObjectArgument.v

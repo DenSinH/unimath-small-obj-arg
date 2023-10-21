@@ -265,8 +265,9 @@ Proof.
       set (fact := n f).
       set (f01 := three_mor01 fact).
       set (f12 := three_mor12 fact).
-      cbn in f01, f12.
+      (* cbn in f01, f12. *)
 
+      apply hinhpr.
       exists (three_ob1 fact), f01, f12.
 
       repeat split.

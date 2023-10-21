@@ -23,12 +23,12 @@ Definition make_is_model_category {M : category} (W C F : morphism_class M)
 Definition model_category (M : category) :=
   ∑ (W C F : morphism_class M), is_model_category W C F.
 
-(* Lemma isprop_is_model_category {M : category} (W C F : morphism_class M) : isaprop (is_model_category W C F).
+Lemma isprop_is_model_category {M : category} (W C F : morphism_class M) : isaprop (is_model_category W C F).
 Proof.
   apply isapropdirprod.
   apply isaprop_is_weak_equivalences.
   apply isapropdirprod; apply isaprop_is_wfs.
-Defined. *)
+Defined.
 
 Lemma is_model_category_mk' {M : category} {W C AF AC F : morphism_class M}
     (weq : is_weak_equivalences W)
@@ -77,7 +77,10 @@ Proof.
       destruct hf as [f_c f_w].
 
       (* factorize f through c, g : a --> c ∈ AC, h : c --> b ∈ F *)
-      destruct ((is_wfs_fact acf) _ _ f) as [c [g [h [g_ac [h_f gh]]]]].
+      set (acf_fact := (is_wfs_fact acf) _ _ f).
+      use (hinhuniv _ acf_fact).
+      clear acf_fact; intro acf_fact.
+      destruct acf_fact as [c [g [h [g_ac [h_f gh]]]]].
 
       (* h ∈ W by 2 out of 3 property (h ∘ g = f) *)
       assert (h_w : (W _ _) h).

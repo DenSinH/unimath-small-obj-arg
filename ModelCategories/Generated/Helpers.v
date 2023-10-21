@@ -7,8 +7,20 @@ Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
 Require Import CategoryTheory.DisplayedCats.natural_transformation.
 
+Require Import CategoryTheory.ModelCategories.NWFS.
+
 Local Open Scope cat.
 
+(* useful lemma in a lot of proofs where we transport
+   arrows / three morphisms *)
+Lemma pr1_transportf_const {A : UU} {B : UU} {P : ∏ (a : A), B -> UU}
+    {a a' : A} (e : a = a') (xs : ∑ b : B, P a b) :
+    pr1 (transportf (λ x, ∑ b : B, P _ b) e xs) = pr1 xs.
+Proof.
+  rewrite pr1_transportf.
+  rewrite transportf_const.
+  reflexivity.
+Qed.
 
 (* helper for showing section_disp_axioms *)
 Lemma section_disp_on_eq_morphisms {C : category} 
@@ -67,17 +79,61 @@ Proof.
   now induction H.
 Qed.
 
-Lemma pr1_transportf_const {A : UU} {B : UU} {P : ∏ (a : A), B -> UU}
-    {a a' : A} (e : a = a') (xs : ∑ b : B, P a b) :
-    pr1 (transportf (λ x, ∑ b : B, P _ b) e xs) = pr1 xs.
-Proof.
-  rewrite pr1_transportf.
-  rewrite transportf_const.
-  reflexivity.
-Qed.
-
 (* double pathscomp0 for rewriting equalities on either side *)
 Definition pathscomp1 {X : UU} {a b x y : X} (e1 : a = b) (e2 : a = x) (e3 : b = y) : x = y.
 Proof.
   induction e1. induction e2. apply e3.
+Qed.
+
+Lemma eq_section_nat_trans_component
+    {C : category}
+    {F F' : Ff C} 
+    {γ γ' : F --> F'}
+    (H : γ = γ') : 
+  ∏ f, section_nat_trans γ f = section_nat_trans γ' f.
+Proof.
+  now induction H.
+Qed.
+
+(* the above equality, but on the middle morphisms *)
+Lemma eq_section_nat_trans_component11
+    {C : category}
+    {F F' : Ff C} 
+    {γ γ' : F --> F'}
+    (H : γ = γ') : 
+  ∏ f, three_mor11 (section_nat_trans γ f) = three_mor11 (section_nat_trans γ' f).
+Proof.
+  now induction H.
+Qed.
+
+(* specific version of the above that we need
+   in a proof *)
+Lemma eq_section_nat_trans_comp_component11
+    {C : category}
+    {F F' F'' : Ff C} 
+    {γ : F --> F''}
+    {γ' : F --> F'}
+    {γ'' : F' --> F''}
+    (H : γ' · γ'' = γ) : 
+  ∏ f, 
+    three_mor11 (section_nat_trans γ' f) 
+    · three_mor11 (section_nat_trans γ'' f) 
+    = three_mor11 (section_nat_trans γ f).
+Proof.
+  induction H.
+  intro f.
+  apply pathsinv0.
+  etrans. apply pr1_transportf_const.
+  reflexivity.
+Qed.
+
+(* composition of morphisms equality *)
+Lemma compeq {C : category} {x y z : C} 
+    {f f' : x --> y} {g g' : y --> z} :
+  f = f' -> g = g' -> f · g = f' · g'.
+Proof.
+  intros Hf Hg.
+  induction Hf.
+  induction Hg.
+  reflexivity.
 Qed.

@@ -52,7 +52,7 @@ Context (CC : Colims C).
 
 Section Ff_cocomplete_diagram.
 
-Context {g : graph} (D : diagram g (Ff C)).
+Context {g : graph} (d : diagram g (Ff C)).
 Context (H : is_connected g).
 
 (* diagram of middle objects *)
@@ -60,13 +60,29 @@ Definition Ff_diagram_pointwise_ob1 (a : arrow C) : diagram g C.
 Proof.
   use tpair.
   - intro v.
-    exact (pr1 (pr1 (dob D v) a)).
+    exact (pr1 (pr1 (dob d v) a)).
   - intros u v e.
-    exact (pr1 (pr1 (dmor D e) a)).
+    exact (pr1 (pr1 (dmor d e) a)).
 Defined.
 
 Definition CCFf_pt_ob1 : ∏ (a : arrow C), ColimCocone (Ff_diagram_pointwise_ob1 a) :=
     λ a, CC _ _.
+
+
+Definition Ff_cocone_pointwise_R
+      (f : arrow C) :
+    cocone (Ff_diagram_pointwise_ob1 f) (arrow_cod f).
+Proof.
+  use make_cocone.
+  - intro v.
+    exact (fact_R (dob d v) f).
+  - abstract (
+      intros u v e;
+      set (ecommf := pr2 (three_mor_comm (section_nat_trans (dmor d e) f)));
+      etrans; [exact (pathsinv0 ecommf)|];
+      apply id_right
+    ).
+Defined.
 
 (* this construction only works for non-empty graphs, since
    we need an arrow arrow_dom a --> colim (CCFf_pt_ob1 a), 
@@ -75,22 +91,17 @@ Definition ColimFf_ob (v0 : vertex g) (a : arrow C) : three_disp C a.
 Proof.
   exists (colim (CCFf_pt_ob1 a)).
 
-  exists (pr12 (pr1 (dob D v0) a) · (colimIn (CCFf_pt_ob1 a) v0)).
+  exists (pr12 (pr1 (dob d v0) a) · (colimIn (CCFf_pt_ob1 a) v0)).
   use tpair.
   - use colimArrow.
-    use make_cocone.
-    + intro v.
-      exact (pr122 (pr1 (dob D v) a)).
-    + intros u v e.
-      etrans. exact (pathsinv0 (pr22 (pr1 (dmor D e) a))).
-      apply id_right.
+    exact (Ff_cocone_pointwise_R a).
   - (* cbn. *)
     abstract (
       etrans; [apply assoc'|];
       etrans; [apply cancel_precomposition;
               use (colimArrowCommutes (CCFf_pt_ob1 a))|];
       (* cbn. *)
-      exact (three_comp (fact_functor (dob D v0) a))
+      exact (three_comp (fact_functor (dob d v0) a))
     ).
 Defined.
 
@@ -102,22 +113,22 @@ Proof.
   - use colimOfArrows.
     * intro v.
       (* cbn. *)
-      set (Dv := (dob D v)).
+      set (Dv := (dob d v)).
       exact (pr1 ((section_disp_on_morphisms (section_disp_data_from_section_disp Dv)) f)).
     * intros u v e.
       (* cbn. *)
       abstract (
-        set (De := (dmor D e));
+        set (De := (dmor d e));
         set (Deax := section_nt_disp_axioms_from_section_nt_disp De _ _ f);
         etrans; [exact (pathsinv0 (base_paths _ _ Deax))|];
         etrans; [apply pr1_transportf_const|];
         reflexivity
       ).
-  - (* functorality of dob D v *)
+  - (* functorality of dob d v *)
     split.
     * (* cbn. *)
       abstract (
-        set (Dv0f := ((section_disp_on_morphisms (section_disp_data_from_section_disp (dob D v0))) f));
+        set (Dv0f := ((section_disp_on_morphisms (section_disp_data_from_section_disp (dob d v0))) f));
         set (Dv0fax := pr2 Dv0f);
         etrans; [apply assoc'|];
         etrans; [apply cancel_precomposition;
@@ -139,7 +150,7 @@ Proof.
         use cocone_paths;
         intro v;
         (* cbn. *)
-        set (Dvf := ((section_disp_on_morphisms (section_disp_data_from_section_disp (dob D v))) f));
+        set (Dvf := ((section_disp_on_morphisms (section_disp_data_from_section_disp (dob d v))) f));
         set (Dvfax := pr2 Dvf);
   
         exact (pathsinv0 (pr2 Dvfax))
@@ -160,7 +171,7 @@ Proof.
     (* cbn. *)
     etrans. apply cancel_postcomposition.
             apply maponpaths.
-            exact (section_disp_id (dob D u) _).
+            exact (section_disp_id (dob d u) _).
     apply id_left.
   - intros a b c fab fbc.
     use subtypePath; [intro; apply isapropdirprod; apply homset_property|].
@@ -187,7 +198,7 @@ Definition ColimFf (v0 : vertex g) : Ff C :=
    regarding equality of (arrow_dom v/v0 · colimIn v/v0) *)
 Local Definition colim_nat_trans_in_data 
       {v0 : vertex g} {v : vertex g} : 
-    dob D v --> ColimFf v0.
+    dob d v --> ColimFf v0.
 Proof.
   use tpair.
   - intro a.
@@ -198,7 +209,7 @@ Proof.
       abstract (
         apply pathsinv0;
         etrans; [apply id_left|];
-        set (predicate := λ v, pr12 (pr1 (ColimFf v0) a) = pr12 (pr1 (dob D v) a) · colimIn (CCFf_pt_ob1 a) v);
+        set (predicate := λ v, pr12 (pr1 (ColimFf v0) a) = pr12 (pr1 (dob d v) a) · colimIn (CCFf_pt_ob1 a) v);
         use (connected_graph_zig_zag_strong_induction v0 H predicate); [reflexivity|];
         intros u u' Hu uu';
         induction uu' as [e|e]; (etrans; [exact Hu|]);
@@ -207,7 +218,7 @@ Proof.
                  exact (pathsinv0 (colimInCommutes (CCFf_pt_ob1 a) _ _ e))|];
            etrans; [apply assoc|];
            apply cancel_postcomposition;
-           etrans; [exact (pr12 (pr1 (dmor D e) a))|];
+           etrans; [exact (pr12 (pr1 (dmor d e) a))|];
            apply id_left)
       ).
     * abstract (
@@ -227,7 +238,7 @@ Proof.
     ).
 Defined.
 
-Local Definition cocone_pointwise (F : Ff C) (cc : cocone D F) a :
+Local Definition cocone_pointwise (F : Ff C) (cc : cocone d F) a :
   cocone (Ff_diagram_pointwise_ob1 a) (pr1 (pr1 F a)).
 Proof.
   use make_cocone.
@@ -246,7 +257,7 @@ Defined.
 
 Definition ColimFf_unique_mor
     (v0: vertex g)
-    (F : Ff C) (cc : cocone D F) :
+    (F : Ff C) (cc : cocone d F) :
   ColimFf v0 --> F.
 Proof.
   use tpair.
@@ -299,7 +310,7 @@ Defined.
 
 Lemma ColimFf_unique
     {v0 : vertex g}
-    (F : Ff C) (cc : cocone D F) :
+    (F : Ff C) (cc : cocone d F) :
   ∃! x : ColimFf v0 --> F,
             ∏ v, colim_nat_trans_in_data · x = coconeIn cc v.
 Proof.
@@ -331,7 +342,7 @@ Defined.
 
 Lemma ColimFfCocone
     (v0 : vertex g) :
-  ColimCocone D.
+  ColimCocone d.
 Proof.
   use make_ColimCocone.
   - exact (ColimFf v0).
@@ -395,7 +406,6 @@ Proof.
   - exact 0.
 Defined.
 
-
 Lemma CoequalizersFf {C : category} (HC : Colims C) :
     Coequalizers (Ff C).
 Proof.
@@ -404,6 +414,7 @@ Proof.
   - exact is_connected_coequalizer_graph.
   - exact (● 0)%stn.
 Defined.
+
 
 Section LNWFS_cocomplete.
 
