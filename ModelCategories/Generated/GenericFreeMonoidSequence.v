@@ -440,6 +440,19 @@ Definition T_preserves_diagram_on (A : C) : UU :=
     (free_monoid_coeq_sequence_diagram_on A)
     _ (colimCocone (free_monoid_coeq_sequence_colim_on A)).
 
+Definition T_preserves_chains_impl_T_preserves_diagram_on (A : C) :
+  preserves_colimits_of_shape
+    (monoidal_left_tensor (T : CMon)) nat_graph
+      -> T_preserves_diagram_on A.
+Proof.
+  intro H.
+  intros CC cl cc.
+  apply (
+    H (free_monoid_coeq_sequence_diagram_on A) 
+      _ _ (isColimCocone_from_ColimCocone (free_monoid_coeq_sequence_colim_on A))
+  ).
+Qed.
+
 Context (A : C).
 Context (HT : T_preserves_diagram_on A).
 

@@ -384,26 +384,26 @@ Proof.
       reflexivity.
 Qed.
 
-Lemma ChainsFf (HC : Colims C) : 
+End Ff_cocomplete.
+
+Lemma ChainsFf {C : category} (HC : Colims C) : 
     Chains (Ff C).
 Proof.
   intros d.
-  use (ColimFfCocone d).
+  use (ColimFfCocone HC d).
   - exact is_connected_nat_graph.
   - exact 0.
 Defined.
 
 
-Lemma CoequalizersFf (HC : Colims C) :
+Lemma CoequalizersFf {C : category} (HC : Colims C) :
     Coequalizers (Ff C).
 Proof.
   intros F G f g.
-  use (ColimFfCocone).
+  use (ColimFfCocone HC).
   - exact is_connected_coequalizer_graph.
   - exact (● 0)%stn.
 Defined.
-
-End Ff_cocomplete.
 
 Section LNWFS_cocomplete.
 
