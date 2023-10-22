@@ -1246,40 +1246,14 @@ Proof.
   apply assoc'.
 Qed.
 
-Lemma Tinf_monoid_unit_right :
-    monoid_laws_unit_right V Tinf_monoid_data.
+Lemma Tinf_monoid_unit_right_pointwise
+    (v : vertex nat_graph) :
+  ruinv^{ V }_{ pair_diagram_lob (free_monoid_coeq_sequence_on I_{ V} v)}
+  · (pair_diagram_lob (free_monoid_coeq_sequence_on I_{ V} v)
+    ⊗^{ V}_{l} colimIn free_monoid_coeq_sequence_colim_unit 0
+    · free_monoid_coeq_sequence_diagram_on_Tinf_Tinf_map v) =
+  colimIn free_monoid_coeq_sequence_colim_unit v.
 Proof.
-  etrans. apply assoc.
-  apply (pre_comp_with_z_iso_is_inj (is_inverse_in_precat_inv (monoidal_rightunitorisolaw V _))).
-  apply pathsinv0.
-  etrans. exact (pr2 (monoidal_rightunitorisolaw V _)).
-  use colim_endo_is_identity.
-  intro v.
-
-  etrans. apply assoc.
-  etrans. apply cancel_postcomposition.
-          exact (pathsinv0 (monoidal_rightunitorinvnat V _ _ _)).
-  etrans. apply assoc'.
-  etrans. apply cancel_precomposition.
-  {
-    etrans. apply assoc.
-            apply cancel_postcomposition.
-    etrans. apply assoc.
-    etrans. apply cancel_postcomposition.
-            apply (whiskerscommutes V (bifunctor_equalwhiskers V)).
-    etrans. apply assoc'.
-    apply cancel_precomposition.
-    exact (Tinf_monoid_mul_iso_precomp_with_colimIn v).
-  }
-  
-  (* cbn. *)
-  etrans. apply cancel_precomposition.
-          etrans. apply assoc'.
-          apply cancel_precomposition.
-  {
-    set (CC := free_monoid_coeq_sequence_rightwhisker_colim_on Tinf I_{ V}).
-    apply (colimArrowCommutes CC Tinf _ v).
-  }
 (*   
   simpl.
   set (t := pr22 (free_monoid_coeq_sequence_on_Tinf_pd_Tinf_map v)).
@@ -1332,10 +1306,12 @@ Proof.
       set (x' := x · colimIn free_monoid_coeq_sequence_colim_unit (S (S v))).
       set (t := test x').
       etrans. use (test x').
-      + admit.
-      + unfold x'.
+      + admit.  (* coequalizer properties *)
+      + show_id_type.
+        (* TODO: assert T preserves coequalizers, precomp with iso *)
+        unfold x'.
         unfold x.
-        simpl.
+        (* simpl. *)
         etrans. apply assoc.
         etrans. apply cancel_postcomposition.
                 exact (pathsinv0 (monoidal_rightunitorinvnat V _ _ _)).
@@ -1347,22 +1323,60 @@ Proof.
                   exact (whiskerscommutes V (bifunctor_equalwhiskers V) _ _).
           etrans. apply assoc'.
           apply cancel_precomposition.
-          unfold free_monoid_coeq_sequence_diagram_on_Tinf_Tinf_map.
-          unfold free_monoid_coeq_sequence_on_Tinf_pd_Tinf_map.
+          (* unfold free_monoid_coeq_sequence_diagram_on_Tinf_Tinf_map. *)
+          (* unfold free_monoid_coeq_sequence_on_Tinf_pd_Tinf_map. *)
           set (abc := free_monoid_coeq_sequence_on_Tinf_pd_Tinf_map_coeqout v Hn).
           set (acoeq := next_pair_diagram_coeq (free_monoid_coeq_sequence_on I_{V} v)).
           set (art_coequalizer := rt_coeq_coequalizer (rt_coeq Tinf) coeq).
           set (atest := CoequalizerArrowComm _ art_coequalizer).
           apply atest.
         }
+
         admit.
       + simpl.
         apply pathsinv0.
         etrans. use (test x').
-        -- admit.
+        -- admit. (* coequalizer properties *)
         -- reflexivity.
         -- reflexivity.
 Admitted.
+
+Lemma Tinf_monoid_unit_right :
+    monoid_laws_unit_right V Tinf_monoid_data.
+Proof.
+  etrans. apply assoc.
+  apply (pre_comp_with_z_iso_is_inj (is_inverse_in_precat_inv (monoidal_rightunitorisolaw V _))).
+  apply pathsinv0.
+  etrans. exact (pr2 (monoidal_rightunitorisolaw V _)).
+  use colim_endo_is_identity.
+  intro v.
+
+  etrans. apply assoc.
+  etrans. apply cancel_postcomposition.
+          exact (pathsinv0 (monoidal_rightunitorinvnat V _ _ _)).
+  etrans. apply assoc'.
+  etrans. apply cancel_precomposition.
+  {
+    etrans. apply assoc.
+            apply cancel_postcomposition.
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+            apply (whiskerscommutes V (bifunctor_equalwhiskers V)).
+    etrans. apply assoc'.
+    apply cancel_precomposition.
+    exact (Tinf_monoid_mul_iso_precomp_with_colimIn v).
+  }
+  
+  (* cbn. *)
+  etrans. apply cancel_precomposition.
+          etrans. apply assoc'.
+          apply cancel_precomposition.
+  {
+    set (CC := free_monoid_coeq_sequence_rightwhisker_colim_on Tinf I_{ V}).
+    apply (colimArrowCommutes CC Tinf _ v).
+  }
+  exact (Tinf_monoid_unit_right_pointwise v).
+Qed.
 
 Lemma Tinf_monoid_assoc :
     monoid_laws_assoc V Tinf_monoid_data.

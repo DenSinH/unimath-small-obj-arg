@@ -62,46 +62,13 @@ Local Ltac functorial_factorization_eq f := (
 ).
 
 Context {C : category}.
-Context {J : morphism_class C}.
+Context (J : morphism_class C).
 Context (CC : Colims C).
-
-Local Definition CCoproducts :
-  ∏ g, Coproducts (morcls_lp J g) C.
-Proof.
-  intro g.
-  apply Coproducts_from_Colims.
-  intro d.
-  exact (CC _ d).
-Defined.
-
-Local Definition CCoequalizers :
-  Coequalizers C := (Coequalizers_from_Colims _ CC).
-
-Local Definition CPushouts : Pushouts C.
-Proof.
-  apply Pushouts_from_Coequalizers_BinCoproducts.
-  - apply BinCoproducts_from_Colims.
-    intro d.
-    exact (CC _ d).
-  - intros H z f g.
-    set (coeq := CCoequalizers _ _ f g).
-    use tpair.
-    * exists (CoequalizerObject _ coeq).
-      exact (CoequalizerArrow _ coeq).
-    * exists (CoequalizerArrowEq _ coeq).
-      intros w h Hw.
-      use unique_exists.
-      + exact (CoequalizerOut _ coeq _ h Hw).
-      + exact (CoequalizerArrowComm _ coeq _ h Hw).
-      + intro y; apply homset_property.
-      + intros y Hy.
-        exact (CoequalizerOutUnique _ _ _ _ _ _ Hy).
-Defined.
 
 Definition one_step_comonad_as_LNWFS : total_category (LNWFS C).
 Proof.
-  exists (one_step_factorization J CCoproducts CPushouts).
-  exact (one_step_comonad J CCoproducts CPushouts).
+  exists (one_step_factorization J CC).
+  exact (one_step_comonad J CC).
 Defined.
 
 Definition LNWFS_pointed (L : total_category (LNWFS C)) :
@@ -136,9 +103,11 @@ Proof.
   set (dbase := mapdiagram (pr1_category _) d).
 
   (* required assertion *)
-  set (F1 := one_step_factorization J CCoproducts CPushouts).
+  set (F1 := one_step_factorization J CC).
   assert (HR : FR_slice_omega_small CC F1).
   {
+    intros d' y ccy.
+    
     admit.
   }
 

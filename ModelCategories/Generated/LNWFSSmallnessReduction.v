@@ -7,6 +7,7 @@ Require Import UniMath.CategoryTheory.Core.Functors.
 Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
 Require Import UniMath.CategoryTheory.Core.Isos.
 Require Import UniMath.CategoryTheory.Core.Univalence.
+Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
 Require Import UniMath.CategoryTheory.limits.coproducts.
 Require Import UniMath.CategoryTheory.limits.bincoproducts.
 Require Import UniMath.CategoryTheory.limits.pushouts.
@@ -24,6 +25,7 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Total.
 Require Import UniMath.CategoryTheory.DisplayedCats.Functors.
 Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
+Require Import UniMath.CategoryTheory.DisplayedCats.Total.
 
 Require Import CategoryTheory.Chains.Chains.
 
@@ -72,8 +74,7 @@ Import BifunctorNotations.
 Import MonoidalNotations.
 
 (* lift edge of diagram to morphism between coconeIns *)
-Definition fact_cocone_coconeIn_lifted
-    (F : Ff C)
+Definition cocone_coconeIn_edge_lifted
     {d : chain C} {y : C}
     (ccy : cocone d y)
     {u v : vertex nat_graph}
@@ -112,7 +113,7 @@ Proof.
   - intro v.
     exact (arrow_dom (fact_R F (coconeIn ccy v))).
   - intros u v e.
-    set (elifted := fact_cocone_coconeIn_lifted F ccy e).
+    set (elifted := cocone_coconeIn_edge_lifted ccy e).
     exact (arrow_mor00 (#(fact_R F) elifted)).
 Defined.
 
@@ -128,7 +129,7 @@ Proof.
     exact (fact_R F (coconeIn ccy v)).
   - abstract (
       intros u v e;
-      set (elifted := fact_cocone_coconeIn_lifted F ccy e);
+      set (elifted := cocone_coconeIn_edge_lifted ccy e);
       etrans; [exact (arrow_mor_comm (#(fact_R F) elifted))|];
       apply id_right
     ).
@@ -141,7 +142,7 @@ Defined.
     v        v
     Y ====== Y
 *)
-Definition fact_R_colimArrow_coconeInBase
+Definition coconeIn_colimArrow_mor
     {d : chain C} {y : C}
     (ccy : cocone d y) :
   ∏ v, coconeIn ccy v --> colimArrow (CC _ d) _ ccy.
@@ -160,7 +161,7 @@ Defined.
 (* define the cocone of right objects with vertex R(colimArrow)
    we will require that this is a colimCocone for the sliced
    R functors to be small *)
-Definition fact_R_colimArrow_cocone
+Definition dom_fact_R_colimArrow_cocone
     (F : Ff C)
     {d : chain C} {y : C}
     (ccy : cocone d y) :
@@ -170,7 +171,7 @@ Definition fact_R_colimArrow_cocone
 Proof.
   use make_cocone.
   - intro v.
-    exact (arrow_mor00 (#(fact_R F) (fact_R_colimArrow_coconeInBase ccy v))).
+    exact (arrow_mor00 (#(fact_R F) (coconeIn_colimArrow_mor ccy v))).
   - abstract (
       intros u v e;
       etrans; [use (pr1_section_disp_on_morphisms_comp F)|];
@@ -180,11 +181,213 @@ Proof.
     ).
 Defined.
   
-(* define smallness of R functor *)
+(* define smallness of (sliced) R functor *)
 Definition FR_slice_omega_small (F : Ff C) : UU :=
     ∏ (d : chain C) (y : C) (ccy : cocone d y),
-      isColimCocone _ _ 
-          (fact_R_colimArrow_cocone F ccy).
+      isColimCocone _ _ (dom_fact_R_colimArrow_cocone F ccy).
+
+(* a chain in arrow C from a cocone in C *)
+Definition cocone_arrow_chain 
+    {d : chain C} {y : C}
+    (ccy : cocone d y) : chain (arrow C).
+Proof.
+  use tpair.
+  - intro v.
+    exact (coconeIn ccy v).
+  - intros u v e.
+    exact (cocone_coconeIn_edge_lifted ccy e).
+Defined.
+
+(* we need that the colimArrow into the codomain y
+   is a colimit for the chain in arrow C *)
+Definition colimArrow_arrow_cocone
+    {d : chain C} {y : C}
+    (ccy : cocone d y) :
+  cocone (cocone_arrow_chain ccy) (colimArrow (CC _ d) _ ccy).
+Proof.
+  use make_cocone.
+  - intro v.
+    exact (coconeIn_colimArrow_mor ccy v).
+  - abstract (
+      intros u v e;
+      use arrow_mor_eq; [|apply id_left];
+      exact (colimInCommutes (CC _ d) _ _ e)
+    ).
+Defined.
+
+Definition project_chain00 (d : chain (arrow C)) := 
+  mapdiagram (pr1_functor _ _) (mapdiagram (pr1_category _) d).
+
+Definition project_arrow_cocone00
+    {cl : arrow C} {d : chain (arrow C)}
+    (cc : cocone d cl) : 
+  cocone (project_chain00 d) (arrow_dom cl).
+Proof.
+  use make_cocone.
+  - intro v. exact (arrow_mor00 (coconeIn cc v)).
+  - abstract (
+      intros u v e;
+      exact (arrow_mor00_eq (coconeInCommutes cc _ _ e))
+    ).
+Defined.
+
+Definition project_chain11 (d : chain (arrow C)) := 
+  mapdiagram (pr2_functor _ _) (mapdiagram (pr1_category _) d).
+
+Definition project_arrow_cocone11
+    {cl : arrow C} {d : chain (arrow C)}
+    (cc : cocone d cl) : 
+  cocone (project_chain11 d) (arrow_cod cl).
+Proof.
+  use make_cocone.
+  - intro v. exact (arrow_mor11 (coconeIn cc v)).
+  - abstract (
+      intros u v e;
+      exact (arrow_mor11_eq (coconeInCommutes cc _ _ e))
+    ).
+Defined.
+
+Definition cocone_arrow_chain_y_cocone
+    {d : chain C} {y : C}
+    (ccy : cocone d y) :
+  cocone (project_chain11 (cocone_arrow_chain ccy)) y.
+Proof.
+  use make_cocone.
+  - intro v. exact (identity y).
+  - abstract (intros u v e; apply id_left).
+Defined.
+
+(* We also need that y is a colimit for the chain on
+   the codomains *)
+Definition cocone_arrow_chain_y_cocone_isColimCocone
+    {d : chain C} {y : C}
+    (ccy : cocone d y) :
+  isColimCocone _ _ (cocone_arrow_chain_y_cocone ccy).
+Proof.
+  intros cl cc.
+  use unique_exists.
+  - exact (coconeIn cc 0).
+  - abstract (
+      intro v;
+      induction v as [|v Hv]; [apply id_left|];
+      etrans; [exact Hv|];
+      etrans; [exact (pathsinv0 (coconeInCommutes cc _ _ (idpath (S v))))|];
+      apply id_left
+    ).
+  - abstract (intro; apply impred; intro; apply homset_property).
+  - abstract (
+      intros x ccx;
+      etrans; [|exact (ccx 0)];
+      apply pathsinv0;
+      apply id_left
+    ).
+Defined.
+
+Definition cocone_arrow_chain_y_ColimCocone
+    {d : chain C} {y : C}
+    (ccy : cocone d y) :
+  ColimCocone (project_chain11 (cocone_arrow_chain ccy)) :=
+    make_ColimCocone _ _ _ (cocone_arrow_chain_y_cocone_isColimCocone ccy).
+
+Lemma colimArrow_arrow_cocone_isColimCocone
+    {d : chain C} {y : C}
+    (ccy : cocone d y) :
+  isColimCocone _ _ (colimArrow_arrow_cocone ccy).
+Proof.
+  intros cl cc.
+
+  assert (Hcin : ∏ v, identity y · arrow_mor11 (coconeIn cc 0) = arrow_mor11 (coconeIn cc v)).
+  {
+    abstract (
+      intro v;
+      induction v as [|v Hv]; [apply id_left|];
+      etrans; [exact Hv|];
+      etrans; [exact (pathsinv0 (arrow_mor11_eq (coconeInCommutes cc _ _ (idpath (S v)))))|];
+      apply id_left
+    ).
+  }
+
+  use unique_exists.
+  - use mors_to_arrow_mor.
+    * exact (colimArrow (CC _ _) _ (project_arrow_cocone00 cc)).
+    * exact (colimArrow (cocone_arrow_chain_y_ColimCocone ccy) _ (project_arrow_cocone11 cc)).
+    * abstract (
+        use colimArrowUnique';
+        intro v;
+        etrans; [apply assoc|];
+        etrans; [apply cancel_postcomposition; apply colimArrowCommutes|];
+        apply pathsinv0;
+        etrans; [apply assoc|];
+        etrans; [apply cancel_postcomposition; apply colimArrowCommutes|];
+        etrans; [|exact (pathsinv0 (arrow_mor_comm (coconeIn cc v)))];
+        apply cancel_precomposition;
+        induction v as [|v Hv]; [reflexivity|];
+        etrans; [exact Hv|];
+        etrans; [exact (pathsinv0 (arrow_mor11_eq (coconeInCommutes cc _ _ (idpath (S v)))))|];
+        apply id_left
+      ).
+  - abstract (
+      intro v;
+      use arrow_mor_eq; [apply colimArrowCommutes|];
+      exact (Hcin v)
+    ).
+  - abstract (intro x; apply impred; intro; apply homset_property).
+  - abstract (
+      intros x ccx;
+      use arrow_mor_eq; [
+        use colimArrowUnique;
+        intro v;
+        exact (arrow_mor00_eq (ccx v))|
+      ];
+      use (colimArrowUnique' (cocone_arrow_chain_y_ColimCocone ccy));
+      intro v;
+      etrans; [exact (arrow_mor11_eq (ccx v))|];
+      apply pathsinv0;
+      exact (Hcin v)
+    ).
+Defined.
+
+Definition colimArrow_arrow_ColimCocone
+    {d : chain C} {y : C}
+    (ccy : cocone d y) : 
+  ColimCocone (cocone_arrow_chain ccy) :=
+    make_ColimCocone _ _ _ (colimArrow_arrow_cocone_isColimCocone ccy).
+
+(* now we can show that the sliced R functor is omega small
+   whenever the L functor preserves chains in arrow C *)
+Lemma FR_slice_omega_small_if_L_omega_small (F : Ff C) :
+    preserves_colimits_of_shape (fact_L F) nat_graph
+    -> FR_slice_omega_small F.
+Proof.
+  intro HL.
+  intros d y ccy.
+  (* intros cl cc. *)
+
+  set (isHLCC := HL _ _ _ (colimArrow_arrow_cocone_isColimCocone ccy)).
+  set (HLCC := make_ColimCocone _ _ _ isHLCC).
+  set (baseCC := arrow_colims CC _ (mapdiagram (fact_L F) (cocone_arrow_chain ccy))).
+  set (base_mor := isColim_is_z_iso _ baseCC _ _ isHLCC).
+
+  use (is_z_iso_isColim _ (CC _ (fact_cocone_chain F ccy))).
+  exists (arrow_mor11 (pr1 base_mor)).
+  split.
+  - abstract (
+      apply pathsinv0;
+      use colim_endo_is_identity;
+      intro v;
+      etrans; [apply assoc|];
+      etrans; [apply cancel_postcomposition; apply colimArrowCommutes|];
+      exact (arrow_mor11_eq (colimArrowCommutes HLCC _ (colimCocone baseCC) v))
+    ).
+  - abstract (
+      etrans; [|exact (arrow_mor11_eq (pr22 base_mor))];
+      apply cancel_precomposition;
+      use colimArrowUnique;
+      intro v;
+      etrans; [apply colimArrowCommutes|];
+      reflexivity
+    ).
+Qed.
 
 (* we get some issues with equality of diagrams, but
    given a chain d of functorial factorizations,
@@ -328,7 +531,7 @@ Proof.
     apply pathsinv0.
 
     set (ccpointwise := Ff_cocone_pointwise_R d f).
-    set (RcoconeInBase := #(fact_R F) (fact_R_colimArrow_coconeInBase ccpointwise v)).
+    set (RcoconeInBase := #(fact_R F) (coconeIn_colimArrow_mor ccpointwise v)).
     etrans. exact (arrow_mor_comm RcoconeInBase).
     apply id_right.
 Qed.

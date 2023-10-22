@@ -8,6 +8,9 @@ Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
 Require Import UniMath.CategoryTheory.Monads.Monads.
 Require Import UniMath.CategoryTheory.Monads.MonadAlgebras.
 Require Import UniMath.CategoryTheory.catiso.
+Require Import UniMath.CategoryTheory.limits.bincoproducts.
+Require Import UniMath.CategoryTheory.limits.graphs.colimits.
+Require Import UniMath.CategoryTheory.limits.graphs.coequalizers.
 Require Import UniMath.CategoryTheory.limits.coproducts.
 Require Import UniMath.CategoryTheory.limits.pushouts.
 Require Import UniMath.CategoryTheory.Equivalences.Core.
@@ -297,8 +300,44 @@ End preliminaries.
 (* Garner 2007, p19 *)
 
 Section lifting_with_J.
-Context {C : category} (n : nwfs C) (J : morphism_class C).
-Context (g : arrow C) (CC : Coproducts (morcls_lp J g) C) (POs : Pushouts C).
+Context {C : category}.
+Context (HCC : Colims C).
+Context (J : morphism_class C).
+Context (g : arrow C).
+
+Local Definition CC :
+  Coproducts (morcls_lp J g) C.
+Proof.
+  apply Coproducts_from_Colims.
+  intro d.
+  exact (HCC _ d).
+Qed.
+
+Local Definition CCoequalizers : Coequalizers C.
+Proof.
+  exact (Coequalizers_from_Colims _ HCC).
+Qed.
+
+Local Definition POs : Pushouts C.
+Proof.
+  apply Pushouts_from_Coequalizers_BinCoproducts.
+  - apply BinCoproducts_from_Colims.
+    intro d.
+    exact (HCC _ d).
+  - intros H z f g'.
+    set (coeq := CCoequalizers _ _ f g').
+    use tpair.
+    * exists (CoequalizerObject _ coeq).
+      exact (CoequalizerArrow _ coeq).
+    * exists (CoequalizerArrowEq _ coeq).
+      intros w h Hw.
+      use unique_exists.
+      + exact (CoequalizerOut _ coeq _ h Hw).
+      + exact (CoequalizerArrowComm _ coeq _ h Hw).
+      + intro y; apply homset_property.
+      + intros y Hy.
+        exact (CoequalizerOutUnique _ _ _ _ _ _ Hy).
+Qed.
 
 Definition morcls_lp_dom_coprod :=
   CC (λ (f : morcls_lp J g), arrow_dom (pr1 (morcls_lp_map f))).
