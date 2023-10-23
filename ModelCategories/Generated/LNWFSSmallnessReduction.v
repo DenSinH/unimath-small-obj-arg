@@ -215,13 +215,10 @@ Proof.
     ).
 Defined.
 
-Definition project_chain00 (d : chain (arrow C)) := 
-  mapdiagram (pr1_functor _ _) (mapdiagram (pr1_category _) d).
-
 Definition project_arrow_cocone00
     {cl : arrow C} {d : chain (arrow C)}
     (cc : cocone d cl) : 
-  cocone (project_chain00 d) (arrow_dom cl).
+  cocone (project_diagram00 d) (arrow_dom cl).
 Proof.
   use make_cocone.
   - intro v. exact (arrow_mor00 (coconeIn cc v)).
@@ -231,13 +228,10 @@ Proof.
     ).
 Defined.
 
-Definition project_chain11 (d : chain (arrow C)) := 
-  mapdiagram (pr2_functor _ _) (mapdiagram (pr1_category _) d).
-
 Definition project_arrow_cocone11
     {cl : arrow C} {d : chain (arrow C)}
     (cc : cocone d cl) : 
-  cocone (project_chain11 d) (arrow_cod cl).
+  cocone (project_diagram11 d) (arrow_cod cl).
 Proof.
   use make_cocone.
   - intro v. exact (arrow_mor11 (coconeIn cc v)).
@@ -250,7 +244,7 @@ Defined.
 Definition cocone_arrow_chain_y_cocone
     {d : chain C} {y : C}
     (ccy : cocone d y) :
-  cocone (project_chain11 (cocone_arrow_chain ccy)) y.
+  cocone (project_diagram11 (cocone_arrow_chain ccy)) y.
 Proof.
   use make_cocone.
   - intro v. exact (identity y).
@@ -286,7 +280,7 @@ Defined.
 Definition cocone_arrow_chain_y_ColimCocone
     {d : chain C} {y : C}
     (ccy : cocone d y) :
-  ColimCocone (project_chain11 (cocone_arrow_chain ccy)) :=
+  ColimCocone (project_diagram11 (cocone_arrow_chain ccy)) :=
     make_ColimCocone _ _ _ (cocone_arrow_chain_y_cocone_isColimCocone ccy).
 
 Lemma colimArrow_arrow_cocone_isColimCocone

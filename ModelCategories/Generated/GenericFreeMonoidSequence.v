@@ -1246,6 +1246,9 @@ Proof.
   apply assoc'.
 Qed.
 
+
+(* Context (Tlt_coeq : preserves_colimits_of_shape (monoidal_left_tensor (T : CMon)) Coequalizer_graph). *)
+
 Lemma Tinf_monoid_unit_right_pointwise
     (v : vertex nat_graph) :
   ruinv^{ V }_{ pair_diagram_lob (free_monoid_coeq_sequence_on I_{ V} v)}
@@ -1307,7 +1310,9 @@ Proof.
       set (t := test x').
       etrans. use (test x').
       + admit.  (* coequalizer properties *)
-      + show_id_type.
+      + unfold pair_diagram_rob.
+        
+        show_id_type.
         (* TODO: assert T preserves coequalizers, precomp with iso *)
         unfold x'.
         unfold x.
@@ -1331,6 +1336,10 @@ Proof.
           set (atest := CoequalizerArrowComm _ art_coequalizer).
           apply atest.
         }
+
+        (* show_id_type. *)
+        (* set (Tcoeq := Tlt_coeq _ _ _ (pr2 coeq)). *)
+        (* use (colimArrowUnique' (make_ColimCocone _ _ _ Tcoeq)). *)
 
         admit.
       + simpl.
@@ -1443,10 +1452,15 @@ Proof.
       
       apply (colimArrowCommutes ((free_monoid_coeq_sequence_rightwhisker_colim_on Tinf I_{ V}))).
     }
-    cbn.
     reflexivity.
   }
   cbn.
+  unfold Tinf_monoid_mul.
+  cbn.
+  (* unfold free_monoid_coeq_sequence_diagram_on_Tinf_Tinf_map.
+  cbn.
+  unfold free_monoid_coeq_sequence_on_Tinf_pd_Tinf_map. *)
+
   show_id_type.
   cbn in TYPE.
 

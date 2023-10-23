@@ -156,6 +156,12 @@ Proof.
       ).
 Defined.
 
+Definition project_diagram00 {C : category} {g : graph} (d : diagram g (arrow C)) := 
+  mapdiagram (pr1_functor _ _) (mapdiagram (pr1_category _) d).
+
+Definition project_diagram11 {C : category} {g : graph} (d : diagram g (arrow C)) := 
+  mapdiagram (pr2_functor _ _) (mapdiagram (pr1_category _) d).
+
 Local Definition arrow_colimit {C : category} (CC : Colims C)
     {g : graph} (d : diagram g (arrow C)) : arrow C.
 Proof.
