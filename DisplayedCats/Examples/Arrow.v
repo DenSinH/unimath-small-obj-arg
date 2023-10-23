@@ -106,7 +106,11 @@ Proof.
   exact (dirprod_pr2 (pathsdirprodweq (base_paths _ _ H))).
 Qed.
 
-Definition arrow_base_colims {C : category} (CC : Colims C) :
+Section Colims.
+
+Context {C : category}.
+
+Definition arrow_base_colims (CC : Colims C) :
     Colims (arrow_base C).
 Proof.
   intros g d.
@@ -156,13 +160,8 @@ Proof.
       ).
 Defined.
 
-Definition project_diagram00 {C : category} {g : graph} (d : diagram g (arrow C)) := 
-  mapdiagram (pr1_functor _ _) (mapdiagram (pr1_category _) d).
 
-Definition project_diagram11 {C : category} {g : graph} (d : diagram g (arrow C)) := 
-  mapdiagram (pr2_functor _ _) (mapdiagram (pr1_category _) d).
-
-Local Definition arrow_colimit {C : category} (CC : Colims C)
+Local Definition arrow_colimit (CC : Colims C)
     {g : graph} (d : diagram g (arrow C)) : arrow C.
 Proof.
   set (dbase := mapdiagram (pr1_category _) d).
@@ -178,7 +177,7 @@ Proof.
     exact (arrow_mor_comm (dmor d e)).
 Defined.
 
-Definition arrow_colims {C : category} (CC : Colims C) :
+Definition arrow_colims (CC : Colims C) :
     Colims (arrow C).
 Proof.
   intros g d.
@@ -239,3 +238,83 @@ Proof.
         exact (base_paths _ _ (H v))
       ).
 Defined.
+
+Definition project_diagram00 {g : graph} (d : diagram g (arrow C)) := 
+  mapdiagram (pr1_functor _ _) (mapdiagram (pr1_category _) d).
+
+Definition project_diagram11 {g : graph} (d : diagram g (arrow C)) := 
+  mapdiagram (pr2_functor _ _) (mapdiagram (pr1_category _) d).
+
+Definition project_cocone00 
+    {g : graph} {d : diagram g (arrow C)}
+    {f : arrow C}
+    (cc : cocone d f) :
+  cocone (project_diagram00 d) (arrow_dom f) :=
+    mapcocone (pr1_functor _ _) _ (mapcocone (pr1_category _) _ cc).
+
+Definition project_cocone11
+    {g : graph} {d : diagram g (arrow C)}
+    {f : arrow C}
+    (cc : cocone d f) :
+  cocone (project_diagram11 d) (arrow_cod f) :=
+    mapcocone (pr2_functor _ _) _ (mapcocone (pr1_category _) _ cc).
+
+Definition project_colimcocone00
+    (CC : Colims C)
+    {g : graph} {d : diagram g (arrow C)}
+    {f : arrow C} {ccf : cocone d f}
+    (isclCC : isColimCocone d f ccf) :
+  isColimCocone _ _ (project_cocone00 ccf).
+Proof.
+  set (dbase := project_diagram00 d).
+  set (base_mor := isColim_is_z_iso _ (arrow_colims CC _ d) _ _ isclCC).
+
+  use (is_z_iso_isColim _ (CC _ dbase)).
+  exists (arrow_mor00 (pr1 base_mor)).
+  abstract (
+    split; [
+      etrans; [|exact (arrow_mor00_eq (pr12 base_mor))];
+      apply cancel_postcomposition
+      | etrans; [|exact (arrow_mor00_eq (pr22 base_mor))];
+        apply cancel_precomposition
+    ]; (
+      use colimArrowUnique';
+      intro v;
+      etrans; [apply colimArrowCommutes|];
+      apply pathsinv0;
+      etrans; [apply colimArrowCommutes|];
+      reflexivity
+    )
+  ).
+Defined.
+
+Definition project_colimcocone11 
+    (CC : Colims C)
+    {g : graph} {d : diagram g (arrow C)}
+    {f : arrow C} {ccf : cocone d f}
+    (isclCC : isColimCocone d f ccf) :
+  isColimCocone _ _ (project_cocone11 ccf).
+Proof.
+  set (dbase := project_diagram11 d).
+  set (base_mor := isColim_is_z_iso _ (arrow_colims CC _ d) _ _ isclCC).
+
+  use (is_z_iso_isColim _ (CC _ dbase)).
+  exists (arrow_mor11 (pr1 base_mor)).
+  abstract (
+    split; [
+      etrans; [|exact (arrow_mor11_eq (pr12 base_mor))];
+      apply cancel_postcomposition
+      | etrans; [|exact (arrow_mor11_eq (pr22 base_mor))];
+        apply cancel_precomposition
+    ]; (
+      use colimArrowUnique';
+      intro v;
+      etrans; [apply colimArrowCommutes|];
+      apply pathsinv0;
+      etrans; [apply colimArrowCommutes|];
+      reflexivity
+    )
+  ).
+Defined.
+
+End Colims.

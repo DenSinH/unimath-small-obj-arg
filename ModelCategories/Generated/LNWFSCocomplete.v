@@ -360,41 +360,6 @@ Defined.
 
 End Ff_cocomplete_diagram.
 
-Lemma is_connected_nat_graph :
-    is_connected nat_graph.
-Proof.
-  use (is_connected_pointed nat_graph 0).
-  intro v.
-  induction v as [|v Hv].
-  - now exists 0.
-  - use (append_graph_zig_zag Hv).
-    exists 1.
-    exists (S v).
-    split.
-    * now apply inl.
-    * reflexivity.
-Qed.
-
-Lemma is_connected_coequalizer_graph :
-    is_connected Coequalizer_graph.
-Proof.
-  use (is_connected_pointed Coequalizer_graph (● 0)%stn).
-  intro v.
-  induction v as [v v2].
-  induction v as [|v Hv].
-  - exists 0.
-    apply subtypePath; [intro; apply propproperty|].
-    reflexivity.
-  - induction v as [|v Hv2]; [|induction (nopathsfalsetotrue v2)].
-    exists 1.
-    exists (● 1)%stn.
-    split.
-    * do 2 apply inl.
-      exact tt.
-    * apply subtypePath; [intro; apply propproperty|].
-      reflexivity.
-Qed.
-
 End Ff_cocomplete.
 
 Lemma ChainsFf {C : category} (HC : Colims C) : 

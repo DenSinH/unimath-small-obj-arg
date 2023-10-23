@@ -11,6 +11,8 @@ Require Import UniMath.CategoryTheory.limits.graphs.coequalizers.
 Require Import UniMath.CategoryTheory.limits.graphs.colimits.
 Require Import UniMath.CategoryTheory.whiskering.
 Require Import UniMath.CategoryTheory.Chains.Chains.
+Require Import UniMath.CategoryTheory.categories.HSET.Core.
+Require Import UniMath.CategoryTheory.categories.HSET.Colimits.
 
 Require Import UniMath.CategoryTheory.Monads.Monads.
 
@@ -24,13 +26,14 @@ Require Import CategoryTheory.DisplayedCats.Examples.Three.
 Require Import CategoryTheory.DisplayedCats.natural_transformation.
 
 Require Import CategoryTheory.limits.coproducts.
+Require Import CategoryTheory.categories.HSET.Core.
 
 Require Import CategoryTheory.ModelCategories.MorphismClass.
 Require Import CategoryTheory.ModelCategories.NWFS.
 Require Import CategoryTheory.ModelCategories.Generated.LiftingWithClass.
 Require Import CategoryTheory.ModelCategories.Generated.OneStepMonad.
 Require Import CategoryTheory.ModelCategories.Generated.Helpers.
-(* Require Import CategoryTheory.ModelCategories.Generated.LNWFSSmallnessReduction. *)
+Require Import CategoryTheory.limits.colimits.
 
 
 Local Open Scope Cat.
@@ -45,9 +48,92 @@ Context (CC : Colims C).
 Local Definition F1 := one_step_factorization J CC.
 Local Definition K := morcls_coprod_functor J CC.
 
+
+Definition presentable (x : C) :=
+    preserves_colimits_of_shape 
+      (cov_homSet_functor x) 
+      nat_graph.
+
 Lemma K_small_if_J_small :
-  preserves_colimits_of_shape K nat_graph.
+  (∏ (f : arrow C), J _ _ f -> (presentable (arrow_dom f)))
+  -> (∏ (f : arrow C), J _ _ f -> (presentable (arrow_cod f)))
+  -> preserves_colimits_of_shape K nat_graph.
 Proof.
+  intros Hdom Hcod.
+  intros d cl cc isclCC.
+
+  set (clCC := make_ColimCocone _ _ _ isclCC).
+  set (Kd00 := project_diagram00 (mapdiagram K d)).
+  set (Kd11 := project_diagram11 (mapdiagram K d)).
+
+  use (is_z_iso_isColim _ (arrow_colims CC _ (mapdiagram K d))).
+  use tpair.
+  - use (colimArrow (id_Colim nat_graph (K cl) is_connected_nat_graph 0)).
+    use make_cocone.
+    * intro v.
+      use mors_to_arrow_mor.
+      + use (CoproductArrow).
+        intro S.
+        set (test := Hdom (morcls_lp_map S) (pr2 (morcls_lp_map S))).
+        set (t := test _ _ _ (pr2 (CC _ (project_diagram00 d)))).
+        cbn in t.
+        set (tcc := make_ColimCocone _ _ _ t).
+        set (dbase := (mapdiagram (cov_homSet_functor (arrow_dom (morcls_lp_map S))) (project_diagram00 d))).
+
+        set (x := isColim_is_z_iso _ (ColimsHSET _ dbase) _ _ t).
+        transparent assert (arr : (arrow_dom (morcls_lp_map S) --> colim (CC _ (project_diagram00 d)))).
+        {
+          apply (compose (arrow_mor00 S)).
+          set (isclCC00 := project_colimcocone00 CC isclCC).
+          set (clCC00 := make_ColimCocone _ _ _ isclCC00).
+          exact (colimArrow clCC00 _ (colimCocone (CC _ (project_diagram00 d)))).
+        }
+        set (abc := pr1 x arr).
+        cbn.
+        cbn in abc.
+        set (abct := pr1 abc).
+      
+
+    use mors_to_arrow_mor.
+    * use CoproductArrow.
+      intro S.
+      set (test := Hdom (morcls_lp_map S) (pr2 (morcls_lp_map S))).
+      set (t := test _ _ _ (pr2 (CC _ Kd00))).
+      cbn in t.
+      set (tcc := make_ColimCocone _ _ _ t).
+      cbn.
+      set (isclCC00 := project_colimcocone00 CC isclCC).
+      set (clCC00 := make_ColimCocone _ _ _ isclCC00).
+      set (SdomCC := id_Colim nat_graph (arrow_dom (morcls_lp_map S)) is_connected_nat_graph 0).
+      use (colimOfArrows SdomCC).
+      + intro v.
+        set (x := colimIn tcc v).
+        cbn in x.
+        cbn.
+        apply x.
+        assert (lp : morcls_lp J (dob d v)).
+        {
+          exists (morcls_lp_map S).
+
+          admit.
+        }
+        set (abc := CoproductIn (morcls_lp_dom_coprod CC J (dob d v)) lp).
+        cbn in abc.
+
+
+      apply (compose (arrow_mor00 S)).
+      use (colimOfArrows clCC00).
+      + intro v.
+        cbn.
+      cbn.
+
+      cbn.
+      (* smallness *)
+      admit.
+    * use CoproductArrow.
+      intro S.
+      cbn.
+  
 
 Admitted.
 
@@ -272,74 +358,30 @@ Defined.
 (* we show that arrow_dom (K f) is a colimCocone,
    given that (K f) is a colim for the mapped diagram,
    i.e. we project the ColimCocone to the 0 ob/arr *)
-Lemma L1_colim_L1_map_dom_Kf_is_colimCocone
+Definition L1_colim_L1_map_dom_Kf_is_colimCocone
     {g : graph} {d : diagram g (arrow C)}
     {f : arrow C} {ccf : cocone d f}
     (HK : preserves_colimit K _ _ ccf)
     (isclCC : isColimCocone d f ccf)
     (isHKCC := HK isclCC)
     (HKCC := make_ColimCocone _ _ _ isHKCC)
-    (HKCC00 := (mapcocone (pr1_functor _ _) _ (mapcocone (pr1_category _) _ (colimCocone HKCC)))) :
-  isColimCocone _ _ HKCC00.
-Proof.
-  set (dbase := project_diagram00 (mapdiagram K d)).
-  set (base_mor := isColim_is_z_iso _ (arrow_colims CC _ (mapdiagram K d)) _ _ isHKCC).
-  set (test := arrow_mor00 (pr1 base_mor)).
-
-  use (is_z_iso_isColim _ (CC _ dbase)).
-  exists (arrow_mor00 (pr1 base_mor)).
-  abstract (
-    split; [
-      etrans; [|exact (arrow_mor00_eq (pr12 base_mor))];
-      apply cancel_postcomposition
-      | etrans; [|exact (arrow_mor00_eq (pr22 base_mor))];
-        apply cancel_precomposition
-    ]; (
-      use colimArrowUnique';
-      intro v;
-      etrans; [apply colimArrowCommutes|];
-      apply pathsinv0;
-      etrans; [apply colimArrowCommutes|];
-      reflexivity
-    )
-  ).
-Qed.
+    (HKCC00 := project_cocone00 (colimCocone HKCC)) :
+  isColimCocone _ _ HKCC00 :=
+    project_colimcocone00 CC isHKCC.
 
 (* we show that arrow_cod (K f) is a colimCocone,
    given that (K f) is a colim for the mapped diagram,
    i.e. we project the ColimCocone to the 1 ob/arr *)
-Lemma L1_colim_L1_map_cod_Kf_is_colimCocone
+Definition L1_colim_L1_map_cod_Kf_is_colimCocone
     {g : graph} {d : diagram g (arrow C)}
     {f : arrow C} {ccf : cocone d f}
     (HK : preserves_colimit K _ _ ccf)
     (isclCC : isColimCocone d f ccf)
     (isHKCC := HK isclCC)
     (HKCC := make_ColimCocone _ _ _ isHKCC)
-    (HKCC11 := (mapcocone (pr2_functor _ _) _ (mapcocone (pr1_category _) _ (colimCocone HKCC)))) :
-  isColimCocone _ _ HKCC11.
-Proof.
-  set (dbase := project_diagram11 (mapdiagram K d)).
-  set (base_mor := isColim_is_z_iso _ (arrow_colims CC _ (mapdiagram K d)) _ _ isHKCC).
-  set (test := arrow_mor11 (pr1 base_mor)).
-
-  use (is_z_iso_isColim _ (CC _ dbase)).
-  exists (arrow_mor11 (pr1 base_mor)).
-  abstract (
-    split; [
-      etrans; [|exact (arrow_mor11_eq (pr12 base_mor))];
-      apply cancel_postcomposition
-      | etrans; [|exact (arrow_mor11_eq (pr22 base_mor))];
-        apply cancel_precomposition
-    ]; (
-      use colimArrowUnique';
-      intro v;
-      etrans; [apply colimArrowCommutes|];
-      apply pathsinv0;
-      etrans; [apply colimArrowCommutes|];
-      reflexivity
-    )
-  ).
-Qed.
+    (HKCC11 := project_cocone11 (colimCocone HKCC)) :
+  isColimCocone _ _ HKCC11 :=
+    project_colimcocone11 CC isHKCC.
 
 (* we show that the canonical iso from 
    K (colim fi) --> colim (K fi)
@@ -398,7 +440,7 @@ Proof.
           apply (colimArrowCommutes (CC _ (project_diagram00 (mapdiagram (fact_L F1) d)))).
   
   apply pathsinv0.
-  etrans. apply (precompWithCoproductArrowInclusion).
+  etrans. apply (precompWithCoproductArrowInclusion _ _ (morcls_lp_dom_coprod CC J f)).
   use CoproductArrow_eq'.
   intro S.
   etrans. apply (CoproductInCommutes (morcls_lp_dom_coprod CC J (dob d v))).
