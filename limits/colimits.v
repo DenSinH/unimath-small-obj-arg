@@ -315,8 +315,7 @@ Proof.
     use (connected_graph_zig_zag_strong_induction v0 Hg predicate); [apply id_left|].
     intros u u' Hu e.
     destruct e as [e|e]; (etrans; [exact Hu|]).
-    - set (test := coconeInCommutes cc _ _ e).
-      etrans. exact (pathsinv0 (coconeInCommutes cc _ _ e)).
+    - etrans. exact (pathsinv0 (coconeInCommutes cc _ _ e)).
       apply id_left.
     - apply pathsinv0.
       etrans. exact (pathsinv0 (coconeInCommutes cc _ _ e)).

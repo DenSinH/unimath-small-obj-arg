@@ -12,7 +12,7 @@ Require Import UniMath.CategoryTheory.limits.graphs.colimits.
 Require Import UniMath.CategoryTheory.whiskering.
 Require Import UniMath.CategoryTheory.Chains.Chains.
 Require Import UniMath.CategoryTheory.categories.HSET.Core.
-Require Import UniMath.CategoryTheory.categories.HSET.Colimits.
+Require Import         CategoryTheory.categories.HSET.Colimits.
 
 Require Import UniMath.CategoryTheory.Monads.Monads.
 
@@ -39,6 +39,11 @@ Require Import CategoryTheory.limits.colimits.
 Local Open Scope Cat.
 Local Open Scope cat.
 
+Definition presentable {C : category} (x : C) :=
+    preserves_colimits_of_shape 
+      (cov_homSet_functor x) 
+      nat_graph.
+
 Section OSCSmall.
 
 Context {C : category}.
@@ -48,18 +53,198 @@ Context (CC : Colims C).
 Local Definition F1 := one_step_factorization J CC.
 Local Definition K := morcls_coprod_functor J CC.
 
+Definition morcls_lp_colim_lp_to_morcls_base_colim_lp
+    {d : chain (arrow C)}
+    {cl : arrow C}
+    {cc : cocone d cl}
+    (isclCC : isColimCocone d cl cc)
+    (S : morcls_lp J cl) :
+  morcls_lp J (colim (arrow_colims CC _ d)).
+Proof. 
+  exists (morcls_lp_map S).
+  apply (compose S).
+  set (clCC := make_ColimCocone _ _ _ isclCC).
+  exact (colimArrow clCC _ (colimCocone (arrow_colims CC _ d))).
+Defined.
 
-Definition presentable (x : C) :=
-    preserves_colimits_of_shape 
-      (cov_homSet_functor x) 
-      nat_graph.
+Definition homSet_diagram
+    (f : arrow C)
+    (d : chain (arrow C)) :=
+  mapdiagram (cov_homSet_functor f) d.
+
+Definition homSet_diagram_colim
+    (f : arrow C)
+    (d : chain (arrow C)) :=
+  ColimsHSET _ (homSet_diagram f d).
+
+Definition arrow_colimK_lp_type 
+    (f : arrow C)
+    (d : chain (arrow C)) :=
+  f --> colim (arrow_colims CC _ (mapdiagram K d)).
+
+Definition arrow_colimK_lp_hSet
+    (f : arrow C)
+    (d : chain (arrow C)) : hSet.
+Proof. 
+  use make_hSet.
+  - exact (arrow_colimK_lp_type f d).
+  - abstract (apply homset_property).
+Defined.
+
+Definition presentable_lp_homSet_colim_arrow
+    {d : chain (arrow C)}
+    {cl : arrow C}
+    {cc : cocone d cl}
+    (isclCC : isColimCocone d cl cc)
+    (S : morcls_lp J cl)
+    (HS : presentable (pr1 (morcls_lp_map S))) :
+  pr1hSet (colim (homSet_diagram_colim (pr1 (morcls_lp_map S)) d)).
+Proof.
+  set (homset_ccbase_isCC := HS _ _ _ (pr2 (arrow_colims CC _ d))).
+  set (homset_ccbase_CC := make_ColimCocone _ _ _ homset_ccbase_isCC).
+  set (homset_iso := isColim_is_z_iso _ (ColimsHSET _ (homSet_diagram (pr1 (morcls_lp_map S)) d)) _ _ homset_ccbase_isCC).
+  exact (pr1 homset_iso (pr2 (morcls_lp_colim_lp_to_morcls_base_colim_lp isclCC S))).
+Defined.
+
+Definition morcls_lp_coprod_in
+    {g : arrow C}
+    (S : morcls_lp J g) :
+  pr1 (morcls_lp_map S) --> morcls_lp_coprod CC J g.
+Proof.
+  use mors_to_arrow_mor.
+  - exact (CoproductIn (morcls_lp_dom_coprod CC J g) S).
+  - exact (CoproductIn (morcls_lp_cod_coprod CC J g) S).
+  - abstract (
+      exact (CoproductOfArrows'In _ _ (morcls_lp_dom_coprod CC J g) _ _ S)
+    ).
+Defined.
+
+Definition presentable_lp_homSet_colim_colimK_fun
+    (d : chain (arrow C))
+    {cl : arrow C}
+    (S : morcls_lp J cl)
+    (HS : presentable (pr1 (morcls_lp_map S))) :
+  Colimits.cobase _ (homSet_diagram (pr1 (morcls_lp_map S)) d)
+  -> pr1hSet (arrow_colimK_lp_hSet (pr1 (morcls_lp_map S)) d).
+Proof.
+  intro vS'.
+  destruct vS' as [v S'].
+  set (S'lp := (morcls_lp_map S,, S') : morcls_lp J (dob d v)).
+  apply (compose (morcls_lp_coprod_in S'lp)).
+  exact (colimIn (arrow_colims CC _ (mapdiagram K d)) v).
+Defined.
+
+Definition presentable_lp_homSet_colim_colimK_fun_iscomprel
+    {d : chain (arrow C)}
+    {cl : arrow C}
+    {cc : cocone d cl}
+    (isclCC : isColimCocone d cl cc)
+    (S : morcls_lp J cl)
+    (HS : presentable (pr1 (morcls_lp_map S))) :
+  iscomprelfun 
+      (Colimits.rel _ (homSet_diagram (pr1 (morcls_lp_map S)) _))
+      (presentable_lp_homSet_colim_colimK_fun d S HS).
+Proof.
+  intros uS' vT' e.
+  use arrow_mor_eq.
+  - 
+    admit.
+  - admit.
+Admitted.
+
+Definition presentable_lp_colimK_mor
+    {d : chain (arrow C)}
+    {cl : arrow C}
+    {cc : cocone d cl}
+    (isclCC : isColimCocone d cl cc)
+    (S : morcls_lp J cl)
+    (HS : presentable (pr1 (morcls_lp_map S))) :
+  pr1 (morcls_lp_map S) --> colim (arrow_colims CC _ (mapdiagram K d)).
+Proof.
+  set (f := presentable_lp_homSet_colim_colimK_fun d S HS).
+  set (fcomprel := presentable_lp_homSet_colim_colimK_fun_iscomprel isclCC S HS).
+  set (homset_colim_arrow := presentable_lp_homSet_colim_arrow isclCC S HS).
+  exact (setquotuniv _ _ f fcomprel homset_colim_arrow).
+Defined.
+
+Lemma presentable_lp_colimK_mor_coconeInCommutes
+    {d : chain (arrow C)}
+    {cl : arrow C}
+    {cc : cocone d cl}
+    (isclCC : isColimCocone d cl cc)
+    {v : vertex nat_graph}
+    (S : morcls_lp J (dob d v))
+    (HS : presentable (pr1 (morcls_lp_map S))) :
+  presentable_lp_colimK_mor isclCC (pr1 S,, pr2 S · coconeIn cc v) HS
+  = morcls_lp_coprod_in S · colimIn (arrow_colims CC _ (mapdiagram K d)) v.
+Proof. 
+  set (eqr := Colimits.eqr _ (homSet_diagram (pr1 (morcls_lp_map S)) d)).
+  set (S' := (pr1 S,, pr2 S · coconeIn cc v) : morcls_lp J cl).
+  set (Sbase := (v,, pr2 S) : (Colimits.cobase _ (homSet_diagram (pr1 (morcls_lp_map S)) d))).
+  (* set (S'base := (v,, pr2 S') : (Colimits.cobase _ (homSet_diagram (pr1 (morcls_lp_map S)) d))). *)
+  set (test := setquotpr eqr Sbase).
+  set (t := setquotuniv eqr).
+  set (f := (presentable_lp_homSet_colim_colimK_fun d S' HS)).
+  set (x := t _ f).
+  set (is := (presentable_lp_homSet_colim_colimK_fun_iscomprel isclCC S' HS)).
+  set (y := x is).
+  set (z := y test).
+  set (w := setquotunivcomm eqr _ f is Sbase).
+  apply pathsinv0.
+  etrans. exact (pathsinv0 w).
+  unfold presentable_lp_colimK_mor.
+  unfold eqr.
+  unfold Colimits.eqr.
+  simpl.
+  unfold morcls_lp_map.
+  set (rel := (Colimits.rel nat_graph (homSet_diagram (pr11 S) d))).
+  set (f' := (presentable_lp_homSet_colim_colimK_fun d S' HS)).
+  set (is' := (presentable_lp_homSet_colim_colimK_fun_iscomprel isclCC S' HS)).
+  set (Y := (arrow_colimK_lp_hSet (pr11 S) d)).
+  set (l := setquotuniv_equal rel Y f f').
+  assert (Hf : f = f').
+  {
+    use funextsec.
+    intro u.
+    apply arrow_mor_eq; reflexivity.
+  }
+  set (m := l Hf is is').
+  rewrite m.
+  apply maponpaths.
+  apply subtypePath.
+  - intro. apply isapropdirprod.
+    apply propproperty.
+    apply isapropdirprod.
+    * do 4 (apply impred_isaprop; intro).
+      apply propproperty.
+    * do 4 (apply impred_isaprop; intro).
+      apply propproperty.
+  - apply funextsec.
+    intro uS.
+    use hPropUnivalence.
+    * admit.
+    * admit.
+Admitted.
+
+Lemma presentable_lp_colimK_mor_colimArrowCommutes
+    {d : chain (arrow C)}
+    {cl : arrow C}
+    {cc : cocone d cl}
+    (isclCC : isColimCocone d cl cc)
+    (S : morcls_lp J cl)
+    (HS : presentable (pr1 (morcls_lp_map S))) :
+  presentable_lp_colimK_mor isclCC S HS
+  · colimArrow (arrow_colims CC _ (mapdiagram K d)) _ (mapcocone K d cc)
+  = morcls_lp_coprod_in S.
+Proof.
+
+Admitted.
 
 Lemma K_small_if_J_small :
-  (∏ (f : arrow C), J _ _ f -> (presentable (arrow_dom f)))
-  -> (∏ (f : arrow C), J _ _ f -> (presentable (arrow_cod f)))
+  (∏ (f : arrow C), J _ _ f -> (presentable f))
   -> preserves_colimits_of_shape K nat_graph.
 Proof.
-  intros Hdom Hcod.
+  intros HJ.
   intros d cl cc isclCC.
 
   set (clCC := make_ColimCocone _ _ _ isclCC).
@@ -72,70 +257,78 @@ Proof.
     use make_cocone.
     * intro v.
       use mors_to_arrow_mor.
-      + use (CoproductArrow).
+      + use CoproductArrow.
         intro S.
-        set (test := Hdom (morcls_lp_map S) (pr2 (morcls_lp_map S))).
-        set (t := test _ _ _ (pr2 (CC _ (project_diagram00 d)))).
-        cbn in t.
-        set (tcc := make_ColimCocone _ _ _ t).
-        set (dbase := (mapdiagram (cov_homSet_functor (arrow_dom (morcls_lp_map S))) (project_diagram00 d))).
-
-        set (x := isColim_is_z_iso _ (ColimsHSET _ dbase) _ _ t).
-        transparent assert (arr : (arrow_dom (morcls_lp_map S) --> colim (CC _ (project_diagram00 d)))).
-        {
-          apply (compose (arrow_mor00 S)).
-          set (isclCC00 := project_colimcocone00 CC isclCC).
-          set (clCC00 := make_ColimCocone _ _ _ isclCC00).
-          exact (colimArrow clCC00 _ (colimCocone (CC _ (project_diagram00 d)))).
-        }
-        set (abc := pr1 x arr).
-        cbn.
-        cbn in abc.
-        set (abct := pr1 abc).
-      
-
-    use mors_to_arrow_mor.
-    * use CoproductArrow.
-      intro S.
-      set (test := Hdom (morcls_lp_map S) (pr2 (morcls_lp_map S))).
-      set (t := test _ _ _ (pr2 (CC _ Kd00))).
-      cbn in t.
-      set (tcc := make_ColimCocone _ _ _ t).
-      cbn.
-      set (isclCC00 := project_colimcocone00 CC isclCC).
-      set (clCC00 := make_ColimCocone _ _ _ isclCC00).
-      set (SdomCC := id_Colim nat_graph (arrow_dom (morcls_lp_map S)) is_connected_nat_graph 0).
-      use (colimOfArrows SdomCC).
-      + intro v.
-        set (x := colimIn tcc v).
-        cbn in x.
-        cbn.
-        apply x.
-        assert (lp : morcls_lp J (dob d v)).
-        {
-          exists (morcls_lp_map S).
-
-          admit.
-        }
-        set (abc := CoproductIn (morcls_lp_dom_coprod CC J (dob d v)) lp).
-        cbn in abc.
-
-
-      apply (compose (arrow_mor00 S)).
-      use (colimOfArrows clCC00).
-      + intro v.
-        cbn.
-      cbn.
-
-      cbn.
-      (* smallness *)
-      admit.
-    * use CoproductArrow.
-      intro S.
-      cbn.
-  
-
-Admitted.
+        exact (arrow_mor00 (presentable_lp_colimK_mor isclCC S (HJ _ (pr2 (morcls_lp_map S))))).
+      + use CoproductArrow.
+        intro S.
+        exact (arrow_mor11 (presentable_lp_colimK_mor isclCC S (HJ _ (pr2 (morcls_lp_map S))))).
+      + abstract (
+          use CoproductArrow_eq';
+          intro S;
+          etrans; [apply assoc|];
+          etrans; [apply cancel_postcomposition;
+                  apply (CoproductInCommutes (morcls_lp_dom_coprod CC J cl))|];
+          apply pathsinv0;
+          etrans; [apply assoc|];
+          etrans; [apply cancel_postcomposition;
+                  apply (CoproductOfArrows'In _ _ (morcls_lp_dom_coprod CC J cl) _ _ S)|];
+          etrans; [apply assoc'|];
+          etrans; [apply cancel_precomposition;
+                  apply (CoproductInCommutes (morcls_lp_cod_coprod CC J cl))|];
+          set (mor := (presentable_lp_colimK_mor isclCC S (HJ _ (pr2 (morcls_lp_map S)))));
+          exact (pathsinv0 (arrow_mor_comm mor))
+        ).
+    * abstract (
+        intros u v e;
+        use arrow_mor_eq; apply id_left
+      ).
+  - split.
+    * apply pathsinv0.
+      use (colim_endo_is_identity).
+      intro v.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply (colimArrowCommutes).
+      use arrow_mor_eq.
+      + use CoproductArrow_eq'.
+        intro S.
+        etrans. apply assoc.
+        etrans. apply cancel_postcomposition.
+                apply (CoproductOfArrowsInclusionIn _ (morcls_lp_dom_coprod CC J (dob d v))).
+        etrans. apply assoc'.
+        etrans. apply id_left.
+        etrans. apply (CoproductInCommutes (morcls_lp_dom_coprod CC J cl) _ (pr1 S,, _)).
+        exact (arrow_mor00_eq (presentable_lp_colimK_mor_coconeInCommutes isclCC S (HJ _ (pr2 (morcls_lp_map S))))).
+      + use CoproductArrow_eq'.
+        intro S.
+        etrans. apply assoc.
+        etrans. apply cancel_postcomposition.
+                apply (CoproductOfArrowsInclusionIn _ (morcls_lp_cod_coprod CC J (dob d v))).
+        etrans. apply assoc'.
+        etrans. apply id_left.
+        etrans. apply (CoproductInCommutes (morcls_lp_cod_coprod CC J cl) _ (pr1 S,, _)).
+        exact (arrow_mor11_eq (presentable_lp_colimK_mor_coconeInCommutes isclCC S (HJ _ (pr2 (morcls_lp_map S))))).
+    * use arrow_mor_eq.
+      + use CoproductArrow_eq'.
+        intro S.
+        etrans. apply assoc.
+        etrans. apply cancel_postcomposition.
+                apply (CoproductInCommutes (morcls_lp_dom_coprod CC J cl) _ S).
+        apply pathsinv0.
+        etrans. apply id_right.
+        apply pathsinv0.
+        exact (arrow_mor00_eq (presentable_lp_colimK_mor_colimArrowCommutes isclCC S (HJ _ (pr2 (morcls_lp_map S))))).
+      + use CoproductArrow_eq'.
+        intro S.
+        etrans. apply assoc.
+        etrans. apply cancel_postcomposition.
+                apply (CoproductInCommutes (morcls_lp_cod_coprod CC J cl) _ S).
+        apply pathsinv0.
+        etrans. apply id_right.
+        apply pathsinv0.
+        exact (arrow_mor11_eq (presentable_lp_colimK_mor_colimArrowCommutes isclCC S (HJ _ (pr2 (morcls_lp_map S))))).
+Qed.
 
 (* no need for information about f here,
    this morphism is just the pushout square *)

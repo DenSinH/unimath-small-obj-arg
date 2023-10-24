@@ -128,22 +128,29 @@ Proof.
       split.
       + exact (colimIn cc1 v).
       + exact (colimIn cc2 v).
-    * intros u v e.
-      use pathsdirprod.
-      + exact (colimInCommutes cc1 _ _ e).
-      + exact (colimInCommutes cc2 _ _ e).
+    * abstract (
+        intros u v e;
+        use pathsdirprod; [
+          exact (colimInCommutes cc1 _ _ e)|
+          exact (colimInCommutes cc2 _ _ e)
+        ]
+      ).
   - intros c cc.
     destruct cc as [f ccf].
     use unique_exists.
     * split.
       + use colimArrow.
         exists (λ v, pr1 (f v)).
-        intros u v e.
-        exact (pr1 (pathsdirprodweq (ccf _ _ e))).
+        abstract (
+          intros u v e;
+          exact (pr1 (pathsdirprodweq (ccf _ _ e)))
+        ).
       + use colimArrow.
         exists (λ v, pr2 (f v)).
-        intros u v e.
-        exact (pr2 (pathsdirprodweq (ccf _ _ e))).
+        abstract (
+          intros u v e;
+          exact (pr2 (pathsdirprodweq (ccf _ _ e)))
+        ).
     * abstract (
         intro; apply pathsdirprod; [
           apply (colimArrowCommutes cc1)|apply (colimArrowCommutes cc2) 
@@ -173,8 +180,10 @@ Proof.
   (* arrow colim is colim of arrows *)
   use colimOfArrows.
   - exact (dob d).
-  - intros u v e.
-    exact (arrow_mor_comm (dmor d e)).
+  - abstract (
+      intros u v e;
+      exact (arrow_mor_comm (dmor d e))
+    ).
 Defined.
 
 Definition arrow_colims (CC : Colims C) :
@@ -193,9 +202,9 @@ Proof.
       abstract (
         use (colimOfArrowsIn _ _ (CC g (mapdiagram (pr1_functor C C) dbase)))
       ).
-    * intros u v e.
-      (* cbn. *)
-      abstract (
+    * abstract (
+        intros u v e;
+        (* cbn. *)
         apply subtypePath; [intro; apply homset_property|];
         apply (colimInCommutes clbase)
       ).
@@ -203,14 +212,15 @@ Proof.
     transparent assert (ccbase : (cocone dbase (pr1 c))).
     {
       exists (λ v, pr1 (coconeIn cc v)).
-      intros u v e.
-      exact (base_paths _ _ (coconeInCommutes cc _ _ e)).
+      abstract (
+        intros u v e;
+        exact (base_paths _ _ (coconeInCommutes cc _ _ e))
+      ).
     }
 
     use unique_exists.
     * exists (colimArrow clbase _ ccbase).
 
-      (* cbn. *)
       abstract (
         etrans; [use postcompWithColimArrow|];
         apply pathsinv0;

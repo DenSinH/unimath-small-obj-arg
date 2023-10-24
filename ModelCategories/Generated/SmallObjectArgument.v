@@ -45,6 +45,7 @@ Require Import CategoryTheory.ModelCategories.Generated.LNWFSMonoidalStructure.
 Require Import CategoryTheory.ModelCategories.Generated.LNWFSCocomplete.
 Require Import CategoryTheory.ModelCategories.Generated.LNWFSClosed.
 Require Import CategoryTheory.ModelCategories.Generated.LNWFSSmallnessReduction.
+Require Import CategoryTheory.ModelCategories.Generated.OneStepMonadSmall.
 
 
 Local Open Scope Cat.
@@ -103,8 +104,7 @@ Proof.
   set (dbase := mapdiagram (pr1_category _) d).
 
   (* required assertion *)
-  set (F1 := one_step_factorization J CC).
-  assert (HR : FR_slice_omega_small CC F1).
+  assert (HK : preserves_colimits_of_shape (OneStepMonadSmall.K J CC) nat_graph).
   {
     intros d' y ccy.
     
@@ -113,7 +113,9 @@ Proof.
 
   use (Ff_lt_preserves_colim_impl_LNWFS_lt_preserves_colim CC L1 d _ cl' cc').
   use (FR_lt_preserves_colim_impl_Ff_lt_preserves_colim CC (pr11 L1)).
-  exact HR.
+  use (FR_slice_omega_small_if_L_omega_small).
+  use (L1_small_if_K_small).
+  exact HK.
 Admitted.
 
 Lemma free_monoid_coeq_sequence_converges_for_osc :
@@ -139,6 +141,7 @@ Proof.
       free_monoid_coeq_sequence_converges_for_osc
       (LNWFS_rt_coeq CC)
       (LNWFS_rt_chain CC)
+      osc_preserves_diagram_on
   ).
 
   use tpair; [|exact (LNWFS_tot_monoid_is_NWFS lnwfs_monoid)].

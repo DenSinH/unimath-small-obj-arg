@@ -37,8 +37,6 @@ Require Import CategoryTheory.DisplayedCats.Examples.Three.
 Require Import CategoryTheory.DisplayedCats.natural_transformation.
 
 Require Import CategoryTheory.ModelCategories.NWFS.
-Require Import CategoryTheory.ModelCategories.Generated.GenericFreeMonoid.
-Require Import CategoryTheory.ModelCategories.Generated.GenericFreeMonoidSequence.
 Require Import CategoryTheory.ModelCategories.Generated.MonoidalHelpers.
 Require Import CategoryTheory.ModelCategories.Generated.Helpers.
 Require Import CategoryTheory.ModelCategories.Generated.MonoidalHelpers.
