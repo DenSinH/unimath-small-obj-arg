@@ -1576,12 +1576,12 @@ Proof.
     }
     reflexivity.
   }
-  
+  cbn.
+  show_id_type.
   induction v.
   - cbn.
     admit.
-  - cbn.
-    admit.
+  - admit.
 
 
   (* set (iso := Tinf_monoid_mul_iso).

@@ -147,7 +147,7 @@ Definition presentable_lp_homSet_colim_colimK_fun_iscomprel
 Proof.
   intros uS' vT' e.
   use arrow_mor_eq.
-  - 
+  - cbn.
     admit.
   - admit.
 Admitted.
@@ -182,48 +182,39 @@ Proof.
   set (S' := (pr1 S,, pr2 S · coconeIn cc v) : morcls_lp J cl).
   set (Sbase := (v,, pr2 S) : (Colimits.cobase _ (homSet_diagram (pr1 (morcls_lp_map S)) d))).
   (* set (S'base := (v,, pr2 S') : (Colimits.cobase _ (homSet_diagram (pr1 (morcls_lp_map S)) d))). *)
-  set (test := setquotpr eqr Sbase).
-  set (t := setquotuniv eqr).
-  set (f := (presentable_lp_homSet_colim_colimK_fun d S' HS)).
-  set (x := t _ f).
-  set (is := (presentable_lp_homSet_colim_colimK_fun_iscomprel isclCC S' HS)).
-  set (y := x is).
-  set (z := y test).
-  set (w := setquotunivcomm eqr _ f is Sbase).
-  apply pathsinv0.
-  etrans. exact (pathsinv0 w).
+
+  set (homset_ccbase_isCC := HS _ _ _ (pr2 (arrow_colims CC _ d))).
+  set (homset_ccbase_CC := make_ColimCocone _ _ _ homset_ccbase_isCC).
+  set (homset_iso := isColim_is_z_iso _ (ColimsHSET _ (homSet_diagram (pr1 (morcls_lp_map S)) d)) _ _ homset_ccbase_isCC).
+  set (test := pr12 homset_iso).
   unfold presentable_lp_colimK_mor.
-  unfold eqr.
-  unfold Colimits.eqr.
-  simpl.
-  unfold morcls_lp_map.
-  set (rel := (Colimits.rel nat_graph (homSet_diagram (pr11 S) d))).
-  set (f' := (presentable_lp_homSet_colim_colimK_fun d S' HS)).
-  set (is' := (presentable_lp_homSet_colim_colimK_fun_iscomprel isclCC S' HS)).
-  set (Y := (arrow_colimK_lp_hSet (pr11 S) d)).
-  set (l := setquotuniv_equal rel Y f f').
-  assert (Hf : f = f').
+  set (Scl := (presentable_lp_homSet_colim_arrow isclCC S' HS)).
+  set (t := funeq Scl test).
+  (* cbn in t. *)
+  set (test2 := pr22 homset_iso).
+  set (t2 := funeq (pr2 S · colimIn (arrow_colims CC nat_graph d) v) test2).
+  (* cbn in t2. *)
+
+  assert (X : Scl = setquotpr eqr Sbase).
   {
+    unfold Scl.
+    unfold presentable_lp_homSet_colim_arrow.
+
+    use subtypePath; [intro; apply isapropiseqclass|].
     use funextsec.
-    intro u.
-    apply arrow_mor_eq; reflexivity.
-  }
-  set (m := l Hf is is').
-  rewrite m.
-  apply maponpaths.
-  apply subtypePath.
-  - intro. apply isapropdirprod.
-    apply propproperty.
-    apply isapropdirprod.
-    * do 4 (apply impred_isaprop; intro).
-      apply propproperty.
-    * do 4 (apply impred_isaprop; intro).
-      apply propproperty.
-  - apply funextsec.
-    intro uS.
+    intro uT.
+    destruct uT as [u T].
     use hPropUnivalence.
-    * admit.
-    * admit.
+    - intro HScl.  (* know that (u,, T) is in the equivalence class *)
+      intros R K.
+      apply K.
+      apply hinhpr.
+      admit.
+    - admit.
+  }
+  rewrite X.
+  etrans. exact (setquotunivcomm eqr _ (presentable_lp_homSet_colim_colimK_fun d S' HS) _ Sbase).
+  use arrow_mor_eq; reflexivity.
 Admitted.
 
 Lemma presentable_lp_colimK_mor_colimArrowCommutes
@@ -253,35 +244,28 @@ Proof.
 
   use (is_z_iso_isColim _ (arrow_colims CC _ (mapdiagram K d))).
   use tpair.
-  - use (colimArrow (id_Colim nat_graph (K cl) is_connected_nat_graph 0)).
-    use make_cocone.
-    * intro v.
-      use mors_to_arrow_mor.
-      + use CoproductArrow.
-        intro S.
-        exact (arrow_mor00 (presentable_lp_colimK_mor isclCC S (HJ _ (pr2 (morcls_lp_map S))))).
-      + use CoproductArrow.
-        intro S.
-        exact (arrow_mor11 (presentable_lp_colimK_mor isclCC S (HJ _ (pr2 (morcls_lp_map S))))).
-      + abstract (
-          use CoproductArrow_eq';
-          intro S;
-          etrans; [apply assoc|];
-          etrans; [apply cancel_postcomposition;
-                  apply (CoproductInCommutes (morcls_lp_dom_coprod CC J cl))|];
-          apply pathsinv0;
-          etrans; [apply assoc|];
-          etrans; [apply cancel_postcomposition;
-                  apply (CoproductOfArrows'In _ _ (morcls_lp_dom_coprod CC J cl) _ _ S)|];
-          etrans; [apply assoc'|];
-          etrans; [apply cancel_precomposition;
-                  apply (CoproductInCommutes (morcls_lp_cod_coprod CC J cl))|];
-          set (mor := (presentable_lp_colimK_mor isclCC S (HJ _ (pr2 (morcls_lp_map S)))));
-          exact (pathsinv0 (arrow_mor_comm mor))
-        ).
+  - use mors_to_arrow_mor.
+    * use CoproductArrow.
+      intro S.
+      exact (arrow_mor00 (presentable_lp_colimK_mor isclCC S (HJ _ (pr2 (morcls_lp_map S))))).
+    * use CoproductArrow.
+      intro S.
+      exact (arrow_mor11 (presentable_lp_colimK_mor isclCC S (HJ _ (pr2 (morcls_lp_map S))))).
     * abstract (
-        intros u v e;
-        use arrow_mor_eq; apply id_left
+        use CoproductArrow_eq';
+        intro S;
+        etrans; [apply assoc|];
+        etrans; [apply cancel_postcomposition;
+                apply (CoproductInCommutes (morcls_lp_dom_coprod CC J cl))|];
+        apply pathsinv0;
+        etrans; [apply assoc|];
+        etrans; [apply cancel_postcomposition;
+                apply (CoproductOfArrows'In _ _ (morcls_lp_dom_coprod CC J cl) _ _ S)|];
+        etrans; [apply assoc'|];
+        etrans; [apply cancel_precomposition;
+                apply (CoproductInCommutes (morcls_lp_cod_coprod CC J cl))|];
+        set (mor := (presentable_lp_colimK_mor isclCC S (HJ _ (pr2 (morcls_lp_map S)))));
+        exact (pathsinv0 (arrow_mor_comm mor))
       ).
   - split.
     * apply pathsinv0.

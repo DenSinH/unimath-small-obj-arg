@@ -21,7 +21,7 @@ Local Open Scope retract.
 
 (* Any map can be factored through maps in L and R *)
 Definition wfs_fact_ax {M : category} (L R : morphism_class M) := 
-    (∏ x y (f : x --> y), ∃ z (g : x --> z) (h : z --> y), (L _ _) g × (R _ _) h × h ∘ g = f).
+    (∏ x y (f : x --> y), ∃ z (g : x --> z) (h : z --> y), (L _ _) g × (R _ _) h × g · h = f).
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L27 *)
 Definition is_wfs {M : category} (L R : morphism_class M) :=

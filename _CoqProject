@@ -1,10 +1,10 @@
 -Q . CategoryTheory
+-arg -type-in-type
 whiskering.v
 limits/coproducts.v
 limits/colimits.v
 Chains/Chains.v
 categories/HSET/Core.v
-categories/HSET/Colimits.v
 DisplayedCats/Examples/Arrow.v
 DisplayedCats/Examples/Three.v
 DisplayedCats/Examples/MonadAlgebras.v
