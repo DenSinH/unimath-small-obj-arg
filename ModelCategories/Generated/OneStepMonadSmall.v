@@ -122,8 +122,7 @@ Defined.
 Definition presentable_lp_homSet_colim_colimK_fun
     (d : chain (arrow C))
     {cl : arrow C}
-    (S : morcls_lp J cl)
-    (HS : presentable (pr1 (morcls_lp_map S))) :
+    (S : morcls_lp J cl) :
   Colimits.cobase _ (homSet_diagram (pr1 (morcls_lp_map S)) d)
   -> pr1hSet (arrow_colimK_lp_hSet (pr1 (morcls_lp_map S)) d).
 Proof.
@@ -134,6 +133,9 @@ Proof.
   exact (colimIn (arrow_colims CC _ (mapdiagram K d)) v).
 Defined.
 
+Local Definition HSETeqr (f : arrow C) (d : chain (arrow C)) :=
+    Colimits.eqr _ (homSet_diagram f d).
+
 Definition presentable_lp_homSet_colim_colimK_fun_iscomprel
     {d : chain (arrow C)}
     {cl : arrow C}
@@ -143,7 +145,7 @@ Definition presentable_lp_homSet_colim_colimK_fun_iscomprel
     (HS : presentable (pr1 (morcls_lp_map S))) :
   iscomprelfun 
       (Colimits.rel _ (homSet_diagram (pr1 (morcls_lp_map S)) _))
-      (presentable_lp_homSet_colim_colimK_fun d S HS).
+      (presentable_lp_homSet_colim_colimK_fun d S).
 Proof.
   intros uS' vT' e.
   use arrow_mor_eq.
@@ -161,11 +163,84 @@ Definition presentable_lp_colimK_mor
     (HS : presentable (pr1 (morcls_lp_map S))) :
   pr1 (morcls_lp_map S) --> colim (arrow_colims CC _ (mapdiagram K d)).
 Proof.
-  set (f := presentable_lp_homSet_colim_colimK_fun d S HS).
+  set (f := presentable_lp_homSet_colim_colimK_fun d S).
   set (fcomprel := presentable_lp_homSet_colim_colimK_fun_iscomprel isclCC S HS).
   set (homset_colim_arrow := presentable_lp_homSet_colim_arrow isclCC S HS).
   exact (setquotuniv _ _ f fcomprel homset_colim_arrow).
 Defined.
+
+Local Definition predicate_type
+    (d : chain (arrow C))
+    (cl : arrow C)
+    (S : morcls_lp J cl) :=
+  pr1 (morcls_lp_map S) --> colim (arrow_colims CC _ (mapdiagram K d)) -> hProp.
+
+Definition presentable_lp_colimK_mor_univ 
+    {d : chain (arrow C)}
+    {cl : arrow C}
+    {cc : cocone d cl}
+    (isclCC : isColimCocone d cl cc)
+    (S : morcls_lp J cl)
+    (HS : presentable (pr1 (morcls_lp_map S)))
+    (P : predicate_type d cl S) 
+    (PS : ∏ (v : vertex nat_graph) 
+      (Sv : pr1hSet (dob (homSet_diagram (pr1 (morcls_lp_map S)) d) v)), 
+        P (presentable_lp_homSet_colim_colimK_fun d S (v,, Sv))) :
+  P (presentable_lp_colimK_mor isclCC S HS).
+Proof.
+  set (cchSetType := pr1hSet (colim (homSet_diagram_colim (pr1 (morcls_lp_map S)) d))).
+  set (
+    pred := λ (S' : cchSetType),
+              P (
+                setquotuniv 
+                  (HSETeqr (pr1 (morcls_lp_map S)) d)
+                  (arrow_colimK_lp_hSet (pr1 (morcls_lp_map S)) d)
+                  (presentable_lp_homSet_colim_colimK_fun d S)
+                  (presentable_lp_homSet_colim_colimK_fun_iscomprel isclCC S HS)
+                  S'
+              )
+  ).
+  use (setquotunivprop _ pred).
+  intro S'.
+  set (predS' :=
+    setquotunivcomm 
+      (HSETeqr (pr1 (morcls_lp_map S)) d)
+      (arrow_colimK_lp_hSet (pr1 (morcls_lp_map S)) d)
+      (presentable_lp_homSet_colim_colimK_fun d S)
+      (presentable_lp_homSet_colim_colimK_fun_iscomprel isclCC S HS)
+      S'
+  ).
+  set (HS' := PS (pr1 S') (pr2 S')).
+  assert (X : (pr1 S',, pr2 S') = S'). reflexivity.
+  rewrite X in HS'.
+  rewrite <- predS' in HS'.
+  exact (HS').
+Qed.
+
+Definition predicate_type'
+    {d : chain (arrow C)}
+    {cl : arrow C}
+    {cc : cocone d cl}
+    (isclCC : isColimCocone d cl cc) :=
+  ∏ (S : morcls_lp J cl) (HS : presentable (pr1 (morcls_lp_map S))),
+    pr1 (morcls_lp_map S) --> colim (arrow_colims CC _ (mapdiagram K d)) -> hProp.
+
+Definition presentable_lp_colimK_mor_univ'
+    {d : chain (arrow C)}
+    {cl : arrow C}
+    {cc : cocone d cl}
+    (isclCC : isColimCocone d cl cc)
+    (S : morcls_lp J cl)
+    (HS : presentable (pr1 (morcls_lp_map S)))
+    (P : predicate_type' isclCC) 
+    (PS : ∏ (v : vertex nat_graph) 
+      (Sv : pr1hSet (dob (homSet_diagram (pr1 (morcls_lp_map S)) d) v)), 
+        P (pr1 S,, Sv · coconeIn cc v) HS (presentable_lp_homSet_colim_colimK_fun d S (v,, Sv))):
+  P S HS (presentable_lp_colimK_mor isclCC S HS).
+Proof.
+
+Admitted.
+
 
 Lemma presentable_lp_colimK_mor_coconeInCommutes
     {d : chain (arrow C)}
@@ -177,43 +252,23 @@ Lemma presentable_lp_colimK_mor_coconeInCommutes
     (HS : presentable (pr1 (morcls_lp_map S))) :
   presentable_lp_colimK_mor isclCC (pr1 S,, pr2 S · coconeIn cc v) HS
   = morcls_lp_coprod_in S · colimIn (arrow_colims CC _ (mapdiagram K d)) v.
-Proof. 
-  set (eqr := Colimits.eqr _ (homSet_diagram (pr1 (morcls_lp_map S)) d)).
-  set (S' := (pr1 S,, pr2 S · coconeIn cc v) : morcls_lp J cl).
-  set (Sbase := (v,, pr2 S) : (Colimits.cobase _ (homSet_diagram (pr1 (morcls_lp_map S)) d))).
-  (* set (S'base := (v,, pr2 S') : (Colimits.cobase _ (homSet_diagram (pr1 (morcls_lp_map S)) d))). *)
-
-  set (homset_ccbase_isCC := HS _ _ _ (pr2 (arrow_colims CC _ d))).
-  set (homset_ccbase_CC := make_ColimCocone _ _ _ homset_ccbase_isCC).
-  set (homset_iso := isColim_is_z_iso _ (ColimsHSET _ (homSet_diagram (pr1 (morcls_lp_map S)) d)) _ _ homset_ccbase_isCC).
-  set (test := pr12 homset_iso).
+Proof.
+  set (Sin := (pr1 S,, pr2 S · coconeIn cc v) : morcls_lp J cl).
   unfold presentable_lp_colimK_mor.
-  set (Scl := (presentable_lp_homSet_colim_arrow isclCC S' HS)).
-  set (t := funeq Scl test).
-  (* cbn in t. *)
-  set (test2 := pr22 homset_iso).
-  set (t2 := funeq (pr2 S · colimIn (arrow_colims CC nat_graph d) v) test2).
-  (* cbn in t2. *)
-
-  assert (X : Scl = setquotpr eqr Sbase).
+  set (Sinarr := presentable_lp_homSet_colim_arrow isclCC Sin HS).
+  assert (X : Sinarr = setquotpr (HSETeqr (pr11 S) d) (v,, pr2 S)).
   {
-    unfold Scl.
-    unfold presentable_lp_homSet_colim_arrow.
-
-    use subtypePath; [intro; apply isapropiseqclass|].
-    use funextsec.
-    intro uT.
-    destruct uT as [u T].
-    use hPropUnivalence.
-    - intro HScl.  (* know that (u,, T) is in the equivalence class *)
-      intros R K.
-      apply K.
-      apply hinhpr.
-      admit.
-    - admit.
+    admit.
   }
   rewrite X.
-  etrans. exact (setquotunivcomm eqr _ (presentable_lp_homSet_colim_colimK_fun d S' HS) _ Sbase).
+  etrans. exact (
+    setquotunivcomm 
+      (HSETeqr (pr11 S) d)
+      _
+      (presentable_lp_homSet_colim_colimK_fun d Sin)
+      (presentable_lp_homSet_colim_colimK_fun_iscomprel isclCC Sin HS)
+      (v,, pr2 S)
+  ).
   use arrow_mor_eq; reflexivity.
 Admitted.
 
@@ -228,8 +283,33 @@ Lemma presentable_lp_colimK_mor_colimArrowCommutes
   · colimArrow (arrow_colims CC _ (mapdiagram K d)) _ (mapcocone K d cc)
   = morcls_lp_coprod_in S.
 Proof.
-
-Admitted.
+  transparent assert (pred : (predicate_type' isclCC)).
+  {
+    intro S'.
+    intro HS'.
+    intro arr.
+    use make_hProp.
+    - exact (
+        arr · colimArrow (arrow_colims CC _ (mapdiagram K d)) _ (mapcocone K d cc)
+        = morcls_lp_coprod_in S'
+      ).
+    - apply homset_property.
+  }
+  
+  use (presentable_lp_colimK_mor_univ' isclCC S HS pred).
+  intros u Su.
+  use arrow_mor_eq.
+  - etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+            apply (colimArrowCommutes (CC _ (project_diagram00 (mapdiagram K d)))).
+    etrans. apply (CoproductOfArrowsInclusionIn _ (morcls_lp_dom_coprod CC J (dob d u)) _ _ (morcls_lp_map S,, Su)).
+    apply id_left.
+  - etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+            apply (colimArrowCommutes (CC _ (project_diagram11 (mapdiagram K d)))).
+    etrans. apply (CoproductOfArrowsInclusionIn _ (morcls_lp_cod_coprod CC J (dob d u)) _ _ (morcls_lp_map S,, Su)).
+    apply id_left.
+Qed.
 
 Lemma K_small_if_J_small :
   (∏ (f : arrow C), J _ _ f -> (presentable f))
