@@ -90,7 +90,7 @@ Proof.
 Qed.
 
 (* first try basic apply / use, the more expensive match statement *)
-Local Ltac morcls_lp_coproduct_in_eq := 
+Ltac morcls_lp_coproduct_in_eq := 
   apply (CoproductInLiftingProblemsEqCod) ||
   apply (CoproductInLiftingProblemsEqDom) ||
   use (CoproductInLiftingProblemsEqCod) ||

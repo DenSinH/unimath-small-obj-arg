@@ -84,7 +84,8 @@ Local Definition LNWFS_mon : monoidal_cat :=
 Import BifunctorNotations.
 Import MonoidalNotations.
 
-Lemma osc_preserves_diagram_on :
+Lemma osc_preserves_diagram_on 
+    (HJ : class_presentable J) :
   T_preserves_diagram_on  _
     (LNWFS_pointed one_step_comonad_as_LNWFS) 
     (ChainsLNWFS CC)
@@ -103,22 +104,16 @@ Proof.
   set (CL := ChainsLNWFS CC d).
   set (dbase := mapdiagram (pr1_category _) d).
 
-  (* required assertion *)
-  assert (HK : preserves_colimits_of_shape (OneStepMonadSmall.K J CC) nat_graph).
-  {
-    intros d' y ccy.
-    
-    admit.
-  }
-
   use (Ff_lt_preserves_colim_impl_LNWFS_lt_preserves_colim CC L1 d _ cl' cc').
   use (FR_lt_preserves_colim_impl_Ff_lt_preserves_colim CC (pr11 L1)).
   use (FR_slice_omega_small_if_L_omega_small).
   use (L1_small_if_K_small).
-  exact HK.
-Admitted.
+  apply (K_small_if_J_small).
+  exact HJ.
+Qed.
 
-Lemma free_monoid_coeq_sequence_converges_for_osc :
+Lemma free_monoid_coeq_sequence_converges_for_osc 
+    (HJ : class_presentable J) :
   free_monoid_coeq_sequence_converges_on _
     (LNWFS_pointed one_step_comonad_as_LNWFS) 
     (ChainsLNWFS CC)
@@ -126,11 +121,12 @@ Lemma free_monoid_coeq_sequence_converges_for_osc :
     (monoidal_unit LNWFS_tot_monoidal).
 Proof.
   apply T_preserves_diagram_impl_convergence_on.
-  exact osc_preserves_diagram_on.
+  exact (osc_preserves_diagram_on HJ).
 Qed.
 
-Theorem small_object_argument :
-    total_category (NWFS C).
+Theorem small_object_argument 
+    (HJ : class_presentable J) :
+  total_category (NWFS C).
 Proof.
   set (lnwfs_monoid := 
     Tinf_monoid 
@@ -138,10 +134,10 @@ Proof.
       (LNWFS_pointed one_step_comonad_as_LNWFS)
       (ChainsLNWFS CC)
       (CoequalizersLNWFS CC)
-      free_monoid_coeq_sequence_converges_for_osc
+      (free_monoid_coeq_sequence_converges_for_osc HJ)
       (LNWFS_rt_coeq CC)
       (LNWFS_rt_chain CC)
-      osc_preserves_diagram_on
+      (osc_preserves_diagram_on HJ)
   ).
 
   use tpair; [|exact (LNWFS_tot_monoid_is_NWFS lnwfs_monoid)].

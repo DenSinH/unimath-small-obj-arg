@@ -137,3 +137,11 @@ Proof.
   induction Hg.
   reflexivity.
 Qed.
+
+Lemma funeq {A B : UU} {f g : A -> B}
+    (H : f = g) :
+  ∏ (a : A), f a = g a.
+Proof.
+  induction H.
+  reflexivity.
+Qed.
