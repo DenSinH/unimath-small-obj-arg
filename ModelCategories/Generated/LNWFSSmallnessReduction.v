@@ -864,7 +864,7 @@ Proof.
       exact (pathsinv0 (pr2 (three_mor_comm cinvf))).
     }
     apply id_right.
-Admitted. (* proof finished, this is just very slow *)
+Qed. (* proof finished, this is just very slow *)
 
 Lemma Ff_lt_preserves_colim_impl_LNWFS_lt_preserves_colim 
     (L : total_category (LNWFS C))
