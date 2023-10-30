@@ -17,6 +17,7 @@ Require Import CategoryTheory.DisplayedCats.Examples.Three.
 Require Import CategoryTheory.ModelCategories.Lifting.
 Require Import CategoryTheory.ModelCategories.NWFS.
 Require Import CategoryTheory.ModelCategories.Generated.Helpers.
+Require Import CategoryTheory.ModelCategories.Generated.LNWFSHelpers.
 Require Import CategoryTheory.ModelCategories.Generated.FFMonoidalStructure.
 
 Local Open Scope cat.
@@ -52,26 +53,6 @@ Proof.
       exact (arrow_mor_comm γ)
     ).
 Defined.
-
-(* todo move these to NWFS.v, add coercion nwfs >-> lnwfs *)
-Lemma lnwfs_Σ_top_map_id {F : Ff C} (L : lnwfs_over F) (f : arrow C) :
-    arrow_mor00 (pr1 L f) = identity _.
-Proof.
-  set (law1 := Monad_law1 (T:=lnwfs_L_monad L) f).
-  set (top := arrow_mor00_eq law1).
-  apply pathsinv0.
-  etrans.
-  exact (pathsinv0 top).
-  apply id_right.
-Qed.
-
-Lemma lnwfs_Σ_bottom_map_inv {F : Ff C} (L : lnwfs_over F) (f : arrow C) :
-    arrow_mor11 (pr1 L f) · arrow_mor (fact_R F (fact_L F f)) = identity _.
-Proof.
-  set (law1 := Monad_law1 (T:=lnwfs_L_monad L) f).
-  set (bottom := arrow_mor11_eq law1).
-  exact bottom.
-Qed.
 
 Local Lemma left_reduced_lp_lift
     {F : Ff C} (L : lnwfs_over F)

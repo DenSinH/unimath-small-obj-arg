@@ -31,6 +31,7 @@ Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
 Require Import CategoryTheory.ModelCategories.NWFS.
 Require Import CategoryTheory.ModelCategories.Generated.Helpers.
+Require Import CategoryTheory.ModelCategories.Generated.LNWFSHelpers.
 Require Import CategoryTheory.ModelCategories.Generated.FFMonoidalStructure.
 Require Import CategoryTheory.ModelCategories.Generated.LNWFSMonoidalStructure.
 

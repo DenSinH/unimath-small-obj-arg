@@ -39,6 +39,7 @@ Require Import CategoryTheory.DisplayedCats.natural_transformation.
 Require Import CategoryTheory.ModelCategories.NWFS.
 Require Import CategoryTheory.ModelCategories.Generated.MonoidalHelpers.
 Require Import CategoryTheory.ModelCategories.Generated.Helpers.
+Require Import CategoryTheory.ModelCategories.Generated.LNWFSHelpers.
 Require Import CategoryTheory.ModelCategories.Generated.MonoidalHelpers.
 Require Import CategoryTheory.ModelCategories.Generated.FFMonoidalStructure.
 Require Import CategoryTheory.ModelCategories.Generated.LNWFSMonoidalStructure.
@@ -540,14 +541,6 @@ Definition FR_lt_preserves_colim_impl_Ff_lt_preserves_colim_mor_data
   section_nat_trans_disp_data (F ⊗_{Ff_mon} (colim CL)) (colim FfCC).
 Proof.
   intro f.
-  (* set (ccpointwise := Ff_cocone_pointwise_R d f). *)
-  (* set (isHRCC' := HR _ _ ccpointwise). *)
-
-  (* correct codomain with equality of diagrams *)
-  (* set (eqdiag := fact_cocone_chain_eq_chain_pointwise_tensored F d f). *)
-  (* set (isHRCC := eq_diag_iscolimcocone _ eqdiag isHRCC'). *)
-  (* set (HRCC := make_ColimCocone _ _ _ isHRCC). *)
-  (* set (baseCC := (CCFf_pt_ob1 CC (mapdiagram (monoidal_left_tensor (F : Ff_mon)) d) f)). *)
   set (base_mor := FR_lt_preserves_colim_impl_Ff_lt_preserves_colim_mor_pointwise F d HR f).
 
   exists (z_iso_inv base_mor).
@@ -667,44 +660,6 @@ Proof.
     apply (section_disp_on_eq_morphisms F); reflexivity.
 Qed.
 
-(* some useful proofs on the comonoidal structure that corresponds
-   with LNWFS on Ff C *)
-Lemma LNWFS_comon_structure_whiskerequals
-    (L L' L'' : total_category (LNWFS C))
-    (α : fact_mor (pr1 L) (pr1 L'))
-    (α' : fact_mor (pr1 L') (pr1 L''))
-    (f : arrow C) : 
-  arrow_mor11 (#(lnwfs_L_monad (pr2 L')) (lnwfs_mor (pr2 L) (pr2 L') α f)) · arrow_mor11 (lnwfs_mor (pr2 L') (pr2 L'') α' ((lnwfs_L_monad (pr2 L')) f))
-  = arrow_mor11 (lnwfs_mor (pr2 L') (pr2 L'') α' (lnwfs_L_monad (pr2 L) f)) · arrow_mor11 (#(lnwfs_L_monad (pr2 L'')) (lnwfs_mor (pr2 L) (pr2 L') α f)).
-Proof.
-  set (α'nat := nat_trans_ax α' _ _ (lnwfs_mor (pr2 L) (pr2 L') α f)).
-  set (α'nat11 := base_paths _ _ (fiber_paths α'nat)).
-  
-  apply pathsinv0.
-  etrans. exact (pathsinv0 α'nat11).
-  etrans. apply pr1_transportf_const.
-  reflexivity.
-Qed.
-
-(* A more general lemma of the above is
-   (above is just below with Λ = L' and Λ' = L'' ) *)
-Lemma LNWFS_comon_structure_whiskercommutes
-    (L L' Λ Λ' : total_category (LNWFS C))
-    (α : fact_mor (pr1 L) (pr1 L'))
-    (β : fact_mor (pr1 Λ) (pr1 Λ'))
-    (f : arrow C) : 
-  arrow_mor11 (#(lnwfs_L_monad (pr2 Λ)) (lnwfs_mor (pr2 L) (pr2 L') α f)) · arrow_mor11 (lnwfs_mor (pr2 Λ) (pr2 Λ') β ((lnwfs_L_monad (pr2 L')) f))
-  = arrow_mor11 (lnwfs_mor (pr2 Λ) (pr2 Λ') β (lnwfs_L_monad (pr2 L) f)) · arrow_mor11 (#(lnwfs_L_monad (pr2 Λ')) (lnwfs_mor (pr2 L) (pr2 L') α f)).
-Proof.
-  set (βnat := nat_trans_ax β _ _ (lnwfs_mor (pr2 L) (pr2 L') α f)).
-  set (βnat11 := base_paths _ _ (fiber_paths βnat)).
-  
-  apply pathsinv0.
-  etrans. exact (pathsinv0 βnat11).
-  etrans. apply pr1_transportf_const.
-  reflexivity.
-Qed.
-
 (* showing that the morphism induced the the universal
 property of the colimit in Ff C is indeed an LNWFS morphism.
 we do this by reducing it to the pointwise case. *)
@@ -722,149 +677,26 @@ Lemma Ff_lt_preserves_colim_impl_LNWFS_lt_preserves_colim_mor_disp
   pr2 (monoidal_left_tensor (L : LNWFS_mon) (colim CL)) 
   -->[pr1 base_mor] pr2 (colim LNWFSCC).
 Proof.
-  set (HFCC := make_ColimCocone _ _ _ HF).
-  set (base_inv := colimArrow FfCCbase _ (colimCocone HFCC)).
-
-  (* base mor component at f is z_iso (obvious since base_mor is an iso) *)
-  assert (Hinviso11 : ∏ f, is_z_isomorphism (three_mor11 (section_nat_trans base_inv f))).
+  set (Ffiso := (_,, base_mor) : z_iso _ _).
+  set (LNWFSarr := colimArrow LNWFSCC _ (mapcocone (monoidal_left_tensor (L : LNWFS_mon)) _ (colimCocone CL))).
+  use (Ff_iso_inv_LNWFS_mor (colim LNWFSCC) (monoidal_left_tensor (L : LNWFS_mon) (colim CL)) Ffiso).
+  
+  (* commutativity of project_cocone for
+     pr1_category and monoidal_left_tensor *)
+  assert (X : z_iso_mor Ffiso = pr1 LNWFSarr).
   {
-    intro f.
-    exists (three_mor11 (section_nat_trans (pr1 base_mor) f)).
-    split.
-    - exact (eq_section_nat_trans_comp_component11 (pr12 base_mor) f).
-    - exact (eq_section_nat_trans_comp_component11 (pr22 base_mor) f).
+    functorial_factorization_eq f.
+    use colimArrowUnique'.
+    intro v.
+    etrans. apply (colimArrowCommutes).
+    apply pathsinv0.
+    etrans. apply (colimArrowCommutes).
+    reflexivity.
   }
-
-  split; intro f.
-  - use arrow_mor_eq; [reflexivity|].
-    use (pre_comp_with_z_iso_is_inj (Hinviso11 f)).
-
-    use colimArrowUnique'.
-    intro v.
-    etrans. apply assoc.
-    etrans. apply cancel_postcomposition.
-            apply colimArrowCommutes.
-    etrans. apply assoc.
-    etrans. apply cancel_postcomposition.
-            set (cincomm := colimArrowCommutes HFCC _ (colimCocone FfCCbase) v).
-            exact (eq_section_nat_trans_comp_component11 cincomm f).
-
-    etrans. apply assoc.
-    etrans. apply cancel_postcomposition.
-            apply colimArrowCommutes.
-    etrans. apply assoc'.
-    etrans. apply cancel_precomposition.
-            apply colimOfArrowsIn.
-    etrans. apply assoc.
-
-    apply pathsinv0.
-
-    etrans. apply assoc.
-    etrans. apply cancel_postcomposition.
-            apply colimArrowCommutes.
-    etrans. apply assoc.
-    etrans. apply cancel_postcomposition.
-    {
-      (* colimIn of CL is a LNWFS mor, rewrite ax *)
-      set (cc := mapcocone (monoidal_left_tensor (L : LNWFS_mon)) _ (colimCocone CL)).
-      set (ccinvax := pr12 (coconeIn cc v) f).
-      exact (arrow_mor11_eq ccinvax).
-    }
-
-    (* can now cancel precomposition with Σ11_{f} of
-       (pr2 (dob (mapdiagram (monoidal_left_tensor L) d) v) 
-       (i.e. Lv) *)
-    etrans. apply assoc'.
-    apply pathsinv0.
-    etrans. apply assoc'.
-    apply cancel_precomposition.
-    apply pathsinv0.
-
-    (* commute the middle 2 morphisms 
-      (think about whiskercommutes)
-      then compose first and last 2 
-      (think about bifunctor_leftcomp / rightcomp)
-      then rewrite commutativity on either
-
-      we have in our current goal:
-      α (T a) · #T' (α a) · (α' (T' a) · #T'' (α' a))
-      want (use α' naturality at morphism (α a))
-      =
-      α (T a) · α' (T a) · (#T'' (α a) · #T'' (α' a))
-      =
-      (α · α') (T a) · (#T'' (α · α' a))
-
-      where α := coconeIn : dob mapdiagram v --> L ⊗ CL
-      and α' := base_mor : L ⊗ CL --> colim LNWFSCC
-
-      then rewrite using colimArrowCommutes
-
-      get colimIn (T a) · #T'' (colimIn a)
-      need more commutativity
-      (naturality of colimIn at (colimIn a)):
-      = #T'' (colimIn a) · colimIn (T a)
-      
-      apply assoc. apply assoc4. *)
-
-    etrans. apply assoc.
-    etrans. apply assoc4.
-    etrans. apply cancel_postcomposition, cancel_precomposition. 
-    {
-      exact (pathsinv0 (
-        LNWFS_comon_structure_whiskercommutes 
-          ((monoidal_left_tensor (L : LNWFS_mon) (colim CL)))
-          (colim LNWFSCC)
-          (dob (mapdiagram (monoidal_left_tensor (L : LNWFS_mon)) d) v)
-          ((monoidal_left_tensor (L : LNWFS_mon) (colim CL)))
-          (pr1 base_mor)
-          (pr1 (coconeIn (mapcocone (monoidal_left_tensor (L : LNWFS_mon)) d (colimCocone CL)) v))
-          f
-      )).
-    }
-    etrans. apply cancel_postcomposition.
-            apply assoc.
-    etrans. apply assoc'.
-    etrans. apply cancel_postcomposition.
-            use pr1_section_disp_on_morphisms_comp.
-    
-    use compeq.
-    * use section_disp_on_eq_morphisms.
-      + etrans. use (pr1_section_disp_on_morphisms_comp (pr1 (dob d v))).
-        use section_disp_on_eq_morphisms; [apply id_left|].
-        set (cinv := colimArrowCommutes HFCC _ (colimCocone FfCCbase) v).
-        exact (eq_section_nat_trans_comp_component11 cinv f).
-      + set (cinv := colimArrowCommutes HFCC _ (colimCocone FfCCbase) v).
-        exact (eq_section_nat_trans_comp_component11 cinv f).
-    * set (cinv := colimArrowCommutes HFCC _ (colimCocone FfCCbase) v).
-      exact (eq_section_nat_trans_comp_component11 cinv (lnwfs_L_monad (pr2 (colim LNWFSCC)) f)).
-  - use arrow_mor_eq; [apply id_left|].
-    
-    use (pre_comp_with_z_iso_is_inj (Hinviso11 f)).
-
-    use colimArrowUnique'.
-    intro v.
-    etrans. apply assoc.
-    etrans. apply cancel_postcomposition.
-            apply colimArrowCommutes.
-    etrans. apply assoc.
-    etrans. apply cancel_postcomposition.
-    {
-      set (cincomm := colimArrowCommutes HFCC _ (colimCocone FfCCbase) v).
-      exact (eq_section_nat_trans_comp_component11 cincomm f).
-    }
-
-    etrans. apply colimArrowCommutes.
-    apply pathsinv0.
-    etrans. apply assoc.
-    etrans. apply cancel_postcomposition.
-            apply colimArrowCommutes.
-    etrans. 
-    {
-      set (cinvf := section_nat_trans (colimIn HFCC v) f).
-      exact (pathsinv0 (pr2 (three_mor_comm cinvf))).
-    }
-    apply id_right.
-Qed. (* proof finished, this is just very slow *)
+  change (pr2 (colim LNWFSCC) -->[z_iso_mor Ffiso] pr2 (monoidal_left_tensor (L : LNWFS_mon) (colim CL))).
+  rewrite X.
+  exact (pr2 LNWFSarr).
+Qed.
 
 Lemma Ff_lt_preserves_colim_impl_LNWFS_lt_preserves_colim 
     (L : total_category (LNWFS C))
@@ -892,25 +724,19 @@ Proof.
     exact (Ff_lt_preserves_colim_impl_LNWFS_lt_preserves_colim_mor_disp L d HF).
   - (* showing isomorphism is easy, since we know that the base morphism is an isomorphism *)
     split; (apply subtypePath; [intro; apply isaprop_lnwfs_mor_axioms|]).
-    * apply pathsinv0.
-      etrans. exact (pathsinv0 (pr12 base_mor)).
+    * etrans; [|exact (pr12 base_mor)].
       apply cancel_postcomposition.
       use colimArrowUnique'.
       intro v.
-      etrans. apply colimArrowCommutes.
+      etrans. exact (colimArrowCommutes FfCCbase _ _ v).
       apply pathsinv0.
       etrans. apply (colimArrowCommutes FfCCbase).
       reflexivity.
-    * use (pre_comp_with_z_iso_is_inj (pr2 base_mor)).
-      etrans. apply assoc.
-      etrans. apply cancel_postcomposition.
-              exact (pr12 base_mor).
-      etrans. apply id_left.
-      apply pathsinv0.
-      etrans. apply id_right.
+    * etrans; [|exact (pr22 base_mor)].
+      apply cancel_precomposition.
       use colimArrowUnique'.
       intro v.
-      etrans. apply colimArrowCommutes.
+      etrans. exact (colimArrowCommutes FfCCbase _ _ v).
       apply pathsinv0.
       etrans. apply (colimArrowCommutes FfCCbase).
       reflexivity.

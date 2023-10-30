@@ -30,6 +30,7 @@ ModelCategories/Generated/MonoidalHelpers.v
 ModelCategories/Generated/LiftingWithClass.v
 ModelCategories/Generated/OneStepMonad.v
 ModelCategories/Generated/FFMonoidalStructure.v
+ModelCategories/Generated/LNWFSHelpers.v
 ModelCategories/Generated/LNWFSMonoidalStructure.v
 ModelCategories/Generated/LNWFSCocomplete.v
 ModelCategories/Generated/LNWFSClosed.v
