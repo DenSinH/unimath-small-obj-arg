@@ -57,6 +57,16 @@ Definition arrow_mor00 {C : category} {f g : arrow C} (F : f --> g) := pr11 F.
 Definition arrow_mor11 {C : category} {f g : arrow C} (F : f --> g) := pr21 F. 
 Definition arrow_mor_comm {C : category} {f g : arrow C} (F : f --> g) := pr2 F. 
 
+Lemma arrow_mor_eq {C : category} {f g : arrow C} 
+    (γ γ' : f --> g) 
+    (H00 : arrow_mor00 γ = arrow_mor00 γ')
+    (H11 : arrow_mor11 γ = arrow_mor11 γ') :
+  γ = γ'.
+Proof.  
+  apply subtypePath; [intro; apply homset_property|].
+  apply pathsdirprod; assumption.
+Qed.
+
 Coercion mor_to_arrow_ob {C : category} {x y : C} (f : x --> y) : arrow C :=
     (make_dirprod x y,, f).
 
@@ -82,14 +92,25 @@ Qed. *)
 (* base_paths : equality in pr1 of ∑-type (paths in base category)
     pathsdirprodweq : _ × _ = _ × _ -> equality of terms
 *)
-Definition top_square {C : category}
-    {f f' : arrow C} {mor mor1' : f --> f'} (H : mor = mor1') := 
-  dirprod_pr1 (pathsdirprodweq (base_paths _ _ H)).
-Definition bottom_square {C : category}
-    {f f' : arrow C} {mor mor1' : f --> f'} (H : mor = mor1') := 
-  dirprod_pr2 (pathsdirprodweq (base_paths _ _ H)).
+Definition arrow_mor00_eq {C : category}
+    {f f' : arrow C} {mor mor' : f --> f'} (H : mor = mor') :
+  arrow_mor00 mor = arrow_mor00 mor'.
+Proof. 
+  exact (dirprod_pr1 (pathsdirprodweq (base_paths _ _ H))).
+Qed.
 
-Definition arrow_base_colims {C : category} (CC : Colims C) :
+Definition arrow_mor11_eq {C : category}
+    {f f' : arrow C} {mor mor' : f --> f'} (H : mor = mor') :
+  arrow_mor11 mor = arrow_mor11 mor'.
+Proof.
+  exact (dirprod_pr2 (pathsdirprodweq (base_paths _ _ H))).
+Qed.
+
+Section Colims.
+
+Context {C : category}.
+
+Definition arrow_base_colims (CC : Colims C) :
     Colims (arrow_base C).
 Proof.
   intros g d.
@@ -107,22 +128,29 @@ Proof.
       split.
       + exact (colimIn cc1 v).
       + exact (colimIn cc2 v).
-    * intros u v e.
-      use pathsdirprod.
-      + exact (colimInCommutes cc1 _ _ e).
-      + exact (colimInCommutes cc2 _ _ e).
+    * abstract (
+        intros u v e;
+        use pathsdirprod; [
+          exact (colimInCommutes cc1 _ _ e)|
+          exact (colimInCommutes cc2 _ _ e)
+        ]
+      ).
   - intros c cc.
     destruct cc as [f ccf].
     use unique_exists.
     * split.
       + use colimArrow.
         exists (λ v, pr1 (f v)).
-        intros u v e.
-        exact (pr1 (pathsdirprodweq (ccf _ _ e))).
+        abstract (
+          intros u v e;
+          exact (pr1 (pathsdirprodweq (ccf _ _ e)))
+        ).
       + use colimArrow.
         exists (λ v, pr2 (f v)).
-        intros u v e.
-        exact (pr2 (pathsdirprodweq (ccf _ _ e))).
+        abstract (
+          intros u v e;
+          exact (pr2 (pathsdirprodweq (ccf _ _ e)))
+        ).
     * abstract (
         intro; apply pathsdirprod; [
           apply (colimArrowCommutes cc1)|apply (colimArrowCommutes cc2) 
@@ -139,7 +167,8 @@ Proof.
       ).
 Defined.
 
-Local Definition arrow_colimit {C : category} (CC : Colims C)
+
+Local Definition arrow_colimit (CC : Colims C)
     {g : graph} (d : diagram g (arrow C)) : arrow C.
 Proof.
   set (dbase := mapdiagram (pr1_category _) d).
@@ -151,11 +180,13 @@ Proof.
   (* arrow colim is colim of arrows *)
   use colimOfArrows.
   - exact (dob d).
-  - intros u v e.
-    exact (arrow_mor_comm (dmor d e)).
+  - abstract (
+      intros u v e;
+      exact (arrow_mor_comm (dmor d e))
+    ).
 Defined.
 
-Definition arrow_colims {C : category} (CC : Colims C) :
+Definition arrow_colims (CC : Colims C) :
     Colims (arrow C).
 Proof.
   intros g d.
@@ -171,9 +202,9 @@ Proof.
       abstract (
         use (colimOfArrowsIn _ _ (CC g (mapdiagram (pr1_functor C C) dbase)))
       ).
-    * intros u v e.
-      (* cbn. *)
-      abstract (
+    * abstract (
+        intros u v e;
+        (* cbn. *)
         apply subtypePath; [intro; apply homset_property|];
         apply (colimInCommutes clbase)
       ).
@@ -181,14 +212,15 @@ Proof.
     transparent assert (ccbase : (cocone dbase (pr1 c))).
     {
       exists (λ v, pr1 (coconeIn cc v)).
-      intros u v e.
-      exact (base_paths _ _ (coconeInCommutes cc _ _ e)).
+      abstract (
+        intros u v e;
+        exact (base_paths _ _ (coconeInCommutes cc _ _ e))
+      ).
     }
 
     use unique_exists.
     * exists (colimArrow clbase _ ccbase).
 
-      (* cbn. *)
       abstract (
         etrans; [use postcompWithColimArrow|];
         apply pathsinv0;
@@ -216,3 +248,83 @@ Proof.
         exact (base_paths _ _ (H v))
       ).
 Defined.
+
+Definition project_diagram00 {g : graph} (d : diagram g (arrow C)) := 
+  mapdiagram (pr1_functor _ _) (mapdiagram (pr1_category _) d).
+
+Definition project_diagram11 {g : graph} (d : diagram g (arrow C)) := 
+  mapdiagram (pr2_functor _ _) (mapdiagram (pr1_category _) d).
+
+Definition project_cocone00 
+    {g : graph} {d : diagram g (arrow C)}
+    {f : arrow C}
+    (cc : cocone d f) :
+  cocone (project_diagram00 d) (arrow_dom f) :=
+    mapcocone (pr1_functor _ _) _ (mapcocone (pr1_category _) _ cc).
+
+Definition project_cocone11
+    {g : graph} {d : diagram g (arrow C)}
+    {f : arrow C}
+    (cc : cocone d f) :
+  cocone (project_diagram11 d) (arrow_cod f) :=
+    mapcocone (pr2_functor _ _) _ (mapcocone (pr1_category _) _ cc).
+
+Definition project_colimcocone00
+    (CC : Colims C)
+    {g : graph} {d : diagram g (arrow C)}
+    {f : arrow C} {ccf : cocone d f}
+    (isclCC : isColimCocone d f ccf) :
+  isColimCocone _ _ (project_cocone00 ccf).
+Proof.
+  set (dbase := project_diagram00 d).
+  set (base_mor := isColim_is_z_iso _ (arrow_colims CC _ d) _ _ isclCC).
+
+  use (is_z_iso_isColim _ (CC _ dbase)).
+  exists (arrow_mor00 (pr1 base_mor)).
+  abstract (
+    split; [
+      etrans; [|exact (arrow_mor00_eq (pr12 base_mor))];
+      apply cancel_postcomposition
+      | etrans; [|exact (arrow_mor00_eq (pr22 base_mor))];
+        apply cancel_precomposition
+    ]; (
+      use colimArrowUnique';
+      intro v;
+      etrans; [apply colimArrowCommutes|];
+      apply pathsinv0;
+      etrans; [apply colimArrowCommutes|];
+      reflexivity
+    )
+  ).
+Defined.
+
+Definition project_colimcocone11 
+    (CC : Colims C)
+    {g : graph} {d : diagram g (arrow C)}
+    {f : arrow C} {ccf : cocone d f}
+    (isclCC : isColimCocone d f ccf) :
+  isColimCocone _ _ (project_cocone11 ccf).
+Proof.
+  set (dbase := project_diagram11 d).
+  set (base_mor := isColim_is_z_iso _ (arrow_colims CC _ d) _ _ isclCC).
+
+  use (is_z_iso_isColim _ (CC _ dbase)).
+  exists (arrow_mor11 (pr1 base_mor)).
+  abstract (
+    split; [
+      etrans; [|exact (arrow_mor11_eq (pr12 base_mor))];
+      apply cancel_postcomposition
+      | etrans; [|exact (arrow_mor11_eq (pr22 base_mor))];
+        apply cancel_precomposition
+    ]; (
+      use colimArrowUnique';
+      intro v;
+      etrans; [apply colimArrowCommutes|];
+      apply pathsinv0;
+      etrans; [apply colimArrowCommutes|];
+      reflexivity
+    )
+  ).
+Defined.
+
+End Colims.

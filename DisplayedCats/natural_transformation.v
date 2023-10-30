@@ -31,7 +31,7 @@ Definition section_nat_trans_disp_axioms
     {F F': section_disp D}
     (nt : section_nat_trans_disp_data F F') : UU :=
   ∏ x x' (f : x --> x'), 
-      transportf _
+    transportf _
       (id_right _ @ !(id_left _)) 
       (section_disp_on_morphisms F f ;; nt x') =
     nt x ;; section_disp_on_morphisms F' f.

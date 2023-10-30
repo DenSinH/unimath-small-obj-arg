@@ -8,6 +8,9 @@ Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
 Require Import UniMath.CategoryTheory.Monads.Monads.
 Require Import UniMath.CategoryTheory.Monads.MonadAlgebras.
 Require Import UniMath.CategoryTheory.catiso.
+Require Import UniMath.CategoryTheory.limits.bincoproducts.
+Require Import UniMath.CategoryTheory.limits.graphs.colimits.
+Require Import UniMath.CategoryTheory.limits.graphs.coequalizers.
 Require Import UniMath.CategoryTheory.limits.coproducts.
 Require Import UniMath.CategoryTheory.limits.pushouts.
 Require Import UniMath.CategoryTheory.Equivalences.Core.
@@ -86,7 +89,7 @@ Proof.
   use disp_cat_from_SIP_data.
   - exact (λ g, right_lifting_data J g).
   - intros g g' δ δ' mn. 
-    simpl in *.
+    (* simpl in *. *)
 
     (* commutativity of lifting data:
        solution of lifting problem S must commute with mn: g --> g':
@@ -106,20 +109,20 @@ Proof.
     apply isaprop_lifting_data_comp.
   - (* identity *)
     intros x a f H S.
-    do 2 rewrite id_right.
-    reflexivity.
+    abstract (
+      etrans; [apply id_right|];
+      (* rewrites in term *)
+      now rewrite id_right
+    ).
   - (* associativity *)
     intros g g' g'' δ δ' δ'' S0 S1 mn mn' g2 g2' S2.
     
-    (* associativity of taking the 00 morphism of an arrow morphism *)
-    assert (arrow_mor00 (S0 · S1) = arrow_mor00 S0 · arrow_mor00 S1) as X.
-    {
-      trivial.
-    }
     abstract (
-      rewrite X, assoc;
-      rewrite mn, mn', assoc;
-      reflexivity
+      etrans; [apply assoc|];
+      etrans; [apply cancel_postcomposition; apply mn|];
+      etrans; [apply mn'|];
+      (* rewrites in term *)
+      now rewrite assoc
     ).
 Defined.
 
@@ -166,29 +169,33 @@ Proof.
   (* map on displayed objects respects morphism property *)
   intros f f' ff ff' S Sisalg g Jg Sgf.
   unfold morcls_L_map_structure in η.
-  simpl.
+  (* simpl.
   unfold three_mor11.
-  simpl.
+  simpl. *)
   (* cancel precomposition with  
     pr211 η g Jg := Lift of g vs ρg (map from cod g --> three_ob1 (n g)) *)
-  do 3 rewrite assoc'.
+  etrans. apply assoc'.
+  etrans. apply assoc'.
+  apply pathsinv0.
+  etrans. apply assoc'.
   apply cancel_precomposition.
+  apply pathsinv0.
 
   (* cancel precomposition with 
     three_mor11 (#n Sgf)*)
   (* first "fix" the morphisms, since the (propositional) 
      commutativity is not equal *)
-  etrans. apply maponpaths_2.
-  use (section_disp_on_eq_morphisms' (nwfs_fact n) (γ := Sgf)).
+  etrans. apply cancel_postcomposition.
+          use (section_disp_on_eq_morphisms' (nwfs_fact n) (γ := Sgf)).
 
   apply pathsinv0.
-  etrans. apply maponpaths_2.
+  etrans. apply cancel_postcomposition.
           use (section_disp_on_eq_morphisms' (nwfs_fact n) (γ := Sgf · S)).
-  etrans. apply maponpaths_2, maponpaths.
+  etrans. apply cancel_postcomposition, maponpaths.
           apply (section_disp_comp (nwfs_fact n)).
-  simpl.
+  (* simpl. *)
 
-  rewrite assoc'.
+  etrans. apply assoc'.
   apply cancel_precomposition.
 
   destruct ff as [αf αflaws].
@@ -211,10 +218,10 @@ Proof.
   This follows from the fact that S is an algebra map (Sisalg)
   *)
 
-  simpl in Sisalg.
-  unfold is_Algebra_mor in Sisalg.
-  set (top_line := top_square Sisalg).
-  simpl in top_line.
+  (* simpl in Sisalg. *)
+  (* unfold is_Algebra_mor in Sisalg. *)
+  set (top_line := arrow_mor00_eq Sisalg).
+  (* simpl in top_line. *)
   exact (pathsinv0 top_line).
 Qed.
 
@@ -252,7 +259,7 @@ Lemma algebraically_free_nwfs_gives_cofibrantly_generated_wfs :
 Proof.
   intro H.
   destruct H as [η cofibη].
-  unfold cofibrantly_generated in cofibη.
+  (* unfold cofibrantly_generated in cofibη. *)
 
   (* suffices to show R = J□ *)
   apply morcls_eq_impl_morcls_cl_eq.
@@ -265,7 +272,7 @@ Proof.
 
     apply hinhpr.
     intros f Jf.
-    simpl in Jg.
+    (* simpl in Jg. *)
     apply (@right_lifting_data_retract J g g').
     - exact Rgg'.
     - exact Jg.
@@ -293,8 +300,44 @@ End preliminaries.
 (* Garner 2007, p19 *)
 
 Section lifting_with_J.
-Context {C : category} (n : nwfs C) (J : morphism_class C).
-Context (g : arrow C) (CC : Coproducts (morcls_lp J g) C) (POs : Pushouts C).
+Context {C : category}.
+Context (HCC : Colims C).
+Context (J : morphism_class C).
+Context (g : arrow C).
+
+Local Definition CC :
+  Coproducts (morcls_lp J g) C.
+Proof.
+  apply Coproducts_from_Colims.
+  intro d.
+  exact (HCC _ d).
+Qed.
+
+Local Definition CCoequalizers : Coequalizers C.
+Proof.
+  exact (Coequalizers_from_Colims _ HCC).
+Qed.
+
+Local Definition POs : Pushouts C.
+Proof.
+  apply Pushouts_from_Coequalizers_BinCoproducts.
+  - apply BinCoproducts_from_Colims.
+    intro d.
+    exact (HCC _ d).
+  - intros H z f g'.
+    set (coeq := CCoequalizers _ _ f g').
+    use tpair.
+    * exists (CoequalizerObject _ coeq).
+      exact (CoequalizerArrow _ coeq).
+    * exists (CoequalizerArrowEq _ coeq).
+      intros w h Hw.
+      use unique_exists.
+      + exact (CoequalizerOut _ coeq _ h Hw).
+      + exact (CoequalizerArrowComm _ coeq _ h Hw).
+      + intro y; apply homset_property.
+      + intros y Hy.
+        exact (CoequalizerOutUnique _ _ _ _ _ _ Hy).
+Qed.
 
 Definition morcls_lp_dom_coprod :=
   CC (λ (f : morcls_lp J g), arrow_dom (pr1 (morcls_lp_map f))).
@@ -313,10 +356,10 @@ Proof.
   - exact (CoproductArrow (morcls_lp_dom_coprod) (λ j, arrow_mor00 j)).
   - exact (CoproductArrow (morcls_lp_cod_coprod) (λ j, arrow_mor11 j)).
   - abstract (
-      unfold morcls_lp_coprod;
-      simpl;
-      rewrite postcompWithCoproductArrow;
-      rewrite precompWithCoproductArrow;
+      etrans; [apply postcompWithCoproductArrow|];
+      apply pathsinv0;
+      etrans; [apply precompWithCoproductArrow|];
+      apply pathsinv0;
       apply maponpaths;
       apply funextsec;
       intro j;
@@ -346,13 +389,16 @@ Proof.
     intro j.
     (* use lifting data of j with respect to g *)
     use (rldJg (pr1 (morcls_lp_map j)) (pr2 (morcls_lp_map j))).
-    unfold hj, kj.
-    rewrite <- assoc.
-    etrans. apply maponpaths. exact S.
-    rewrite assoc, assoc.
-    etrans. apply maponpaths_2.
-    unfold morcls_lp_coprod.
-    exact (CoproductOfArrows'In _ _ _ _ _ j).
+    (* unfold hj, kj. *)
+    etrans. apply assoc'.
+    etrans. apply cancel_precomposition. exact S.
+    etrans. apply assoc.
+    apply pathsinv0.
+    etrans. apply assoc.
+    apply pathsinv0.
+    etrans. apply cancel_postcomposition.
+            (* unfold morcls_lp_coprod. *)
+            exact (CoproductOfArrows'In _ _ _ _ _ j).
     reflexivity.
   }
 
@@ -364,38 +410,41 @@ Proof.
   exists l.
   split; rewrite CoproductArrowEta, (CoproductArrowEta _ _ _ _ _ l).
   - (* factor f as well *)
-    unfold morcls_lp_coprod.
-    rewrite (precompWithCoproductArrow).
+    (* unfold morcls_lp_coprod. *)
+    etrans. apply (precompWithCoproductArrow).
 
     (* maps are equal if maps through coproduct are equal *)
     apply CoproductArrowUnique.
 
     (* now we can reason in separate diagrams again *)
     intro j.
-    rewrite (CoproductInCommutes (morcls_lp_dom_coprod)).
+    etrans. apply (CoproductInCommutes (morcls_lp_dom_coprod)).
 
     (* this is basically exactly the relation we want to prove: *)
     destruct (hlj j) as [hljcomm _].
 
-    (* by definition *)
-    change (CoproductIn _ _ · h) with (hj j).
-    rewrite (hl j).
-    exact hljcomm.
+    apply pathsinv0.
+    etrans. exact (pathsinv0 hljcomm).
+    etrans. apply cancel_precomposition.
+            exact (pathsinv0 (hl j)).
+    reflexivity.
   - (* factor through coproduct object *)
     apply CoproductArrowUnique.
 
     (* reason about separate diagrams again *)
     intro j.
-    rewrite assoc.
-    rewrite (CoproductInCommutes (morcls_lp_cod_coprod)).
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition. 
+            apply (CoproductInCommutes (morcls_lp_cod_coprod)).
 
     (* the relation we want to prove *)
     destruct (hlj j) as [_ kljcomm].
 
-    (* by definition *)
-    change (CoproductIn _ _ · k) with (kj j).
-    rewrite (hl j).
-    exact kljcomm.
+    apply pathsinv0.
+    etrans. exact (pathsinv0 kljcomm).
+    etrans. apply cancel_postcomposition.
+            exact (pathsinv0 (hl j)).
+    reflexivity.
 Qed.
 
 (* we need the actual diagram for the other direction 
@@ -428,12 +477,14 @@ Proof.
   - (* h = (inclusion of arrow_dom f) · (top morphism of canonical diagram) *)
     assert (h = domf_in · (arrow_mor00 (morcls_lp_coprod_diagram))) as Hh.
     {
-      unfold domf_in.
-      symmetry.
+      (* unfold domf_in. *)
+      apply pathsinv0.
       
       exact (CoproductInCommutes (morcls_lp_dom_coprod) _ Hlp).
     }
-    rewrite Hh.
+    apply pathsinv0.
+    etrans. exact Hh.
+    apply pathsinv0.
 
     (* commutativity of f with inclusions of domain / codomain *)
     assert (f · codf_in = domf_in · (morcls_lp_coprod)) as Hf.
@@ -442,20 +493,21 @@ Proof.
       rewrite (CoproductOfArrows'In _ _ (morcls_lp_dom_coprod)).
       reflexivity.
     }
-    rewrite assoc.
+    etrans. apply assoc.
     etrans. apply maponpaths_2.
             exact Hf.
-    rewrite <- assoc.
-    now rewrite Hl1.
-  - rewrite <- assoc.
+    etrans. apply assoc'.
+    apply cancel_precomposition.
+    exact Hl1.
+  - etrans. apply assoc'.
     etrans. apply maponpaths.
             exact Hl2.
 
     apply pathsinv0.
 
     (* k = codf_in · kj *)
-    unfold codf_in.
-    symmetry.
+    (* unfold codf_in. *)
+    apply pathsinv0.
     exact (CoproductInCommutes (morcls_lp_cod_coprod) _ Hlp).
 Qed.
 
@@ -535,7 +587,7 @@ Proof.
   - exact (identity _).
   - exact ρ1.
   - abstract (
-      rewrite id_left;
+      etrans; [apply id_left|];
       exact (pathsinv0 λ1_ρ1_compat)
     ).
 Defined.
@@ -554,8 +606,9 @@ Proof.
   - exact λ1.
   - exact (identity _).
   - abstract (
-      rewrite id_right;
-      exact (λ1_ρ1_compat)
+      apply pathsinv0;
+      etrans; [apply id_right|];
+      exact (pathsinv0 λ1_ρ1_compat)
     ).
 Defined.
 
@@ -567,19 +620,20 @@ Lemma lifting_coprod_lp_red_impl_lifting_coprod_lp :
 Proof.
   intro H.
   destruct H as [l [Hl1 Hl2]].
-  simpl in Hl1, Hl2.
+  (* simpl in Hl1, Hl2. *)
   exists ((PushoutIn1 morcls_lp_coprod_diagram_pushout) · l).
-  split; simpl.
+  split.
   - (* ∑fx · (PushoutIn1 · l) = ∑hx *)
-    rewrite assoc.
-    rewrite (PushoutSqrCommutes (morcls_lp_coprod_diagram_pushout)).
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+            apply (PushoutSqrCommutes (morcls_lp_coprod_diagram_pushout)).
     
     (* ∑hx · λ1g · l = ∑hx *)
-    rewrite <- assoc.
+    etrans. apply assoc'.
     etrans. apply maponpaths. exact Hl1.
-    now rewrite id_right.
+    apply id_right.
   - (* (PushoutIn1 · l) · g = ∑kx *)
-    rewrite <- assoc.
+    etrans. apply assoc'.
     etrans. apply maponpaths. exact Hl2.
     
     (* PushoutIn1 · ρ1g = ∑kx *)
@@ -592,14 +646,15 @@ Lemma lifting_coprod_lp_impl_lifting_coprod_lp_red :
 Proof.
   intro H.
   destruct H as [l [Hl1 Hl2]].
-  simpl in Hl1, Hl2.
+  (* simpl in Hl1, Hl2. *)
   
   (* commutativity of f · l = ∑hx · id *)
   assert (H : morcls_lp_coprod · l = 
             arrow_mor00 morcls_lp_coprod_diagram · identity _).
   {
-    rewrite id_right.
-    exact Hl1.
+    apply pathsinv0.
+    etrans. apply id_right.
+    exact (pathsinv0 Hl1).
   }
 
   (* obtain lift using pushout property on lift *)
@@ -611,18 +666,18 @@ Proof.
   - (* λ1g · lred = identity *)
     apply PushoutArrow_PushoutIn2.
   - (* lred · g = ρ1g *)
-    simpl.
-    use PushoutArrowUnique; simpl.
+    (* simpl. *)
+    use PushoutArrowUnique.
     * (* PushoutIn1 · (lred · g) = ∑kx*)
-      rewrite assoc.
+      etrans. apply assoc.
       etrans. apply maponpaths_2.
-      apply PushoutArrow_PushoutIn1.
+              apply PushoutArrow_PushoutIn1.
       exact Hl2.
     * (* PushoutIn2 · (lred · g) = g*)
-      rewrite assoc.
+      etrans. apply assoc.
       etrans. apply maponpaths_2.
-      apply PushoutArrow_PushoutIn2.
-      now rewrite id_left.
+              apply PushoutArrow_PushoutIn2.
+      apply id_left.
 Qed.
 
 (* almost proposition 12 in Garner, 2007 *)
@@ -661,23 +716,25 @@ Proof.
     * use mors_to_arrow_mor.
       + exact l.
       + exact (identity _).
-      + rewrite id_right.
-        exact lcomm2.
-    * simpl.
-      apply subtypePath; [intro; apply homset_property|].
-      apply pathsdirprod.
+      + abstract (
+          etrans; [exact lcomm2|];
+          apply pathsinv0;
+          apply id_right
+        ).
+    * use arrow_mor_eq.
       + exact lcomm1.
-      + now rewrite id_left.
+      + apply id_left.
   - destruct H as [γ γcomm].
     exists (arrow_mor00 γ).
-    set (γcomm1 := top_square γcomm).
-    set (γcomm2 := bottom_square γcomm).
+    set (γcomm1 := arrow_mor00_eq γcomm).
+    set (γcomm2 := arrow_mor11_eq γcomm).
     split.
     * exact γcomm1.
     * etrans. exact (arrow_mor_comm γ).
-      simpl in γcomm2.
-      rewrite id_left in γcomm2.
-      now rewrite γcomm2, id_right.
+      etrans. apply cancel_precomposition.
+              etrans. exact (pathsinv0 (id_left _)).
+              exact γcomm2.
+      apply id_right.
 Qed.
 
 End lifting_with_J.

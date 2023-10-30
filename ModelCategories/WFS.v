@@ -21,7 +21,7 @@ Local Open Scope retract.
 
 (* Any map can be factored through maps in L and R *)
 Definition wfs_fact_ax {M : category} (L R : morphism_class M) := 
-    (∏ x y (f : x --> y), ∑ z (g : x --> z) (h : z --> y), (L _ _) g × (R _ _) h × h ∘ g = f).
+    (∏ x y (f : x --> y), ∃ z (g : x --> z) (h : z --> y), (L _ _) g × (R _ _) h × g · h = f).
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L27 *)
 Definition is_wfs {M : category} (L R : morphism_class M) :=
@@ -46,7 +46,7 @@ Definition wfs_is_wfs {M : category} (w : wfs M) := pr2 (pr2 w).
 Definition wfs_llp  {M : category} (w : wfs M) := is_wfs_llp (wfs_is_wfs w).
 Definition wfs_rlp  {M : category} (w : wfs M) := is_wfs_rlp (wfs_is_wfs w).
 Definition wfs_fact {M : category} (w : wfs M) := is_wfs_fact (wfs_is_wfs w).
-Definition wfs_fact_ob {M : category} (w : wfs M) {x y} (f : x --> y) := 
+(* Definition wfs_fact_ob {M : category} (w : wfs M) {x y} (f : x --> y) := 
   pr1 ((wfs_fact w) _ _ f).
 Definition wfs_left_map {M : category} (w : wfs M) {x y} (f : x --> y) := 
   pr12 ((wfs_fact w) _ _ f).
@@ -57,9 +57,9 @@ Definition wfs_left_map_L {M : category} (w : wfs M) {x y} (f : x --> y) :=
 Definition wfs_right_map_R {M : category} (w : wfs M) {x y} (f : x --> y) := 
   pr12 (pr222 ((wfs_fact w) _ _ f)).
 Definition wfs_fact_fact {M : category} (w : wfs M) {x y} (f : x --> y) := 
-  pr22 (pr222 ((wfs_fact w) _ _ f)).
+  pr22 (pr222 ((wfs_fact w) _ _ f)). *)
 
-(*
+
 Lemma isaprop_is_wfs {M : category} (L R : morphism_class M) : isaprop (is_wfs L R).
 Proof.
   apply isapropdirprod.
@@ -70,7 +70,7 @@ Proof.
     * do 3 (apply impred_isaprop; intro).
       apply propproperty.
 Qed.
-*)
+
 
 (* Can't do dot notation like in lean (is_wfs.lp)*)
 (* any two maps in a wfs have the lifting property with respect to each other *)
@@ -136,7 +136,7 @@ Defined.
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L55 *)
 (* No counterpart in MCAT, (□(I□), I□) is a WFS *)
 Lemma wfs_of_factorization {M : category} (I : morphism_class M) 
-  (h : ∏ (x y : M) (f : x --> y), ∑ z (g : x --> z) (h : z --> y), (llp (rlp I) _ _ g) × (rlp I _ _ h) × (h ∘ g = f)) :
+  (h : ∏ (x y : M) (f : x --> y), ∃ z (g : x --> z) (h : z --> y), (llp (rlp I) _ _ g) × (rlp I _ _ h) × (h ∘ g = f)) :
   is_wfs (llp (rlp I)) (rlp I).
 Proof.
   use make_is_wfs.
@@ -293,6 +293,7 @@ Proof.
   - exact rlp_isos.
   - (* factorize a morphism through identity and itself *)
     intros x y f.
+    apply hinhpr.
     exists x, (identity x), f.
 
     (* this solves the second subgoal, stating that f is a morphism *)
@@ -311,8 +312,10 @@ Proof.
     exact (opp_llp_is_rlp_opp _).
   - intros x y f.
     specialize ((is_wfs_fact w) _ _ (rm_opp_mor f)) as H.
+    use (hinhuniv _ H).
+    clear H; intro H.
     destruct H as [z [g [h [? [? ?]]]]].
-    
+    apply hinhpr.
     exists (opp_ob z), (opp_mor h), (opp_mor g).
     repeat split; assumption.
 Defined.
@@ -557,15 +560,18 @@ prove that L is left saturated, and R is right saturated in a WFS
 or lemma 14.1.8
 *)
 
-Lemma llp_iff_lift_with_R {M : category} (w : wfs M) {x y : M} (f : x --> y) : 
-    lp (wfs_left_map w f) f <-> (wfs_R w _ _) f.
+Lemma llp_iff_lift_with_R {M : category} (w : wfs M) {x y : M} (f : x --> y) 
+  (H : ∑ z (g : x --> z) (h : z --> y), (wfs_L w _ _) g × (wfs_R w _ _) h × h ∘ g = f) :
+    lp (pr12 H) f <-> (wfs_R w _ _) f.
 Proof.
+  destruct H as [z [g [h [Lg [Rh Hgh]]]]].
+
   split.
   - intro hf.
     unfold wfs_R.
     rewrite (wfs_rlp w).
 
-    intros a b g hg.
+    intros a b g' hg'.
     intros top bottom comm_total.
 
     (* extract lp of λ_f and f (assumption) *)
@@ -576,15 +582,16 @@ Proof.
        Mf --> y
           ρ_f
     *)
-    use (hf (identity _) (wfs_right_map w f)).
+    use (hf (identity _) h).
     {
       rewrite id_left.
       apply pathsinv0.
-      exact (wfs_fact_fact w f).
+
+      exact (Hgh).
     }
-    intro h.
+    intro h'.
     (* extract lift *)
-    destruct h as [lift_lff [comm_lff1 comm_lff2]].
+    destruct h' as [lift_lff [comm_lff1 comm_lff2]].
     
     (* Since ρ_f ∈ R, this diagram has a lift
         top     λ_f
@@ -595,19 +602,20 @@ Proof.
            bottom
     *)
     (* g and rf indeed have the rlp *)
-    assert (lp g (wfs_right_map w f)) as lp_grf.
+    assert (lp g' h) as lp_grf.
     {
-      set (rf_r := wfs_right_map_R w f).
-      rewrite (wfs_rlp) in rf_r.
-      exact (rf_r _ _ g hg).
+      set (rf_r := Rh).
+      unfold wfs_R in rf_r.
+      rewrite (wfs_rlp w) in rf_r.
+      exact (rf_r _ _ g' hg').
     }
 
     (* extract this lift *)
-    use (lp_grf ((wfs_left_map w f) ∘ top) bottom).
+    use (lp_grf (g ∘ top) bottom).
     {
       rewrite <- assoc.
-      unfold wfs_left_map, wfs_right_map.
-      rewrite (wfs_fact_fact w f).
+      (* unfold wfs_left_map, wfs_right_map. *)
+      rewrite (Hgh).
       exact comm_total.
     }
 
@@ -620,22 +628,27 @@ Proof.
 
     (* diagram chasing *)
     split.
-    * rewrite assoc, comm_grf1, <- assoc, comm_lff1, id_right.
-      reflexivity.
-    * rewrite <- assoc, comm_lff2.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              exact comm_grf1.
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              exact comm_lff1.
+      apply id_right.
+    * etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              exact comm_lff2.
       exact comm_grf2.
   - (* this side is easy, we know that f has a lift for all functions in L, 
        so also for its factorization *)
     intro hf.
-    intros h k Hk.
+    intros h' k Hk.
     
     (* get factorization of f *)
-    set (lf := wfs_left_map w f).
-    
     unfold wfs_R in hf.
     rewrite wfs_rlp in hf.
     use hf.
-    exact (wfs_left_map_L w f).
-Defined.
+    exact (Lg).
+Qed.
 
 End wfs.

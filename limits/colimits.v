@@ -3,6 +3,8 @@ Require Import UniMath.CategoryTheory.Core.Prelude.
 Require Import UniMath.CategoryTheory.Core.Categories.
 
 Require Import UniMath.CategoryTheory.limits.graphs.colimits.
+Require Import UniMath.CategoryTheory.limits.graphs.coequalizers.
+Require Import UniMath.CategoryTheory.Chains.Chains.
 Require Import UniMath.Combinatorics.StandardFiniteSets.
 
 Local Open Scope cat.
@@ -219,6 +221,27 @@ Proof.
   apply H.
 Defined.
 
+Lemma connected_graph_zig_zag_strong_induction_symmetric
+    {g : graph}
+    (x : vertex g)
+    {y : vertex g}
+    (H : is_connected g)
+    (P : vertex g -> UU)
+    (Hsymm : ∏ [a b : vertex g], edge b a -> (edge a b -> P b) -> P b) :
+  (P x) ->
+    (∏ (a b : vertex g), P a -> edge a b -> P b) ->
+  P y.
+Proof.
+  intros Px IHn.
+  apply (connected_graph_zig_zag_strong_induction x H P Px).
+  intros a b Pa e.
+  destruct e.
+  - apply (IHn a b Pa e).
+  - apply (Hsymm a b e).
+    intro e'.
+    apply (IHn a b Pa e').
+Defined.
+
 Lemma is_connected_pointed (g : graph) (v0 : vertex g) :
     (∏ (v : vertex g), graph_zig_zag v0 v) ->
         is_connected g.
@@ -229,3 +252,86 @@ Proof.
   - exact (reverse_graph_zig_zag (H v1)).
   - exact (H v2).
 Defined.
+
+Lemma is_connected_nat_graph :
+    is_connected nat_graph.
+Proof.
+  use (is_connected_pointed nat_graph 0).
+  intro v.
+  induction v as [|v Hv].
+  - now exists 0.
+  - use (append_graph_zig_zag Hv).
+    exists 1.
+    exists (S v).
+    split.
+    * now apply inl.
+    * reflexivity.
+Qed.
+
+Lemma is_connected_coequalizer_graph :
+    is_connected Coequalizer_graph.
+Proof.
+  use (is_connected_pointed Coequalizer_graph (● 0)%stn).
+  intro v.
+  induction v as [v v2].
+  induction v as [|v Hv].
+  - exists 0.
+    apply subtypePath; [intro; apply propproperty|].
+    reflexivity.
+  - induction v as [|v Hv2]; [|induction (nopathsfalsetotrue v2)].
+    exists 1.
+    exists (● 1)%stn.
+    split.
+    * do 2 apply inl.
+      exact tt.
+    * apply subtypePath; [intro; apply propproperty|].
+      reflexivity.
+Qed.
+
+Definition id_diagram {C : category} (g : graph) (x : C) :
+    diagram g C.
+Proof.
+  use tpair.
+  - intro v. exact x.
+  - intros u v e. exact (identity x).
+Defined.
+
+Definition id_cocone {C : category} (g : graph) (x : C) :
+    cocone (id_diagram g x) x.
+Proof.
+  use make_cocone.
+  - intro v. exact (identity x).
+  - abstract (intros u v e; apply id_left).
+Defined.
+
+Definition id_isColim {C : category} (g : graph) (x : C) (Hg : is_connected g) (v0 : vertex g) :
+    isColimCocone _ _ (id_cocone g x).
+Proof.
+  intros cl cc.
+  assert (Hv : ∏ v, identity x · coconeIn cc v0 = coconeIn cc v).
+  {
+    intro v.
+    set (predicate := λ v, identity x · coconeIn cc v0 = coconeIn cc v).
+    use (connected_graph_zig_zag_strong_induction v0 Hg predicate); [apply id_left|].
+    intros u u' Hu e.
+    destruct e as [e|e]; (etrans; [exact Hu|]).
+    - etrans. exact (pathsinv0 (coconeInCommutes cc _ _ e)).
+      apply id_left.
+    - apply pathsinv0.
+      etrans. exact (pathsinv0 (coconeInCommutes cc _ _ e)).
+      apply id_left.
+  }
+
+  use unique_exists.
+  - exact (coconeIn cc v0).
+  - abstract (exact Hv).
+  - abstract (intro y; apply impred; intro; apply homset_property).
+  - abstract (
+      intros y ccy;
+      etrans; [|exact (ccy v0)];
+      apply pathsinv0, id_left
+    ).
+Defined.
+
+Definition id_Colim {C : category} (g : graph) (x : C) (Hg : is_connected g) (v0 : vertex g) :=
+    make_ColimCocone _ _ _ (id_isColim g x Hg v0).

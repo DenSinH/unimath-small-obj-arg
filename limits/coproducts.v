@@ -80,3 +80,20 @@ Definition CoproductOfArrows'_comp (I : UU) (C : category) (CC : Coproducts I C)
 Proof.
   apply CoproductOfArrowsInclusion_comp.
 Qed.
+
+(* missing in my version of UniMath *)
+Proposition CoproductArrow_eq'
+            {I : UU}
+            {C : category}
+            {d : I -> C}
+            (z : C)
+            (x : Coproduct _ _ d)
+            (f g : CoproductObject _ _ x --> z)
+            (p : ∏ (i : I), CoproductIn _ _ x i · f = CoproductIn _ _ x i · g)
+  : f = g.
+Proof.
+  refine (CoproductArrowEta _ _ _ _ _ _ @ _ @ !(CoproductArrowEta _ _ _ _ _ _)).
+  apply maponpaths.
+  use funextsec.
+  exact p.
+Qed.

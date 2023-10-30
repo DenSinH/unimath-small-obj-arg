@@ -1,8 +1,10 @@
 -Q . CategoryTheory
+-arg -type-in-type
 whiskering.v
 limits/coproducts.v
 limits/colimits.v
 Chains/Chains.v
+categories/HSET/Core.v
 DisplayedCats/Examples/Arrow.v
 DisplayedCats/Examples/Three.v
 DisplayedCats/Examples/MonadAlgebras.v
@@ -24,9 +26,15 @@ ModelCategories/NWFSisWFS.v
 ModelCategories/WeakEquivalences.v
 ModelCategories/ModelCategory.v
 ModelCategories/Generated/Helpers.v
+ModelCategories/Generated/MonoidalHelpers.v
 ModelCategories/Generated/LiftingWithClass.v
 ModelCategories/Generated/OneStepMonad.v
 ModelCategories/Generated/FFMonoidalStructure.v
 ModelCategories/Generated/LNWFSMonoidalStructure.v
+ModelCategories/Generated/LNWFSCocomplete.v
+ModelCategories/Generated/LNWFSClosed.v
 ModelCategories/Generated/GenericFreeMonoid.v
-ModelCategories/Generated/LNWFSFreeMonoid.v
+ModelCategories/Generated/GenericFreeMonoidSequence.v
+ModelCategories/Generated/LNWFSSmallnessReduction.v
+ModelCategories/Generated/OneStepMonadSmall.v
+ModelCategories/Generated/SmallObjectArgument.v
