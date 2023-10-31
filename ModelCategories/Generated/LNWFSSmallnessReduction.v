@@ -53,14 +53,6 @@ Local Open Scope cat.
 
 Section SmallnessReduction.
 
-
-Local Ltac functorial_factorization_eq f := (
-  apply subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|];
-  use funextsec;
-  intro f;
-  use subtypePath; [intro; apply isapropdirprod; apply homset_property|]
-).
-
 Context {C : category}.
 Context (CC : Colims C).
 
@@ -626,7 +618,7 @@ Proof.
   use (is_z_iso_isColim _ FfCC).
   exists (FR_lt_preserves_colim_impl_Ff_lt_preserves_colim_mor F d HR).
   split.
-  - functorial_factorization_eq f.
+  - functorial_factorization_mor_eq f.
     set (HRCC := FR_slice_colimcocone_over_pointwise_tensored F d HR f).
     set (base_iso := FR_lt_preserves_colim_impl_Ff_lt_preserves_colim_mor_pointwise F d HR f).
     
@@ -642,7 +634,7 @@ Proof.
     etrans. apply pr1_transportf_const.
     etrans. apply id_left.
     apply (section_disp_on_eq_morphisms F); reflexivity.
-  - functorial_factorization_eq f.
+  - functorial_factorization_mor_eq f.
 
     set (HRCC := FR_slice_colimcocone_over_pointwise_tensored F d HR f).
     set (base_iso := FR_lt_preserves_colim_impl_Ff_lt_preserves_colim_mor_pointwise F d HR f).
@@ -685,7 +677,7 @@ Proof.
      pr1_category and monoidal_left_tensor *)
   assert (X : z_iso_mor Ffiso = pr1 LNWFSarr).
   {
-    functorial_factorization_eq f.
+    functorial_factorization_mor_eq f.
     use colimArrowUnique'.
     intro v.
     etrans. apply (colimArrowCommutes).

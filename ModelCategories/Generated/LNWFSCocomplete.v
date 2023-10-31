@@ -39,13 +39,6 @@ Local Open Scope cat.
 Local Open Scope Cat.
 
 
-Local Ltac functorial_factorization_eq f := (
-  apply subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|];
-  use funextsec;
-  intro f;
-  use subtypePath; [intro; apply isapropdirprod; apply homset_property|]
-).
-
 Section Ff_cocomplete.
 
 Context {C : category}.
@@ -319,7 +312,7 @@ Proof.
   - exact (ColimFf_unique_mor v0 F cc).
   - abstract (
       intro v;
-      functorial_factorization_eq a;
+      functorial_factorization_mor_eq a;
       etrans; [use pr1_transportf_const|];
       etrans; [apply (colimArrowCommutes (CCFf_pt_ob1 a))|];
       reflexivity
@@ -329,7 +322,7 @@ Proof.
     ).
   - abstract (
       intros f t;
-      functorial_factorization_eq a;
+      functorial_factorization_mor_eq a;
       apply colimArrowUnique;
       intro u;
       (* cbn. *)
@@ -351,7 +344,7 @@ Proof.
     * intro v. exact (colim_nat_trans_in_data).
     * abstract (
         intros u v e;
-        functorial_factorization_eq a;
+        functorial_factorization_mor_eq a;
         etrans; [use pr1_transportf_const|];
         (* cbn. *)
         apply (colimInCommutes (CCFf_pt_ob1 a))

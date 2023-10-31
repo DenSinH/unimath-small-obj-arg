@@ -38,13 +38,6 @@ Require Import CategoryTheory.ModelCategories.Generated.LNWFSCocomplete.
 Local Open Scope cat.
 Local Open Scope Cat.
 
-Local Ltac functorial_factorization_eq f := (
-  apply subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|];
-  use funextsec;
-  intro f;
-  use subtypePath; [intro; apply isapropdirprod; apply homset_property|]
-).
-
 Section Ff_closed.
 
 Import BifunctorNotations.
@@ -185,7 +178,7 @@ Lemma Ff_right_tensor_preserves_colimit_mor_are_inverses
     (Ff_right_tensor_preserves_colimit_mor_inv A d).
 Proof.
   split.
-  - functorial_factorization_eq f.
+  - functorial_factorization_mor_eq f.
     etrans. use pr1_transportf_const.
     apply pathsinv0.
     apply (colim_endo_is_identity).
@@ -198,7 +191,7 @@ Proof.
     (* cbn. *)
     etrans. use (colimArrowCommutes (CCFf_pt_ob1 CC (mapdiagram (monoidal_right_tensor A) d) f)).
     reflexivity.
-  - functorial_factorization_eq f.
+  - functorial_factorization_mor_eq f.
     etrans. use pr1_transportf_const.
     apply pathsinv0.
     apply (colim_endo_is_identity).
@@ -364,44 +357,6 @@ Context (v0 : vertex g).
 Context (LNWFSCC := λ d, ColimLNWFSCocone CC d H v0).
 
 
-Local Lemma LNWFS_right_tensor_preserves_colimit_mor_inv_disp_subproof
-    (A : LNWFS_mon)
-    (d : diagram g (total_category (LNWFS C)))
-    (f : arrow C)
-    (v : vertex g)
-    (dbase := mapdiagram (pr1_category _) d) :
-    fact_L (pr1 (dob d v0)) (fact_R (pr1 A) f) · colimIn (CCFf_pt_ob1 CC dbase (fact_R (pr1 A) f)) v0 =
-    fact_L (pr1 (dob d v)) (fact_R (pr1 A) f) · colimIn (CCFf_pt_ob1 CC dbase (fact_R (pr1 A) f)) v.
-Proof.
-  set (predicate := λ v, fact_L (pr1 (dob d v0)) (fact_R (pr1 A) f) · colimIn (CCFf_pt_ob1 CC dbase (fact_R (pr1 A) f)) v0 =
-                fact_L (pr1 (dob d v)) (fact_R (pr1 A) f) · colimIn (CCFf_pt_ob1 CC dbase (fact_R (pr1 A) f)) v).
-  use (connected_graph_zig_zag_strong_induction v0 H predicate); [reflexivity|].
-  enough (He : ∏ (u u' : vertex g) (e : edge u u'), 
-            fact_L (pr1 (dob d u)) (fact_R (pr1 A) f) · colimIn (CCFf_pt_ob1 CC dbase (fact_R (pr1 A) f)) u =
-            fact_L (pr1 (dob d u')) (fact_R (pr1 A) f) · colimIn (CCFf_pt_ob1 CC dbase (fact_R (pr1 A) f)) u').
-  {
-    intros u u' Hu e.
-    destruct e.
-    - etrans. exact Hu.
-      exact (He _ _ e).
-    - etrans. exact Hu.
-      apply pathsinv0.
-      exact (He _ _ e).
-  }
-  
-  intros u u' e.
-  set (cinc := colimInCommutes (CCFf_pt_ob1 CC dbase (fact_R (pr1 A) f))).
-  etrans. apply cancel_precomposition.
-          exact (pathsinv0 (cinc _ _ e)).
-  etrans. apply assoc.
-  apply cancel_postcomposition.
-  (* cbn. *)
-  
-  set (comme := pr1 (three_mor_comm (section_nat_trans (pr1 (dmor d e)) (fact_R (pr1 A) f)))).
-  etrans. exact comme.
-  apply id_left.
-Qed.
-
 Lemma LNWFS_right_tensor_preserves_colimit_mor_inv_disp
     (A : LNWFS_mon)
     (d : diagram g _) 
@@ -410,145 +365,35 @@ Lemma LNWFS_right_tensor_preserves_colimit_mor_inv_disp
   -->[Ff_right_tensor_preserves_colimit_mor_inv CC H v0 (pr1 A) dbase]
     pr2 ((monoidal_right_tensor A) (colim (LNWFSCC d))).
 Proof.
-  split; intro.
-  - use arrow_mor_eq; 
-    [apply pathsinv0; etrans; [apply cancel_postcomposition, id_left|]; apply id_left|].
+  set (colimAL := colim (LNWFSCC (mapdiagram (monoidal_right_tensor A) d))).
+  set (AcolimL := monoidal_right_tensor A (colim (LNWFSCC d))).
+  set (Ffiso := z_iso_inv (Ff_right_tensor_preserves_colimit_mor_iso CC H v0 (pr1 A) dbase)).
+  set (LNWFSmor := colimArrow (LNWFSCC (mapdiagram (monoidal_right_tensor A) d)) _ (mapcocone (monoidal_right_tensor A) _ (colimCocone (LNWFSCC d)))).
+
+  (* rewrite commutativity of leftwhiskering functor and projection *)
+  assert (
+    Ff_right_tensor_preserves_colimit_mor_inv CC H v0 (pr1 A) dbase
+    = pr1 LNWFSmor
+  ) as X.
+  {
+    functorial_factorization_mor_eq f.
     use colimArrowUnique'.
     intro v.
-    
-    etrans. apply assoc.
-    etrans. apply cancel_postcomposition.
-            apply colimArrowCommutes.
-    etrans. 
-    {
-      etrans. apply assoc.
-      etrans. 
-      {
-        apply cancel_postcomposition.
-        etrans. apply assoc.
-        etrans.
-        {
-          apply cancel_postcomposition.
-          set (ccin := (CCFf_pt_ob1 CC dbase (fact_R (pr1 A) a))).
-          apply (colimOfArrowsIn _ _ ccin).
-        }
-        etrans. apply assoc'.
-        apply cancel_precomposition.
-        apply (colimOfArrowsIn).
-      }
-      etrans. apply assoc'.
-      apply cancel_precomposition.
-      etrans. apply assoc'.
-      apply cancel_precomposition.
-      apply colimOfArrowsIn.
-    }
-    etrans. apply assoc.
-    etrans. apply assoc.
-
+    etrans. apply (colimArrowCommutes).
     apply pathsinv0.
-    etrans. apply assoc.
+    etrans. apply (colimArrowCommutes).
+    etrans. apply pr1_transportf_const.
+    etrans. apply (colimOfArrowsIn _ _ (CCFf_pt_ob1 CC (mapdiagram (pr1_category (LNWFS C)) d) (fact_R (pr1 A) f))).
     etrans. apply cancel_postcomposition.
     {
-      set (ccin := (CCFf_pt_ob1 CC
-            (mapdiagram (pr1_category (LNWFS C)) (mapdiagram (monoidal_right_tensor A) d)) a)).
-      etrans. apply (assoc (colimIn ccin v)).
-      etrans. apply cancel_postcomposition.
-              exact (colimOfArrowsIn _ _ ccin _ _ _ v).
-      etrans. apply assoc'.
-      apply cancel_precomposition.
-      apply colimOfArrowsIn.
+      etrans. use (section_disp_on_eq_morphisms (pr1 (dob d v)) (γ' := identity _)); reflexivity.
+      apply maponpaths.
+      exact (section_disp_id (pr1 (dob d v)) _).
     }
-    etrans. apply cancel_postcomposition.
-            apply assoc.
-    etrans. apply assoc'.
-    etrans. apply cancel_precomposition.
-    {
-      set (ccin := (CCFf_pt_ob1 CC
-            (mapdiagram (pr1_category (LNWFS C))
-                (mapdiagram (monoidal_right_tensor A) d))
-            (fact_L
-                (colim
-                  (ColimFfCocone CC
-                      (mapdiagram (pr1_category (LNWFS C))
-                        (mapdiagram (monoidal_right_tensor A) d)) H v0)) a))).
-      etrans. apply (assoc (colimIn ccin v)).
-      etrans. apply cancel_postcomposition.
-              apply (colimArrowCommutes ccin).
-      etrans. apply assoc'.
-      apply cancel_precomposition.
-      set (accin := (CCFf_pt_ob1 CC
-              (mapdiagram (pr1_category (LNWFS C))
-                (mapdiagram (monoidal_right_tensor A) d))
-              (lnwfs_L_monad (pr2 (monoidal_right_tensor A (colim (LNWFSCC d)))) a))).
-      apply (colimArrowCommutes accin).
-    }
-    etrans. apply assoc.
-    apply cancel_postcomposition.
-    
-    etrans. apply assoc'.
-    etrans. apply assoc'.
-    apply pathsinv0.
-    etrans. apply assoc'.
-    apply cancel_precomposition.
-
-    etrans. apply (pr1_section_disp_on_morphisms_comp (pr1 (dob d v))).
-    apply pathsinv0.
-    etrans.
-    {
-      etrans. apply cancel_precomposition.
-              apply (pr1_section_disp_on_morphisms_comp (pr1 (dob d v))).
-      apply (pr1_section_disp_on_morphisms_comp (pr1 (dob d v))).
-    }
-
-    abstract (
-      apply (section_disp_on_eq_morphisms (pr1 (dob d v))); [
-        etrans; [apply assoc'|];
-        apply pathsinv0;
-        etrans; [apply id_left|];
-        apply cancel_precomposition;
-        apply pathsinv0;
-        etrans; [
-          etrans; [apply cancel_precomposition|];
-            apply (pr1_section_disp_on_morphisms_comp (pr1 A));
-          apply (pr1_section_disp_on_morphisms_comp (pr1 A))
-        |];
-        apply section_disp_on_eq_morphisms; [
-          etrans; [apply id_left|]; apply id_left|
-        ];
-        etrans; [
-          apply cancel_precomposition;
-          set (ccin := (CCFf_pt_ob1 CC
-                  (mapdiagram (pr1_category (LNWFS C)) (mapdiagram (monoidal_right_tensor A) d))
-                a));
-          apply (colimArrowCommutes ccin)
-        |];
-        apply pathsinv0;
-        exact (LNWFS_right_tensor_preserves_colimit_mor_inv_disp_subproof A d a v)
-      
-      | etrans; [apply id_left|];
-        etrans; [
-          set (ccin := (CCFf_pt_ob1 CC
-                  (mapdiagram (pr1_category (LNWFS C)) (mapdiagram (monoidal_right_tensor A) d))
-              a));
-          apply (colimArrowCommutes ccin)
-        |];
-        apply pathsinv0;
-        apply id_right
-      ]
-    ).
-  - use arrow_mor_eq; [apply id_left|].
-    use colimArrowUnique.
-    intro v.
-    etrans. 
-    {
-      etrans. apply assoc.
-      etrans. apply cancel_postcomposition.
-              apply colimArrowCommutes.
-      (* cbn. *)
-      set (ccin := (CCFf_pt_ob1 CC dbase (fact_R (pr1 A) a))).
-      apply (colimArrowCommutes ccin).
-    }
-    reflexivity.
+    apply id_left.
+  }
+  rewrite X.
+  exact (pr2 LNWFSmor).
 Qed.
 
 Local Lemma LNWFS_right_tensor_preserves_colimit_mor_disp

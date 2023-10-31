@@ -30,7 +30,7 @@ Local Open Scope Cat.
 Local Open Scope morcls.
 
 
-Local Ltac functorial_factorization_eq f := (
+Ltac functorial_factorization_mor_eq f := (
   apply subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|];
   use funextsec;
   intro f;
@@ -622,16 +622,16 @@ Definition Ff_monoidal_laws : monoidal_laws Ff_monoidal_data.
 Proof.
   repeat split.
   - intros F F'.
-    functorial_factorization_eq f.
+    functorial_factorization_mor_eq f.
     cbn.
     etrans. use (section_disp_on_eq_morphisms F (γ' := identity _)); reflexivity. 
     etrans. apply maponpaths. apply (section_disp_id F).
     reflexivity.
   - intros F F'.
-    functorial_factorization_eq f.
+    functorial_factorization_mor_eq f.
     reflexivity.
   - intros A F F' F'' γ γ'.
-    functorial_factorization_eq f.
+    functorial_factorization_mor_eq f.
     (* cbn. *)
     apply pathsinv0.
     etrans. use pr1_transportf_const.
@@ -643,14 +643,14 @@ Proof.
       reflexivity.
     * apply id_left.
   - intros A F F' F'' γ γ'.
-    functorial_factorization_eq f.
+    functorial_factorization_mor_eq f.
     etrans. use pr1_transportf_const.
     apply pathsinv0.
     etrans. use pr1_transportf_const.
     reflexivity.
   - intros A F F' F'' γ γ'.
     apply pathsinv0.
-    functorial_factorization_eq f.
+    functorial_factorization_mor_eq f.
     (* cbn. *)
     etrans. use pr1_transportf_const.
     apply pathsinv0.
@@ -666,7 +666,7 @@ Proof.
     apply cancel_postcomposition.
     use (section_disp_on_eq_morphisms A); reflexivity.
   - intros F F' γ.
-    functorial_factorization_eq f.
+    functorial_factorization_mor_eq f.
     etrans. use pr1_transportf_const.
     apply pathsinv0.
     etrans. use pr1_transportf_const.
@@ -675,29 +675,29 @@ Proof.
     apply pathsinv0.
     etrans. apply id_right.
     reflexivity.
-  - functorial_factorization_eq f.
+  - functorial_factorization_mor_eq f.
     (* cbn. *)
     etrans. use pr1_transportf_const.
     apply id_left.
-  - functorial_factorization_eq f.
+  - functorial_factorization_mor_eq f.
     etrans. use pr1_transportf_const.
     apply id_left.
   - intros F F' γ.
-    functorial_factorization_eq f.
+    functorial_factorization_mor_eq f.
     etrans. use pr1_transportf_const.
     apply pathsinv0.
     etrans. use pr1_transportf_const.
     etrans. apply id_left.
     apply pathsinv0.
     apply id_right.
-  - functorial_factorization_eq f.
+  - functorial_factorization_mor_eq f.
     etrans. use pr1_transportf_const.
     apply id_left.
-  - functorial_factorization_eq f.
+  - functorial_factorization_mor_eq f.
     etrans. use pr1_transportf_const.
     apply id_left.
   - intros A F F' F'' γ.
-    functorial_factorization_eq f.
+    functorial_factorization_mor_eq f.
     etrans. use pr1_transportf_const.
     apply pathsinv0.
     etrans. use pr1_transportf_const.
@@ -706,7 +706,7 @@ Proof.
     etrans. apply id_left.
     use (section_disp_on_eq_morphisms A); reflexivity.
   - intros A F F' F'' γ.
-    functorial_factorization_eq f.
+    functorial_factorization_mor_eq f.
     etrans. use pr1_transportf_const.
     apply pathsinv0.
     etrans. use pr1_transportf_const.
@@ -714,7 +714,7 @@ Proof.
     apply pathsinv0.
     apply id_left.
   - intros A F F' F'' γ.
-    functorial_factorization_eq f.
+    functorial_factorization_mor_eq f.
     etrans. use pr1_transportf_const.
     apply pathsinv0.
     etrans. use pr1_transportf_const.
@@ -722,14 +722,14 @@ Proof.
     apply pathsinv0.
     etrans. apply id_left.
     use (section_disp_on_eq_morphisms A); reflexivity.
-  - functorial_factorization_eq f. 
+  - functorial_factorization_mor_eq f. 
     etrans. use pr1_transportf_const.
     apply id_left.
-  - functorial_factorization_eq f. 
+  - functorial_factorization_mor_eq f. 
     etrans. use pr1_transportf_const.
     apply id_left.
   - intros F F'.
-    functorial_factorization_eq f.
+    functorial_factorization_mor_eq f.
     etrans. use pr1_transportf_const.
     etrans. apply id_left.
     etrans. use (section_disp_on_eq_morphisms F (γ' := identity _)); reflexivity.
@@ -737,7 +737,7 @@ Proof.
             apply (section_disp_id F).
     reflexivity.
   - intros A F F' F''.
-    functorial_factorization_eq f.
+    functorial_factorization_mor_eq f.
     etrans. use pr1_transportf_const.
     etrans. apply cancel_postcomposition.
             use pr1_transportf_const.

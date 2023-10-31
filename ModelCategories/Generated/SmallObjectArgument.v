@@ -54,14 +54,6 @@ Local Open Scope cat.
 
 Section SmallObjectArgument.
 
-
-Local Ltac functorial_factorization_eq f := (
-  apply subtypePath; [intro; apply isaprop_section_nat_trans_disp_axioms|];
-  use funextsec;
-  intro f;
-  use subtypePath; [intro; apply isapropdirprod; apply homset_property|]
-).
-
 Context {C : category}.
 Context (J : morphism_class C).
 Context (CC : Colims C).
