@@ -45,7 +45,7 @@ Definition presentable {C : category} (x : C) :=
       nat_graph.
 
 Definition class_presentable {C : category} (J : morphism_class C) :=
-    ∏ (f : arrow C), J _ _ f -> (presentable f).
+    ∏ (g : arrow C), J _ _ g -> (presentable g).
 
 Section OSCSmall.
 
@@ -137,15 +137,15 @@ Defined.
 
 (* inclusion of arrow into CoproductArrow in the arrow category *)
 Definition morcls_lp_coprod_in
-    {g : arrow C}
-    (S : morcls_lp J g) :
-  pr1 (morcls_lp_map S) --> morcls_lp_coprod CC J g.
+    {f : arrow C}
+    (S : morcls_lp J f) :
+  pr1 (morcls_lp_map S) --> morcls_lp_coprod CC J f.
 Proof.
   use mors_to_arrow_mor.
-  - exact (CoproductIn (morcls_lp_dom_coprod CC J g) S).
-  - exact (CoproductIn (morcls_lp_cod_coprod CC J g) S).
+  - exact (CoproductIn (morcls_lp_dom_coprod CC J f) S).
+  - exact (CoproductIn (morcls_lp_cod_coprod CC J f) S).
   - abstract (
-      exact (CoproductOfArrows'In _ _ (morcls_lp_dom_coprod CC J g) _ _ S)
+      exact (CoproductOfArrows'In _ _ (morcls_lp_dom_coprod CC J f) _ _ S)
     ).
 Defined.
 
@@ -490,15 +490,15 @@ Lemma presentable_lp_colimK_mor_colimArrowCommutes
 Proof.
   unfold presentable_lp_colimK_mor.
 
-  set (f := (morcls_lp_map S)).
-  transparent assert (pred : (predicate_type d cl (pr1 f))).
+  set (g := (morcls_lp_map S)).
+  transparent assert (pred : (predicate_type d cl (pr1 g))).
   {
     intro S'.
     use make_hProp.
     - exact (
-        presentable_lp_colimK_mor isclCC (f,, S') HS 
+        presentable_lp_colimK_mor isclCC (g,, S') HS 
         · colimArrow (arrow_colims CC _ (mapdiagram K d)) _ (mapcocone K d cc)
-        = morcls_lp_coprod_in (f,, S')
+        = morcls_lp_coprod_in (g,, S')
       ).
     - apply homset_property.
   }
