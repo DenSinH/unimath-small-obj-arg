@@ -11,35 +11,29 @@ Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Local Open Scope cat.
 Local Open Scope morcls.
 Local Open Scope retract.
-(* Local Open Scope set. *)
+
+Section Lifting.
+
+Context {C : category}.
 
 (* in a category, we know that homs are sets, so equality must be a prop *)
 (* Lean: lp @ https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L14 *)
 (* Normal ∑-type is not a proposition, we need it to be to use it to create morphism classes *)
-Definition filler {M : category} {a x e b : M} {i : a --> x} {p : e --> b}
-    {g : a --> e} {f : x --> b} (H : p ∘ g = f ∘ i) := 
-  ∑ l : x --> e, (l ∘ i = g) × (p ∘ l = f).
+Definition filler {x y a b : C} {f : x --> y} {g : a --> b}
+    {h : x --> a} {k : y --> b} (H : h · g = f · k) := 
+  ∑ l : y --> a, (f · l = h) × (l · g = k).
 
-Definition filler_map {M : category} {a x e b : M} {i : a --> x} {p : e --> b}
-    {g : a --> e} {f : x --> b} {H : p ∘ g = f ∘ i} (l : filler H) := pr1 l.
-Definition filler_comm {M : category} {a x e b : M} {i : a --> x} {p : e --> b}
-    {g : a --> e} {f : x --> b} {H : p ∘ g = f ∘ i} (l : filler H) := pr2 l.
+Definition filler_map {x y a b : C} {f : x --> y} {g : a --> b}
+    {h : x --> a} {k : y --> b} {H : h · g = f · k} (l : filler H) := pr1 l.
+Definition filler_comm {x y a b : C} {f : x --> y} {g : a --> b}
+    {h : x --> a} {k : y --> b} {H : h · g = f · k} (l : filler H) := pr2 l.
 
-Definition lp {M : category} {a x e b : M} (i : a --> x) (p : e --> b) : hProp := 
-  ∀ (g : a --> e) (f : x --> b) (H : p ∘ g = f ∘ i), ∥filler H∥.
+Definition lp {x y a b : C} (f : x --> y) (g : a --> b) : hProp := 
+  ∀ (h : x --> a) (k : y --> b) (H : h · g = f · k), ∥filler H∥.
 
 (* "existential" lifting property *)
-Definition elp {M : category} {a x e b : M} (i : a --> x) (p : e --> b) : UU := 
-  ∏ (g : a --> e) (f : x --> b) (H : p ∘ g = f ∘ i), filler H.
-
-Lemma hinh_elp_impl_lp {M : category} {a x e b : M} (i : a --> x) (p : e --> b) :
-    ∥elp i p∥ -> lp i p.
-Proof.
-  intros elp_ip h k Hhk.
-  use (elp_ip); clear elp_ip; intro elp_ip.
-  apply hinhpr.
-  exact (elp_ip h k Hhk).
-Qed.
+Definition elp {x y a b : C} (f : x --> y) (g : a --> b) : UU := 
+  ∏ (h : x --> a) (k : y --> b) (H : h · g = f · k), filler H.
 
 (* Lean: llp @ https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L18 *)
 (* 
@@ -51,35 +45,39 @@ Qed.
     X ---> B
        f 
 *)
-Definition llp {M : category} (R : morphism_class M) : (morphism_class M) :=
-    λ {a x : M} (i : a --> x), ∀ (e b : M) (p : e --> b), ((R _ _) p ⇒ lp i p)%logic.
-
-Definition rlp {M : category} (L : morphism_class M) : (morphism_class M) :=
-    λ {e b : M} (p : e --> b), ∀ (a x : M) (i : a --> x), ((L _ _) i ⇒ lp i p)%logic.
+Section Lp.
+Local Open Scope logic.
+Definition llp (R : morphism_class C) : (morphism_class C) :=
+    λ {x y : C} (f : x --> y), ∀ (a b : C) (g : a --> b), ((R _ _) g ⇒ lp f g).
+Definition rlp (L : morphism_class C) : (morphism_class C) :=
+    λ {a b : C} (g : a --> b), ∀ (x y : C) (f : x --> y), ((L _ _) f ⇒ lp f g).
+End Lp.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L24 *)
 (* MCAT: Lemma 14.1.9 *)
-Lemma llp_anti {M : category} {R R' : morphism_class M} (h : R ⊆ R') : llp R' ⊆ llp R.
+Lemma llp_anti {R R' : morphism_class C} (h : R ⊆ R') : llp R' ⊆ llp R.
 Proof.
   unfold "⊆" in *.
-  intros a x i H.
-  intros e b p K.
+  intros ? ? f H.
+  intros ? ? g K.
   (* LLP for i in R' *)
-  apply (H e b p).
+  apply (H _ _ g).
   (* R ⊆ R' *)
-  apply (h e b p).
+  apply (h _ _ g).
   (* i in R *)
   exact K.
-Defined.
+Qed.
+
+End Lifting.
 
 (* not in Lean file *)
-Lemma opp_rlp_is_llp_opp {M : category} (L : morphism_class M) : 
+Lemma opp_rlp_is_llp_opp {C : category} (L : morphism_class C) : 
     morphism_class_opp (rlp L) = (llp (morphism_class_opp L)).
 Proof.
-  apply morphism_class_subset_antisymm; intros a b f.
+  apply morphism_class_subset_antisymm; intros x y f.
   (* todo: these proofs are the same *)
   - intro rlpf.
-    intros x y g hg.
+    intros a b g hg.
     intros top bottom H.
     (* extract lift fro rlp of f with respect to the opposite morphism of g *)
     use (rlpf _ _ (rm_opp_mor g)).
@@ -99,7 +97,7 @@ Proof.
       exists (opp_mor l).
       split; assumption.
   - intro rlpf.
-    intros x y g hg.
+    intros a b g hg.
     intros top bottom H.
     use (rlpf _ _ (rm_opp_mor g)).
     * exact hg.
@@ -113,20 +111,21 @@ Proof.
 
       exists (opp_mor l).
       split; assumption.
-Defined.
+Qed.
 
 (* dual statement *)
-Lemma opp_llp_is_rlp_opp {M : category} (L : morphism_class M) : 
+Lemma opp_llp_is_rlp_opp {C : category} (L : morphism_class C) : 
     morphism_class_opp (llp L) = rlp (morphism_class_opp L).
 Proof.
   rewrite <- (morphism_class_opp_opp (rlp _)).
   rewrite (opp_rlp_is_llp_opp _).
   trivial.
-Defined.
+Qed.
 
-Lemma elp_of_retracts {M : category} {a b x y a' b' x' y' : M} 
-    {f : a --> b} {f' : a' --> b'}
-    {g : x --> y} {g' : x' --> y'}
+Lemma elp_of_retracts {C : category} 
+    {a b x y a' b' x' y' : C} 
+    {f : x --> y} {f' : x' --> y'}
+    {g : a --> b} {g' : a' --> b'}
     (rf : retract f' f) (rg : retract g' g) :
   (elp f' g') -> (elp f g).
 Proof.
@@ -146,12 +145,13 @@ Proof.
     now rewrite ha, id_left, <- assoc, hx, id_right.
   * rewrite <- assoc, hrg, assoc, <- (assoc _ l g'), H2, assoc, assoc.
     now rewrite hb, id_left, <- assoc, hy, id_right.
-Defined.
+Qed.
 
 (* todo: use elp_of_retracts for this?  *)
-Lemma lp_of_retracts {M : category} {a b x y a' b' x' y' : M} 
-    {f : a --> b} {f' : a' --> b'}
-    {g : x --> y} {g' : x' --> y'}
+Lemma lp_of_retracts {C : category} 
+    {a b x y a' b' x' y' : C} 
+    {f : x --> y} {f' : x' --> y'}
+    {g : a --> b} {g' : a' --> b'}
     (rf : retract f' f) (rg : retract g' g) :
   (lp f' g') -> (lp f g).
 Proof.
@@ -174,4 +174,4 @@ Proof.
       now rewrite ha, id_left, <- assoc, hx, id_right.
     * rewrite <- assoc, hrg, assoc, <- (assoc _ l g'), H2, assoc, assoc.
       now rewrite hb, id_left, <- assoc, hy, id_right.
-Defined.
+Qed.

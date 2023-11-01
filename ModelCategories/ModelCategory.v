@@ -141,7 +141,7 @@ Proof.
       (* so since g ∈ AC in a WFS acf = (AC, F), so must f be *)
       exact (wfs_L_retract (make_wfs AC F acf) r g_ac).
     }
-Defined.
+Qed.
 
 
 End modelcat.

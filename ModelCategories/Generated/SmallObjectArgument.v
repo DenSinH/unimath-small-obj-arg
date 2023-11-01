@@ -10,7 +10,6 @@ Require Import UniMath.CategoryTheory.limits.pushouts.
 Require Import UniMath.CategoryTheory.limits.graphs.coequalizers.
 Require Import UniMath.CategoryTheory.limits.graphs.colimits.
 Require Import UniMath.CategoryTheory.whiskering.
-Require Import UniMath.CategoryTheory.Chains.Chains.
 
 Require Import UniMath.CategoryTheory.Monads.Monads.
 Require Import UniMath.CategoryTheory.Monads.MonadAlgebras.
@@ -132,7 +131,7 @@ Proof.
       (osc_preserves_diagram_on HJ)
   ).
 
-  use tpair; [|exact (LNWFS_tot_monoid_is_NWFS lnwfs_monoid)].
+  exact (_,, LNWFS_tot_monoid_is_NWFS lnwfs_monoid).
 Defined.
 
 End SmallObjectArgument.

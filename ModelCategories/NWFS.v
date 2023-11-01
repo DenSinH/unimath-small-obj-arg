@@ -65,12 +65,11 @@ Proof.
   - (* unfold functor_idax. *)
     intro.
     apply subtypePath; [intro; apply homset_property|].
-    + trivial.
+    reflexivity.
   - (* unfold functor_compax. *)
     intros a b c f g.
-    apply subtypePath.
-    + intro; apply homset_property.
-    + trivial.
+    apply subtypePath; [intro; apply homset_property|].
+    reflexivity.
 Qed.
 
 Definition face_map_0 : three C ⟶ arrow C :=
@@ -110,7 +109,9 @@ Definition face_map_2 : three C ⟶ arrow C :=
     (_,, face_map_2_axioms).
 
 (* verify that they are indeed compatible *)
-Lemma face_compatibility (fg : three C) : arrow_mor (face_map_0 fg) ∘ arrow_mor (face_map_2 fg) = arrow_mor (face_map_1 fg).
+Lemma face_compatibility (fg : three C) : 
+    arrow_mor (face_map_2 fg) · arrow_mor (face_map_0 fg) 
+    = arrow_mor (face_map_1 fg).
 Proof.
   exact (three_comp fg).
 Defined.
@@ -156,8 +157,7 @@ Proof.
     This is because the induced map is a commuting square,
     so an equality between maps. Therefore, the homset property
     says this is a property. *)
-    intro f.
-    simpl.
+    intro.
     apply homset_property.
   * (* We are left to prove the commutativity in the base category,
     given our displayed properties. This is effectively just commutativity
@@ -182,7 +182,6 @@ Proof.
     2 ===== 2
   *)
   intro xxx.
-  simpl.
   exists (make_dirprod (three_mor01 xxx) (identity _)).
   abstract (
     simpl;
@@ -785,16 +784,15 @@ Proof.
   assert (lnwfs_mor n n'' (α · α') =
           nat_trans_comp _ _ _ (lnwfs_L_monad_mor α' ax') (lnwfs_L_monad_mor α ax)) as H.
   {
-    simpl.
     use nat_trans_eq.
     - (* for some reason this definition is completely unfolded *)
       exact (homset_property (op_cat (arrow C))).
-    - intro x; simpl in x.
-      apply subtypePath; [intro; apply homset_property|].
-      simpl.
-      apply pathsdirprod; cbn.
-      * now rewrite id_left.
-      * unfold three_mor11.
+    - intro x.
+      use arrow_mor_eq.
+      * apply pathsinv0. 
+        apply id_left.
+      * cbn.
+        unfold three_mor11.
         simpl.
         unfold mor_disp; simpl.
         (* todo: understand what I have done here *)

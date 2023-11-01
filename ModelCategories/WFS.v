@@ -6,61 +6,56 @@ Require Import UniMath.CategoryTheory.limits.pullbacks.
 Require Import UniMath.CategoryTheory.limits.pushouts.
 Require Import UniMath.CategoryTheory.limits.coproducts.
 Require Import UniMath.CategoryTheory.limits.products.
+Require Import UniMath.CategoryTheory.limits.graphs.colimits.
 Require Import UniMath.CategoryTheory.limits.Opp.
 
+Require Import UniMath.CategoryTheory.Chains.Chains.
+Require Import CategoryTheory.Chains.Chains.
+
+Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.ModelCategories.Retract.
 Require Import CategoryTheory.ModelCategories.MorphismClass.
 Require Import CategoryTheory.ModelCategories.Lifting.
 
-Section wfs.
 
 Local Open Scope cat.
 Local Open Scope morcls.
 Local Open Scope retract.
-(* Local Open Scope set. *)
+
+Section wfs.
 
 (* Any map can be factored through maps in L and R *)
-Definition wfs_fact_ax {M : category} (L R : morphism_class M) := 
-    (∏ x y (f : x --> y), ∃ z (g : x --> z) (h : z --> y), (L _ _) g × (R _ _) h × g · h = f).
+Definition wfs_fact_ax {C : category} (L R : morphism_class C) := 
+  ∏ x y (f : x --> y), 
+    ∃ z (g : x --> z) (h : z --> y), 
+      (L _ _) g × (R _ _) h × g · h = f.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L27 *)
-Definition is_wfs {M : category} (L R : morphism_class M) :=
+Definition is_wfs {C : category} (L R : morphism_class C) :=
   (L = llp R) × (R = rlp L) × (wfs_fact_ax L R).
 
-Definition make_is_wfs {M : category} {L R : morphism_class M}
+Definition make_is_wfs {C : category} {L R : morphism_class C}
     (llp : L = llp R) (rlp : R = rlp L) (fact : wfs_fact_ax L R) : is_wfs L R :=
   make_dirprod llp (make_dirprod rlp fact).
 
-Definition wfs (M : category) :=
-  ∑ (L R : morphism_class M), is_wfs L R.
+Definition wfs (C : category) :=
+  ∑ (L R : morphism_class C), is_wfs L R.
 
-Definition make_wfs {M : category} (L R : morphism_class M) (w : is_wfs L R) : wfs M :=
+Definition make_wfs {C : category} (L R : morphism_class C) (w : is_wfs L R) : wfs C :=
   tpair _ L (tpair _ R w).
 
-Definition wfs_L {M : category} (w : wfs M) := (pr1 w).
-Definition wfs_R {M : category} (w : wfs M) := pr1 (pr2 w).
-Definition is_wfs_llp  {M : category} {L R : morphism_class M} (w : is_wfs L R) := pr1 w.
-Definition is_wfs_rlp  {M : category} {L R : morphism_class M} (w : is_wfs L R) := pr1 (pr2 w).
-Definition is_wfs_fact {M : category} {L R : morphism_class M} (w : is_wfs L R) := pr2 (pr2 w).
-Definition wfs_is_wfs {M : category} (w : wfs M) := pr2 (pr2 w).
-Definition wfs_llp  {M : category} (w : wfs M) := is_wfs_llp (wfs_is_wfs w).
-Definition wfs_rlp  {M : category} (w : wfs M) := is_wfs_rlp (wfs_is_wfs w).
-Definition wfs_fact {M : category} (w : wfs M) := is_wfs_fact (wfs_is_wfs w).
-(* Definition wfs_fact_ob {M : category} (w : wfs M) {x y} (f : x --> y) := 
-  pr1 ((wfs_fact w) _ _ f).
-Definition wfs_left_map {M : category} (w : wfs M) {x y} (f : x --> y) := 
-  pr12 ((wfs_fact w) _ _ f).
-Definition wfs_right_map {M : category} (w : wfs M) {x y} (f : x --> y) :=
-  pr122 ((wfs_fact w) _ _ f).
-Definition wfs_left_map_L {M : category} (w : wfs M) {x y} (f : x --> y) := 
-  pr1 (pr222 ((wfs_fact w) _ _ f)).
-Definition wfs_right_map_R {M : category} (w : wfs M) {x y} (f : x --> y) := 
-  pr12 (pr222 ((wfs_fact w) _ _ f)).
-Definition wfs_fact_fact {M : category} (w : wfs M) {x y} (f : x --> y) := 
-  pr22 (pr222 ((wfs_fact w) _ _ f)). *)
+Definition wfs_L {C : category} (w : wfs C) := (pr1 w).
+Definition wfs_R {C : category} (w : wfs C) := pr1 (pr2 w).
+Definition is_wfs_llp  {C : category} {L R : morphism_class C} (w : is_wfs L R) := pr1 w.
+Definition is_wfs_rlp  {C : category} {L R : morphism_class C} (w : is_wfs L R) := pr1 (pr2 w).
+Definition is_wfs_fact {C : category} {L R : morphism_class C} (w : is_wfs L R) := pr2 (pr2 w).
+Definition wfs_is_wfs {C : category} (w : wfs C) := pr2 (pr2 w).
+Definition wfs_llp  {C : category} (w : wfs C) := is_wfs_llp (wfs_is_wfs w).
+Definition wfs_rlp  {C : category} (w : wfs C) := is_wfs_rlp (wfs_is_wfs w).
+Definition wfs_fact {C : category} (w : wfs C) := is_wfs_fact (wfs_is_wfs w).
 
-
-Lemma isaprop_is_wfs {M : category} (L R : morphism_class M) : isaprop (is_wfs L R).
+Lemma isaprop_is_wfs {C : category} (L R : morphism_class C) :
+    isaprop (is_wfs L R).
 Proof.
   apply isapropdirprod.
   - unfold isaprop.
@@ -71,29 +66,35 @@ Proof.
       apply propproperty.
 Qed.
 
+Context {C : category}.
+
 
 (* Can't do dot notation like in lean (is_wfs.lp)*)
 (* any two maps in a wfs have the lifting property with respect to each other *)
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L33 *)
-Lemma wfs'lp {M : category} (w : wfs M)
-  {a b x y} {f : a --> b} {g : x --> y} (hf : (wfs_L w _ _) f) (hg : (wfs_R w _ _) g) : lp f g.
+Lemma wfs'lp (w : wfs C)
+    {x y a b} {f : x --> y} {g : a --> b} 
+    (hf : (wfs_L w _ _) f) (hg : (wfs_R w _ _) g) : 
+  lp f g.
 Proof.
   unfold wfs_L in hf.
   rewrite (wfs_llp w) in hf.
   exact (hf _ _ _ hg). 
-Defined.
+Qed.
 
 (* if f' is a retract of f and f is in L for some WFS, then so is f' *)
 (* proposition 14.1.13 in More Concise AT *)
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L40 *)
-Lemma wfs_L_retract {M : category} (w : wfs M)
-  {a b a' b'} {f : a --> b} {f' : a' --> b'} (r : retract f f') (hf : (wfs_L w _ _) f) : (wfs_L w _ _) f'.
+Lemma wfs_L_retract (w : wfs C)
+    {x y x' y'} {f : x --> y} {f' : x' --> y'}
+    (r : retract f f') (hf : (wfs_L w _ _) f) : 
+  (wfs_L w _ _) f'.
 Proof.
   destruct r as [ia [ra [ib [rb [ha [hb [hi hr]]]]]]].
 
   unfold wfs_L.
   rewrite (wfs_llp w).
-  intros x y g hg h k s.
+  intros a b g hg h k s.
   (* existence of lift in part of diagram *)
   use (wfs'lp w hf hg (h ∘ ra) (k ∘ rb) _).
   {
@@ -114,29 +115,29 @@ Proof.
     reflexivity.
   * rewrite <- assoc, hlk, assoc, hb, id_left.
     reflexivity.
-Defined.
+Qed.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L52 *)
 (* Lemma 14.1.9 in MCAT *)
-Lemma llp_rlp_self {M : category} (L : morphism_class M) : L ⊆ llp (rlp L).
+Lemma llp_rlp_self (L : morphism_class C) : L ⊆ llp (rlp L).
 Proof.
   intros a b f hf x y g hg.
   apply (hg _ _ _).
   exact hf.
-Defined.
+Qed.
 
 (* no counterpart in lean *)
-Lemma rlp_llp_self {M : category} (L : morphism_class M) : L ⊆ rlp (llp L).
+Lemma rlp_llp_self (L : morphism_class C) : L ⊆ rlp (llp L).
 Proof.
   intros a b f hf x y g hg.
   apply (hg _ _ _).
   exact hf.
-Defined.
+Qed.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L55 *)
 (* No counterpart in MCAT, (□(I□), I□) is a WFS *)
-Lemma wfs_of_factorization {M : category} (I : morphism_class M) 
-  (h : ∏ (x y : M) (f : x --> y), ∃ z (g : x --> z) (h : z --> y), (llp (rlp I) _ _ g) × (rlp I _ _ h) × (h ∘ g = f)) :
+Lemma wfs_of_factorization (I : morphism_class C) 
+    (h : ∏ (x y : C) (f : x --> y), ∃ z (g : x --> z) (h : z --> y), (llp (rlp I) _ _ g) × (rlp I _ _ h) × (h ∘ g = f)) :
   is_wfs (llp (rlp I)) (rlp I).
 Proof.
   use make_is_wfs.
@@ -147,17 +148,23 @@ Proof.
       apply (hg _ _ _).
       exact (llp_rlp_self _ _ _ _ hf).
   - exact h.
-Defined.
+Qed.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L67 *)
 (* same name as Lemma 14.1.12 in MCAT, but a different phrasing 
 In MCAT, the statement is in reference of a single morphism, not a whole class
 *)
-Lemma retract_argument {M : category} {L' : morphism_class M} (w : wfs M)
-  (H : ∀ {x y} (f : x --> y), ∃ z (g : x --> z) (h : z --> y), (L' _ _) g × (wfs_R w _ _) h × h ∘ g = f) :
-  ∏ {a b} (f : a --> b), (wfs_L w _ _) f -> ∃ {x' y'} (f' : x' --> y') (r : retract f' f), (L' _ _) f'.
+Lemma retract_argument {L' : morphism_class C} (w : wfs C)
+    (
+      H : ∀ {x y} (f : x --> y), 
+            ∃ z (g : x --> z) (h : z --> y), 
+              (L' _ _) g × (wfs_R w _ _) h × h ∘ g = f
+    ) :
+  ∏ {x y} (f : x --> y), 
+    (wfs_L w _ _) f 
+    -> ∃ {x' y'} (f' : x' --> y') (r : retract f' f), (L' _ _) f'.
 Proof.
-  intros a b f hf.
+  intros x y f hf.
 
   (* rcases H f with ⟨z, g, h, hg, hh, hgh⟩, *)
   (* Get factorization for f from H *)
@@ -180,7 +187,7 @@ Proof.
   (* Show that f is a retract of g *)
   assert (r : retract g f).
   {
-    use (make_retract (identity a) (identity a) l h).
+    use (make_retract (identity _) (identity _) l h).
     use make_is_retract.
     - now rewrite id_left.
     - assumption.
@@ -192,13 +199,13 @@ Proof.
   apply hinhpr.
   
   (* finish proof *)
-  exists a, z, g, r.
+  exists x, z, g, r.
   exact hg.
-Defined.
+Qed.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L82 *)
-Lemma lp_isos_univ {M : category} {a b x y : M} (f : a --> b) (g : x --> y) : 
-  (morphism_class_isos M _ _ f) -> lp f g.
+Lemma lp_isos_univ {x y a b : C} (f : x --> y) (g : a --> b) : 
+  (morphism_class_isos C _ _ f) -> lp f g.
 Proof.
   intro H.
   set (fiso := make_iso _ H).
@@ -216,10 +223,10 @@ Proof.
   * rewrite <- assoc, s, assoc.
     rewrite iso_after_iso_inv, id_left.
     reflexivity.
-Defined.
+Qed.
 
-Lemma lp_univ_isos {M : category} {a b x y : M} (f : a --> b) (g : x --> y) : 
-  (morphism_class_isos M _ _ f) -> lp g f.
+Lemma lp_univ_isos {x y a b : C} (f : x --> y) (g : a --> b) : 
+  (morphism_class_isos C _ _ f) -> lp g f.
 Proof.
   intro H.
   set (fiso := make_iso _ H).
@@ -236,12 +243,12 @@ Proof.
     reflexivity.
   * rewrite <- assoc, iso_after_iso_inv, id_right.
     reflexivity.
-Defined.
+Qed.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L91 *)
-Lemma llp_univ {M : category} : llp (morphism_class_univ M) = morphism_class_isos M.
+Lemma llp_univ : llp (morphism_class_univ C) = morphism_class_isos C.
 Proof.
-  apply morphism_class_subset_antisymm; intros a b f H.
+  apply morphism_class_subset_antisymm; intros x y f H.
   - (* apply llp of f with itself *)
     specialize ((H _ _ f) tt).
     (* choose horizontal maps to be identity *)
@@ -265,13 +272,13 @@ Proof.
     (* finish proof *)
     apply is_iso_from_is_z_iso.
     exact f_z_iso.
-  - intros x y g _.
+  - intros a b g _.
     (* other inclusion is exactly the previous Lemma *)
     exact (lp_isos_univ f g H).
-Defined.
+Qed.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L101 *)
-Lemma rlp_isos {M : category} : rlp (morphism_class_isos M) = morphism_class_univ M.
+Lemma rlp_isos : rlp (morphism_class_isos C) = morphism_class_univ C.
 Proof.
   (* This proof is slightly different *)
   apply morphism_class_subset_antisymm.
@@ -282,10 +289,10 @@ Proof.
   - (* other inclusion is easy with previous Lemmas *)
     rewrite <- llp_univ.
     exact (rlp_llp_self _).
-Defined.
+Qed.
 
 (* https://github.com/rwbarton/lean-model-categories/blob/e366fccd9aac01154da9dd950ccf49524f1220d1/src/category_theory/model/wfs.lean#L109 *)
-Lemma wfs_isos_univ {M : category} : is_wfs (morphism_class_isos M) (morphism_class_univ M).
+Lemma wfs_isos_univ : is_wfs (morphism_class_isos C) (morphism_class_univ C).
 Proof.
   (* apply symmetry to immediately exact the previous Lemmas *)
   use make_is_wfs; try symmetry.
@@ -298,12 +305,13 @@ Proof.
 
     (* this solves the second subgoal, stating that f is a morphism *)
     repeat split.
-    * exact (identity_is_iso M x).
+    * exact (identity_is_iso C x).
     * rewrite id_left.
       reflexivity.
-Defined.
+Qed.
 
-Definition opp_is_wfs {M : category} {L R : morphism_class M} (w : is_wfs L R) : is_wfs (morphism_class_opp R) (morphism_class_opp L).
+Definition opp_is_wfs {L R : morphism_class C} (w : is_wfs L R) : 
+    is_wfs (morphism_class_opp R) (morphism_class_opp L).
 Proof.
   use make_is_wfs.
   - rewrite (is_wfs_rlp w).
@@ -318,15 +326,20 @@ Proof.
     apply hinhpr.
     exists (opp_ob z), (opp_mor h), (opp_mor g).
     repeat split; assumption.
-Defined.
+Qed.
 
-Definition opp_wfs {M : category} (w : wfs M) : wfs (op_cat M).
+Definition opp_wfs (w : wfs C) : wfs (op_cat C).
 Proof.
   exists (morphism_class_opp (wfs_R w)), (morphism_class_opp (wfs_L w)).
   exact (opp_is_wfs (wfs_is_wfs w)).
 Defined.
 
-Lemma wfs_L_contains_isos {M : category} (w : wfs M) : (morphism_class_isos M) ⊆ (wfs_L w).
+End wfs. 
+
+Section properties.
+
+Lemma wfs_L_contains_isos {C : category} (w : wfs C) :
+    (morphism_class_isos C) ⊆ (wfs_L w).
 Proof.
   (* isos are the llp of univ *)
   rewrite <- llp_univ.
@@ -338,27 +351,32 @@ Proof.
   (* every morphism is a morphism *)
   intros x y f hf.
   exact tt.
-Defined.
+Qed.
 
 (* Dual statement *)
-Lemma wfs_R_contains_isos {M : category} (w : wfs M) : (morphism_class_isos M) ⊆ (wfs_R w).
+Lemma wfs_R_contains_isos {C : category} (w : wfs C) : 
+    (morphism_class_isos C) ⊆ (wfs_R w).
 Proof.
   intros x y f hf.
   set (opp_containment := wfs_L_contains_isos (opp_wfs w)).
   exact (opp_containment _ _ (opp_mor f) (opp_is_iso _ hf)).
-Defined.
+Qed.
 
 (* Dual statement of wfs_L_retract *)
-Lemma wfs_R_retract {M : category} (w : wfs M)
-  {a b a' b'} {f : a --> b} {f' : a' --> b'} (r : retract f f') (hf : (wfs_R w _ _) f) : (wfs_R w _ _) f'.
+Lemma wfs_R_retract {C : category} (w : wfs C)
+    {a b a' b'} {f : a --> b} {f' : a' --> b'}
+    (r : retract f f') (hf : (wfs_R w _ _) f) :
+  (wfs_R w _ _) f'.
 Proof.
   use (wfs_L_retract (opp_wfs w) (opp_retract r)).
   exact hf.
-Defined.
+Qed.
 
 (* https://ncatlab.org/nlab/show/weak+factorization+system#ClosuredPropertiesOfWeakFactorizationSystem *)
-Lemma wfs_closed_pullbacks {M : category} (w : wfs M) 
-  {x y z : M} {p : x --> y} {f : z --> y} (Pb : Pullback f p) : ((wfs_R w _ _) p) -> ((wfs_R w _ _) (PullbackPr1 Pb)).
+Lemma wfs_closed_pullbacks {C : category} (w : wfs C) 
+    {x y z : C} {p : x --> y} {f : z --> y} 
+    (Pb : Pullback f p) : 
+  ((wfs_R w _ _) p) -> ((wfs_R w _ _) (PullbackPr1 Pb)).
 Proof.
   intro p_r.
 
@@ -420,20 +438,23 @@ Proof.
       reflexivity.
   - (* commutativity in lower triangle is trivial by pullback property *)
     exact hgh1.
-Defined.
+Qed.
 
 (* Dual statement *)
-Lemma wfs_closed_pushouts {M : category} (w : wfs M) 
-    {x y z : M} {p : x --> y} {f : x --> z} (Po : Pushout f p) : ((wfs_L w _ _) p) -> ((wfs_L w _ _) (PushoutIn1 Po)).
+Lemma wfs_closed_pushouts {C : category} (w : wfs C) 
+    {x y z : C} {p : x --> y} {f : x --> z}
+    (Po : Pushout f p) : 
+  ((wfs_L w _ _) p) -> ((wfs_L w _ _) (PushoutIn1 Po)).
 Proof.
   (* didn't expect Coq would be this powerful... *)
   apply (wfs_closed_pullbacks (opp_wfs w)).
-Defined.
+Qed.
 
 (* https://ncatlab.org/nlab/show/weak+factorization+system#ClosuredPropertiesOfWeakFactorizationSystem *)
 (* map between coproducts is in L if all arrows between objects in coproduct are *)
-Lemma wfs_closed_coproducts {I : hSet} {M : category} (w : wfs M)
-    {a b : I -> M} {f : ∏ (i : I), a i --> b i} (hf : ∀ (i : I), (wfs_L w _ _) (f i))
+Lemma wfs_closed_coproducts {C : category} {I : hSet} (w : wfs C)
+    {a b : I -> C} 
+    {f : ∏ (i : I), a i --> b i} (hf : ∀ (i : I), (wfs_L w _ _) (f i))
     (CCa : Coproduct _ _ a) (CCb : Coproduct _ _ b) : 
   (wfs_L w _ _) (CoproductOfArrows _ _ CCa CCb f).
 Proof.
@@ -445,10 +466,10 @@ Proof.
 
   (* obtain a square for all i ∈ I *)
   (* factor maps from A_i / B_i through coproduct object *)
-  set (hi := λ i, h ∘ (CoproductIn _ _ CCa i)).
-  set (ki := λ i, k ∘ (CoproductIn _ _ CCb i)).
+  set (hi := λ i, (CoproductIn _ _ CCa i) · h).
+  set (ki := λ i, (CoproductIn _ _ CCb i) · k).
 
-  assert (∏ i, ∃ li, (li ∘ (f i) = hi i) × (g ∘ li = ki i)) as ilift.
+  assert (∏ i, ∃ li, ((f i) · li = hi i) × (li · g = ki i)) as ilift.
   {
     intro i.
     (* extract lift in i-th diagram *)
@@ -465,7 +486,7 @@ Proof.
   (* we need the axiom of choice here 
      it is basically exactly the definition of the axiom of choice *)
   assert (aoc : AxiomOfChoice). admit.
-  assert (∥∏ i, ∑ li, (li ∘ (f i) = hi i) × (g ∘ li = ki i)∥) as ilift_aoc.
+  assert (∥∏ i, ∑ li, ((f i) · li = hi i) × (li · g = ki i)∥) as ilift_aoc.
   {
     set (aocI := aoc I).
     simpl in aocI.
@@ -474,7 +495,7 @@ Proof.
   }
 
   (* obtain lift in original diagram *)
-  assert (∃ (li : (∏ i, (b i --> x))), (∏ i, (li i) ∘ (f i) = hi i × (g ∘ (li i) = ki i))) as ilifts.
+  assert (∃ (li : (∏ i, (b i --> x))), (∏ i, (f i) · (li i) = hi i × ((li i) · g = ki i))) as ilifts.
   {
     use (hinhuniv _ ilift_aoc).
     intro ilift_aoc_sig.
@@ -539,28 +560,112 @@ Proof.
 Admitted.
 
 (* Dual statement *)
-Lemma wfs_closed_products {I : hSet} {M : category} (w : wfs M)
-    {a b : I -> M} {f : ∏ (i : I), b i --> a i} (hf : ∀ (i : I), (wfs_R w _ _) (f i))
+Lemma wfs_closed_products {C : category} {I : hSet} (w : wfs C)
+    {a b : I -> C} {f : ∏ (i : I), b i --> a i} 
+    (hf : ∀ (i : I), (wfs_R w _ _) (f i))
     (CCa : Product _ _ a) (CCb : Product _ _ b) : 
   (wfs_R w _ _) (ProductOfArrows _ _ CCa CCb f).
 Proof.
   (* again superpowers by Coq *)
   apply (wfs_closed_coproducts (opp_wfs w)).
   exact hf.
-Defined.
+Qed.
+
+Lemma wfs_closed_transfinite_composition 
+    {C : category}
+    {d : chain C}
+    {w : wfs C}
+    (CC : ColimCocone d)
+    (Hd : ∏ {u v : vertex nat_graph} (e : edge u v), wfs_L w _ _ (dmor d e)) :
+  wfs_L w _ _ (colimIn CC 0).
+Proof.
+  unfold wfs_L in *.
+  (* create square with g ∈ R *)
+  rewrite (wfs_llp w) in *.
+
+  intros a b g Rg h k hkcomm.
+  
+  transparent assert (Hind : (∏ (v : vertex nat_graph), ∃ (va : dob d v --> a), va · g = colimIn CC v · k)).
+  {
+    intro v.
+    induction v as [|v Hv].
+    - apply hinhpr.
+      exists h.
+      exact hkcomm.
+    - transparent assert (lpSv : (∃ (lp : dmor d (idpath (S v)) --> g), arrow_mor11 lp = colimIn CC (S v) · k)). 
+      {
+        use (hinhuniv _ Hv).
+        intro Hv'.
+        apply hinhpr.
+        use tpair.
+        - use mors_to_arrow_mor.
+          * exact (pr1 Hv').
+          * exact (colimIn CC (S v) · k).
+          * abstract (
+              etrans; [exact (pr2 Hv')|];
+              apply pathsinv0;
+              etrans; [apply assoc|];
+              apply cancel_postcomposition;
+              exact (colimInCommutes CC _ _ (idpath (S v)))
+            ).
+        - reflexivity.
+      }
+      use (hinhuniv _ lpSv).
+      clear lpSv; intro lpSv.
+      set (fillv := Hd _ _ (idpath (S v)) _ _ _ Rg _ _ (arrow_mor_comm (pr1 lpSv))).
+      use (hinhuniv _ fillv).
+      clear fillv; intro fillv.
+      apply hinhpr.
+      exists (pr1 fillv).
+      etrans; [exact (pr22 fillv)|].
+      exact (pr2 lpSv).
+  }
+
+  assert (aoc : AxiomOfChoice). admit.
+  assert (∥∏ v : vertex nat_graph, ∑ va : dob d v --> a, va · g = colimIn CC v · k∥) as Hind_aoc.
+  {
+    set (aocI := aoc natset).
+    simpl in aocI.
+    apply (aocI).
+    exact Hind.
+  }
+  use (hinhuniv _ Hind_aoc).
+  clear Hind Hind_aoc; intro Hind.
+  apply hinhpr.
+
+  use tpair.
+  - use colimArrow.
+    use make_cocone.
+    * intro v.
+      exact (pr1 (Hind v)).
+    * intros u v e.
+      simpl in e.
+      rewrite <- e.
+      admit. (* also follows from definition of Hind... *)
+  - split.
+    * etrans. apply colimArrowCommutes.
+      cbn.
+      admit.  (* true by definition of Hind... *)
+    * use colimArrowUnique'.
+      intro v.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply colimArrowCommutes.
+      exact (pr2 (Hind v)).
+Admitted.
 
 (*
 (i)   wfs_<X>_contains_isos
 (ii)  wfs_<X>_retract
 (iii) wfs_closed_<co>products
 (iv)  wfs_closed_<pushouts|pullbacks>
-(v)   NOT DONE
+(v)   wfs_closed_transfinite_composition
 
 prove that L is left saturated, and R is right saturated in a WFS
 or lemma 14.1.8
 *)
 
-Lemma llp_iff_lift_with_R {M : category} (w : wfs M) {x y : M} (f : x --> y) 
+Lemma llp_iff_lift_with_R {C : category} (w : wfs C) {x y : C} (f : x --> y) 
   (H : ∑ z (g : x --> z) (h : z --> y), (wfs_L w _ _) g × (wfs_R w _ _) h × h ∘ g = f) :
     lp (pr12 H) f <-> (wfs_R w _ _) f.
 Proof.
@@ -651,4 +756,4 @@ Proof.
     exact (Lg).
 Qed.
 
-End wfs.
+End properties.

@@ -25,7 +25,7 @@ Proof.
   - intro X.
     exact (∑ (α : (T X) --> X), Algebra_laws _ (make_Algebra_data T X α)).
   - intros X Y αX αY f.
-    simpl in αX, αY.
+    (* simpl in αX, αY. *)
     set (X' := make_Algebra_data T X (pr1 αX),, pr2 αX : Algebra T).
     set (Y' := make_Algebra_data T Y (pr1 αY),, pr2 αY : Algebra T).
     exact (is_Algebra_mor T (X:=X') (Y:=Y') f).
@@ -43,14 +43,14 @@ Definition MonadAlg_disp_id_comp {C : category} (T : Monad C) : disp_cat_id_comp
 Proof.
   split.
   - intros x xx.
-    unfold mor_disp.
-    simpl.
-    exact (Algebra_mor_commutes T (Algebra_mor_id T xx)).
+    abstract (
+      exact (Algebra_mor_commutes T (Algebra_mor_id T xx))
+    ).
   - intros x y z f g xx yy zz ff gg.
-    unfold mor_disp.
-    simpl.
-    exact (Algebra_mor_commutes T (Algebra_mor_comp T xx yy zz ff gg)).
-Defined.
+    abstract (
+      exact (Algebra_mor_commutes T (Algebra_mor_comp T xx yy zz ff gg))
+    ).
+Qed.
 
 Definition MonadAlg_disp_data {C : category} (T : Monad C) : disp_cat_data C.
 Proof.
@@ -63,9 +63,11 @@ Definition MonadAlg_disp {C : category} (T : Monad C) : disp_cat C.
 Proof.
   use tpair.
   - exact (MonadAlg_disp_data T).
-  - repeat split; intros; try (apply homset_property).
-    apply isasetaprop.
-    apply homset_property.
+  - abstract (
+      repeat split; intros; try (apply homset_property);
+      apply isasetaprop;
+      apply homset_property
+    ).
 Defined.
 
 (* todo: this is not in my version of UniMath? *)
@@ -77,7 +79,7 @@ Proof.
   { assumption. }
   apply isaprop_is_precategory.
   apply homset_property.
-Defined.
+Qed.
 
 Corollary catiso_to_category_path {A B : category}
   (F : catiso A B) : A = B.
@@ -85,7 +87,7 @@ Proof.
   apply category_eq.
   apply catiso_to_precategory_data_path.
   assumption.
-Defined.
+Qed.
 
 Definition MonadAlg_disp_Algebra_functor {C : category} (T : Monad C) :
     total_category (MonadAlg_disp T) ⟶ (MonadAlg T).
@@ -94,13 +96,12 @@ Proof.
   - use make_functor_data.
     * intro X. 
       exact (Algebra_from_MonadAlg_disp (pr2 X)).
-    * intros. simpl.
+    * intros.
       exact (Algebra_mor_from_Algebra_mor_disp (pr2 a) (pr2 b) (pr2 X)).
-  - split.
-    * intro.
-      reflexivity.
-    * intros a b c f g.
-      reflexivity.
+  - abstract (
+      split; [intro|intros a b c f g]; 
+        (apply subtypePath; [intro; apply homset_property|]; reflexivity)
+    ).
 Defined.
 
 Lemma MonadAlg_disp_is_Algebra {C : category} (T : Monad C) :
