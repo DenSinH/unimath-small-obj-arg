@@ -730,9 +730,17 @@ Proof.
   intro S.
   exists (pr1 S).
   (* right hand square *)
-  set (rhs := PushoutSqrCommutes (morcls_lp_coprod_diagram_pushout CC J f)).
-  set (rhs_mor := mors_to_arrow_mor (morcls_lp_coprod CC J f) (λ1 CC J f) _ _ (pathsinv0 rhs)).
-  use (λ inx, inx · rhs_mor).
+  transparent assert (rhs_mor : (morcls_lp_coprod CC J f --> λ1 CC J f)).
+  {
+    use mors_to_arrow_mor. 
+    - exact (arrow_mor00 (morcls_lp_coprod_diagram CC J f)).
+    - exact (PushoutIn1 (morcls_lp_coprod_diagram_pushout CC J f)).
+    - abstract (
+        set (rhs := PushoutSqrCommutes (morcls_lp_coprod_diagram_pushout CC J f));
+        exact (pathsinv0 rhs)
+      ).
+  }
+  apply (postcompose rhs_mor).
 
   (* left hand square *)
   (* todo: generalize this *)
@@ -960,6 +968,7 @@ Proof.
     etrans. use (CoproductOfArrowsInclusionIn _ (morcls_lp_cod_coprod CC J (one_step_comonad_data f)) _ _ (morcls_lp_coprod_L1_inclusion f S)).
     etrans. apply id_left.
     morcls_lp_coproduct_in_eq.
+    simpl.
     use arrow_mor_eq.
     * etrans. apply id_right.
       etrans. apply (CoproductInCommutes (morcls_lp_dom_coprod CC J f)).

@@ -4,7 +4,16 @@ Require Import UniMath.CategoryTheory.Core.Categories.
 Require Import UniMath.CategoryTheory.opp_precat.
 Require Import UniMath.CategoryTheory.Monads.Monads.
 Require Import UniMath.CategoryTheory.Monads.MonadAlgebras.
+
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
+Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
+
+Require Import UniMath.CategoryTheory.limits.coproducts.
+Require Import UniMath.CategoryTheory.limits.graphs.colimits.
+Require Import UniMath.CategoryTheory.Chains.Chains.
+Require Import CategoryTheory.Chains.Chains.
+
+Require Import CategoryTheory.limits.coproducts.
 
 Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
@@ -13,6 +22,7 @@ Require Import CategoryTheory.ModelCategories.Retract.
 Require Import CategoryTheory.ModelCategories.Lifting.
 Require Import CategoryTheory.ModelCategories.WFS.
 Require Import CategoryTheory.ModelCategories.NWFS.
+Require Import CategoryTheory.ModelCategories.Generated.Helpers.
 
 Local Open Scope cat.
 Local Open Scope mor_disp.
@@ -254,7 +264,7 @@ Proof.
       + exact (nwfs_rlp_L_maps_cl_subs_R_maps_cl _).
     * intros x y f.
 
-      set (fact := n f).
+      set (fact := fact_functor n f).
       set (f01 := three_mor01 fact).
       set (f12 := three_mor12 fact).
       (* cbn in f01, f12. *)
@@ -269,3 +279,231 @@ Proof.
         exact (nwfs_Rf_is_R_map n (three_mor02 fact)).
       + exact (three_comp fact).
 Defined.
+
+Lemma nwfs_closed_coproducts {C : category} {I : hSet} (n : nwfs C)
+    {a b : I -> C} 
+    {f : ∏ (i : I), a i --> b i} (hf : ∏ (i : I), (nwfs_L_maps n (f i)))
+    (CCa : Coproduct _ _ a) (CCb : Coproduct _ _ b) : 
+  nwfs_L_maps n (CoproductOfArrows _ _ CCa CCb f).
+Proof.
+  transparent assert (ini : (∏ i, f i --> CoproductOfArrows I C CCa CCb f)).
+  {
+    intro i.
+    use mors_to_arrow_mor.
+    - exact (CoproductIn _ _ CCa i).
+    - exact (CoproductIn _ _ CCb i).
+    - abstract (apply CoproductInCommutes).
+  }
+  use tpair.
+  - use mors_to_arrow_mor.
+    * exact (identity _).
+    * use CoproductArrow.
+      intro i.
+      apply (compose (arrow_mor11 (pr1 (hf i)))).
+      exact (three_mor11 (#(fact_functor n) (ini i))).
+    * abstract (
+        etrans; [apply id_left|];
+        use CoproductArrow_eq';
+        intro i;
+        etrans; [exact (pathsinv0 (pr1 (three_mor_comm (#(fact_functor n) (ini i)))))|];
+        apply pathsinv0;
+        etrans; [apply assoc|];
+        etrans; [apply cancel_postcomposition;
+                apply CoproductOfArrows'In|];
+        etrans; [apply assoc'|];
+        etrans; [apply cancel_precomposition;
+                apply CoproductInCommutes|];
+        etrans; [apply assoc|]; 
+        apply cancel_postcomposition;
+        etrans; [exact (pathsinv0 (arrow_mor_comm (pr1 (hf i))))|];
+        etrans; [apply cancel_postcomposition;
+                etrans; [exact (pathsinv0 (id_right _))|];
+                exact (arrow_mor00_eq (pr12 (hf i)))|];
+        apply id_left
+      ).
+  - split.
+    * use arrow_mor_eq; [apply id_left|].
+      use CoproductArrow_eq'.
+      intro i.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              use (CoproductInCommutes).
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              exact (pathsinv0 (pr2 (three_mor_comm (#(fact_functor n) (ini i))))).
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              exact (arrow_mor11_eq (pr12 (hf i))).
+      etrans. apply id_left.
+      apply pathsinv0.
+      apply id_right.
+    * use arrow_mor_eq.
+      + apply cancel_precomposition.
+        exact (nwfs_Σ_top_map_id n (CoproductOfArrows I C CCa CCb f)).
+      + use CoproductArrow_eq'.
+        intro i.
+        etrans. apply assoc.
+        etrans. apply cancel_postcomposition.
+                apply CoproductInCommutes.
+        etrans. apply assoc'.
+        etrans. apply cancel_precomposition.
+        {
+          set (Σnat := nat_trans_ax (nwfs_Σ n) _ _ (ini i)).
+          exact (arrow_mor11_eq Σnat).
+        }
+        etrans. apply assoc.
+        etrans. apply cancel_postcomposition.
+                exact (arrow_mor11_eq (pr22 (hf i))).
+        etrans. apply assoc'.
+        apply pathsinv0.
+        etrans. apply assoc.
+        etrans. apply cancel_postcomposition.
+                apply CoproductInCommutes.
+        etrans. apply assoc'.
+        apply cancel_precomposition.
+        etrans. apply (pr1_section_disp_on_morphisms_comp).
+        apply pathsinv0.
+        etrans. apply (pr1_section_disp_on_morphisms_comp).
+        use (section_disp_on_eq_morphisms).
+        -- etrans. apply cancel_postcomposition.
+                   etrans. exact (pathsinv0 (id_right _)).
+                   exact (arrow_mor00_eq (pr12 (hf i))).
+           etrans. apply id_left.
+           apply pathsinv0.
+           apply id_right.
+        -- apply pathsinv0.
+           etrans. apply (CoproductInCommutes I C _ CCb).
+           reflexivity.
+Qed.
+
+Local Lemma todo {A : UU} : A. Admitted.
+
+Definition chain_L_map {C : category}
+    (d : chain C) (n : nwfs C) :=
+  ∏ (u v : vertex nat_graph) (e : edge u v), nwfs_L_maps n (dmor d e).
+
+Local Definition nwfs_tfcomp_lp
+    {C : category}
+    {d : chain C}
+    {n : nwfs C}
+    (CC : ColimCocone d)
+    (Hd : chain_L_map d n) :
+  ∏ v, dmor d (idpath (S v)) --> fact_R n (colimIn CC 0).
+Proof.
+  induction v as [|v Hv].
+  - use mors_to_arrow_mor.
+    * exact (fact_L n (colimIn CC 0)).
+    * exact (colimIn CC 1).
+    * abstract (
+        etrans; [exact (three_comp (fact_functor n (colimIn CC 0)))|];
+        exact (pathsinv0 (colimInCommutes CC _ _ (idpath 1)))
+      ).
+  - use mors_to_arrow_mor.
+    * apply (compose (arrow_mor11 (pr1 (Hd _ _ (idpath (S v)))))).
+      apply (compose (three_mor11 (#(fact_functor n) Hv))).
+      exact (arrow_mor00 (nwfs_Π n (colimIn CC 0))).
+    * exact (colimIn CC (S (S v))). 
+    * etrans. apply cancel_postcomposition.
+              apply assoc.
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              exact (arrow_mor_comm (nwfs_Π n (colimIn CC 0))).
+      etrans. apply assoc.
+      etrans. apply assoc4.
+      etrans. apply cancel_postcomposition, cancel_precomposition.
+              exact (arrow_mor_comm (#(fact_R n) Hv)).
+      etrans. apply cancel_postcomposition.
+              etrans. apply assoc.
+              apply cancel_postcomposition.
+              exact (arrow_mor11_eq (pr1 (pr2 (Hd _ _ (idpath (S v)))))).
+      etrans. apply assoc'.
+      etrans. apply id_left.
+      
+      
+      apply todo.
+Defined.
+
+Definition nwfs_tfcomp_alg_map
+    {C : category}
+    {d : chain C}
+    {n : nwfs C}
+    (CC : ColimCocone d)
+    (Hd : chain_L_map d n) :
+  colimIn CC 0 --> fact_L n (colimIn CC 0).
+Proof.
+  use mors_to_arrow_mor.
+  * exact (identity _).
+  * use colimArrow.
+    use make_cocone.
+    + intro v.
+      exact (arrow_mor00 (nwfs_tfcomp_lp CC Hd v)).
+    + intros u v e.
+      rewrite <- e.
+      apply todo.
+  * abstract (
+      etrans; [apply id_left|];
+      apply pathsinv0;
+      etrans; [apply (colimArrowCommutes)|];
+      reflexivity
+    ).
+Defined.
+
+Local Lemma nwfs_tfcomp_lp_unit_compat 
+    {C : category}
+    {d : chain C}
+    {n : nwfs C}
+    (CC : ColimCocone d)
+    (Hd : chain_L_map d n)
+    (v : vertex nat_graph) :
+  arrow_mor00 (nwfs_tfcomp_lp CC Hd v)
+  · fact_R n (colimIn CC 0)
+  = colimIn CC v.
+Proof.
+
+Admitted.
+
+Local Lemma nwfs_tfcomp_lp_mul_compat 
+    {C : category}
+    {d : chain C}
+    {n : nwfs C}
+    (CC : ColimCocone d)
+    (Hd : chain_L_map d n)
+    (v : vertex nat_graph) :
+  arrow_mor00 (nwfs_tfcomp_lp CC Hd v)
+  · three_mor11 (#(fact_functor n) (nwfs_tfcomp_alg_map CC Hd))
+  = arrow_mor00 (nwfs_tfcomp_lp CC Hd v)
+  · arrow_mor11 (nwfs_Σ n (colimIn CC 0)).
+Proof.
+
+Admitted.
+
+Lemma nwfs_closed_transfinite_composition 
+    {C : category}
+    {d : chain C}
+    {n : nwfs C}
+    (CC : ColimCocone d)
+    (Hd : chain_L_map d n) :
+  nwfs_L_maps n (colimIn CC 0).
+Proof.
+  exists (nwfs_tfcomp_alg_map CC Hd).
+  split.
+  - use arrow_mor_eq; [apply id_left|].
+    apply pathsinv0.
+    use (colim_endo_is_identity).
+    intro v.
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+            apply (colimArrowCommutes).
+    exact (nwfs_tfcomp_lp_unit_compat CC Hd v).
+  - use arrow_mor_eq; [apply cancel_precomposition; exact (nwfs_Σ_top_map_id n _)|].
+    use colimArrowUnique'.
+    intro v.
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+            apply (colimArrowCommutes CC).
+    apply pathsinv0.
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+            apply (colimArrowCommutes CC).
+    exact (nwfs_tfcomp_lp_mul_compat CC Hd v).
+Qed.
