@@ -409,7 +409,9 @@ Proof.
     * (* commutativity of right face *)
       (* γ00 · λ1f' = λ1f · ccc *)
       (* This follows simply from the properties of a pushout *)
-      apply commuting_cube_right_face.
+      abstract (
+        apply commuting_cube_right_face
+      ).
 Defined.
 
 Definition one_step_comonad_functor_is_functor : is_functor one_step_comonad_functor_data.
@@ -510,7 +512,9 @@ Proof.
   - intro f.
     exists (E1 CC J f).
     exists (λ1 CC J f), (ρ1 CC J f).
-    apply λ1_ρ1_compat.
+    abstract (
+      apply λ1_ρ1_compat
+    ).
   - intros f f' γ.
     (* cbn. *)
     set (L1γ := (#(one_step_comonad_functor) γ)%Cat).
@@ -574,7 +578,9 @@ Proof.
     use mors_to_arrow_mor.
     * exact (arrow_mor11 (#one_step_comonad_functor γ)%cat).
     * exact (arrow_mor11 γ).
-    * exact (one_step_comonad_ρ1_compat _).
+    * abstract (
+        exact (one_step_comonad_ρ1_compat _)
+      ).
 Defined.
 
 Definition one_step_monad_functor_is_functor : is_functor one_step_monad_functor_data.
@@ -712,12 +718,12 @@ Definition morcls_lp_coprod_L1_inclusion (f : arrow C) :
     morcls_lp J f -> morcls_lp J (λ1 CC J f).
 Proof.
   (* The inclusion of lifting problems is induced by
-    S_f → S_{L1f} : x ↦ (g_x -- in_x -> Kg = ∑f -- ϵf -> L1f)
+    S_f → S_{L1f} : x ↦ (g_x -- in_x -> Kf = ∑f -- ϵf -> L1f)
     where ϵf is morcls_lp_coprod_diagram_red:
               ∑h
-    A ---> ∑A ---> C
+    A ---> ∑A ---> X
     |      |       |
-  f |    ∑f|       | λ1f
+  g |    ∑g|       | λ1f
     v      v       v
     B ---> ∑B ---> E1f
     *)
@@ -807,7 +813,9 @@ Proof.
         exact (CoproductInCommutes _ _ S)
       ).
   - (* commutativity in right face *)
-    use commuting_cube_right_face.
+    abstract (
+      use commuting_cube_right_face
+    ).
 Defined.
 
 Definition one_step_comonad_mul_is_nat_trans : is_nat_trans _ _ one_step_comonad_mul_data.

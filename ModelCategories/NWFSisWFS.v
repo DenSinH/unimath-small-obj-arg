@@ -97,23 +97,19 @@ Proof.
   (* unfold nwfs_L_maps_class, isCoAlgebra. *)
   apply hinhpr.
   exists (nwfs_Σ n f).
-  split; use subtypePath; try (intro; apply homset_property); cbn.
-  - apply pathsdirprod.
-    * etrans.
-      apply maponpaths_2.
-      exact (nwfs_Σ_top_map_id n f).
-      now rewrite id_right.
-    * exact (nwfs_Σ_bottom_map_inv n f).
-  - apply pathsdirprod.
-    * apply cancel_precomposition.
-      (* rhs is just pr11 nwfs_Σ n f
-         unfold three_mor00; simpl. *)
-      apply pathsinv0.
-      etrans.
-      exact (nwfs_Σ_top_map_id n f).
-      apply pathsinv0.
-      exact (nwfs_Σ_top_map_id n (mor_to_arrow_ob _)).
-    * exact (nwfs_Σ_bottom_map_L_is_middle_map_of_Σ _ _).
+  split; use arrow_mor_eq.
+  - etrans. apply cancel_postcomposition.
+            exact (nwfs_Σ_top_map_id n f).
+    apply id_left.
+  - exact (nwfs_Σ_bottom_map_inv n f).
+  - apply cancel_precomposition.
+    (* rhs is just pr11 nwfs_Σ n f
+        unfold three_mor00; simpl. *)
+    apply pathsinv0.
+    etrans. exact (nwfs_Σ_top_map_id n f).
+    apply pathsinv0.
+    exact (nwfs_Σ_top_map_id n (mor_to_arrow_ob _)).
+  - exact (nwfs_Σ_bottom_map_L_is_middle_map_of_Σ _ _).
 Qed.
 
 (* dual statement *)
@@ -126,23 +122,19 @@ Proof.
   apply hinhpr.
   exists (nwfs_Π n f).
 
-  split; use subtypePath; try (intro; apply homset_property); cbn.
-  - apply pathsdirprod.
-    * exact (nwfs_Π_top_map_inv n f).
-    * etrans.
-      apply maponpaths.
-      exact (nwfs_Π_bottom_map_id n f).
-      now rewrite id_right.
-  - apply pathsdirprod.
-    * exact (nwfs_Π_bottom_map_R_is_middle_map_of_Π _ _).
-    * apply cancel_postcomposition.
-      (* rhs is just pr21 nwfs_Π n f
-        unfold three_mor22; simpl. *)
-      apply pathsinv0.
-      etrans.
-      exact (nwfs_Π_bottom_map_id n f).
-      apply pathsinv0.
-      exact (nwfs_Π_bottom_map_id n (mor_to_arrow_ob _)).
+  split; use arrow_mor_eq.
+  - exact (nwfs_Π_top_map_inv n f).
+  - etrans. apply cancel_precomposition.
+            exact (nwfs_Π_bottom_map_id n f).
+    apply id_right.
+  - exact (nwfs_Π_bottom_map_R_is_middle_map_of_Π _ _).
+  - apply cancel_postcomposition.
+    (* rhs is just pr21 nwfs_Π n f
+      unfold three_mor22; simpl. *)
+    apply pathsinv0.
+    etrans. exact (nwfs_Π_bottom_map_id n f).
+    apply pathsinv0.
+    exact (nwfs_Π_bottom_map_id n (mor_to_arrow_ob _)).
 Qed.
 
 Lemma nwfs_llp_R_maps_cl_subs_L_maps_cl {C : category} (n : nwfs C) :

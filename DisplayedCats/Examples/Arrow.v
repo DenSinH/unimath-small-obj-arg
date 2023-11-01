@@ -71,7 +71,7 @@ Coercion mor_to_arrow_ob {C : category} {x y : C} (f : x --> y) : arrow C :=
     (make_dirprod x y,, f).
 
 Definition mors_to_arrow_mor {C : category} {a b x y : C} (f : a --> b) (g : x --> y) 
-    (h : a --> x) (k : b --> y) (H : g ∘ h = k ∘ f) : (mor_to_arrow_ob f) --> (mor_to_arrow_ob g).
+    (h : a --> x) (k : b --> y) (H : h · g = f · k) : (mor_to_arrow_ob f) --> (mor_to_arrow_ob g).
 Proof.
   use tpair.
   - exact (make_dirprod h k).
