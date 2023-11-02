@@ -968,7 +968,6 @@ Proof.
     etrans. use (CoproductOfArrowsInclusionIn _ (morcls_lp_cod_coprod CC J (one_step_comonad_data f)) _ _ (morcls_lp_coprod_L1_inclusion f S)).
     etrans. apply id_left.
     morcls_lp_coproduct_in_eq.
-    simpl.
     use arrow_mor_eq.
     * etrans. apply id_right.
       etrans. apply (CoproductInCommutes (morcls_lp_dom_coprod CC J f)).

@@ -690,10 +690,9 @@ Lemma nwfs_wfs_closed_transfinite_composition
     {n : nwfs C}
     (CC : ColimCocone d)
     (Hd : chain_L_map d n) :
-  (nwfs_L_maps_class n)^cl _ _ (colimIn CC 0).
+  ∑ (f : arrow C), nwfs_L_maps_class n _ _ f × retract f (colimIn CC 0).
 Proof.
-  use hinhpr.
-  exists _, _, (fact_L n (colimIn CC 0)).
+  exists (fact_L n (colimIn CC 0)).
   split; [exact (nwfs_Lf_is_L_map _ _)|].
   use make_retract.
   - exact (identity _).
@@ -714,5 +713,5 @@ Proof.
       apply colimArrowCommutes.
     * etrans. apply id_left.
       apply pathsinv0.
-      exact (three_comp (fact_functor n (colimIn CC 0))).  
+      exact (three_comp (fact_functor n (colimIn CC 0))).
 Qed.
