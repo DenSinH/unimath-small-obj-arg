@@ -382,45 +382,58 @@ Definition chain_L_map {C : category}
     (d : chain C) (n : nwfs C) :=
   ∏ (u v : vertex nat_graph) (e : edge u v), nwfs_L_maps n (dmor d e).
 
+Local Definition nwfs_tfcomp_ind_lp
+    {C : category}
+    {d : chain C}
+    (n : nwfs C)
+    (CC : ColimCocone d)
+    (v : vertex nat_graph) :=
+  ∑ (lp : dmor d (idpath (S v)) --> fact_R n (colimIn CC 0)),
+    arrow_mor11 lp = colimIn CC (S v).
+
 Local Definition nwfs_tfcomp_lp
     {C : category}
     {d : chain C}
     {n : nwfs C}
     (CC : ColimCocone d)
     (Hd : chain_L_map d n) :
-  ∏ v, dmor d (idpath (S v)) --> fact_R n (colimIn CC 0).
+  ∏ v, nwfs_tfcomp_ind_lp n CC v.
 Proof.
   induction v as [|v Hv].
-  - use mors_to_arrow_mor.
-    * exact (fact_L n (colimIn CC 0)).
-    * exact (colimIn CC 1).
-    * abstract (
-        etrans; [exact (three_comp (fact_functor n (colimIn CC 0)))|];
-        exact (pathsinv0 (colimInCommutes CC _ _ (idpath 1)))
-      ).
-  - use mors_to_arrow_mor.
-    * apply (compose (arrow_mor11 (pr1 (Hd _ _ (idpath (S v)))))).
-      apply (compose (three_mor11 (#(fact_functor n) Hv))).
-      exact (arrow_mor00 (nwfs_Π n (colimIn CC 0))).
-    * exact (colimIn CC (S (S v))). 
-    * etrans. apply cancel_postcomposition.
-              apply assoc.
-      etrans. apply assoc'.
-      etrans. apply cancel_precomposition.
-              exact (arrow_mor_comm (nwfs_Π n (colimIn CC 0))).
-      etrans. apply assoc.
-      etrans. apply assoc4.
-      etrans. apply cancel_postcomposition, cancel_precomposition.
-              exact (arrow_mor_comm (#(fact_R n) Hv)).
-      etrans. apply cancel_postcomposition.
-              etrans. apply assoc.
-              apply cancel_postcomposition.
-              exact (arrow_mor11_eq (pr1 (pr2 (Hd _ _ (idpath (S v)))))).
-      etrans. apply assoc'.
-      etrans. apply id_left.
-      
-      
-      apply todo.
+  - use tpair.
+      * use mors_to_arrow_mor.
+        + exact (fact_L n (colimIn CC 0)).
+        + exact (colimIn CC 1).
+        + abstract (
+            etrans; [exact (three_comp (fact_functor n (colimIn CC 0)))|];
+            exact (pathsinv0 (colimInCommutes CC _ _ (idpath 1)))
+          ).
+      * reflexivity.
+  - use tpair.
+    * use mors_to_arrow_mor.
+      + apply (compose (arrow_mor11 (pr1 (Hd _ _ (idpath (S v)))))).
+        apply (compose (three_mor11 (#(fact_functor n) (pr1 Hv)))).
+        exact (arrow_mor00 (nwfs_Π n (colimIn CC 0))).
+      + exact (colimIn CC (S (S v))). 
+      + abstract (
+          etrans; [apply cancel_postcomposition, assoc|];
+          etrans; [apply assoc'|];
+          etrans; [apply cancel_precomposition;
+                  exact (arrow_mor_comm (nwfs_Π n (colimIn CC 0)))|];
+          etrans; [do 2 apply cancel_precomposition;
+                  exact (nwfs_Π_bottom_map_id n (colimIn CC 0))|];
+          etrans; [apply cancel_precomposition, id_right|];
+          etrans; [apply assoc'|];
+          etrans; [apply cancel_precomposition;
+                  exact (pathsinv0 (pr2 (three_mor_comm (#(fact_functor n) (pr1 Hv)))))|];
+          etrans; [apply assoc|];
+          etrans; [apply cancel_postcomposition;
+                  exact (arrow_mor11_eq (pr12 (Hd _ _ (idpath (S v)))))|];
+          etrans; [apply id_left|];
+          etrans; [exact (pr2 Hv)|];
+          exact (pathsinv0 (colimInCommutes CC _ _ (idpath (S (S v)))))
+        ).
+    * reflexivity.
 Defined.
 
 Definition nwfs_tfcomp_alg_map
@@ -436,10 +449,27 @@ Proof.
   * use colimArrow.
     use make_cocone.
     + intro v.
-      exact (arrow_mor00 (nwfs_tfcomp_lp CC Hd v)).
-    + intros u v e.
-      rewrite <- e.
-      apply todo.
+      exact (arrow_mor00 (pr1 (nwfs_tfcomp_lp CC Hd v))).
+    + abstract (
+        intros u v e;
+        rewrite <- e;
+        clear v e;
+        set (Hu := nwfs_tfcomp_lp CC Hd u);
+        etrans; [apply assoc|];
+        etrans; [apply cancel_postcomposition;
+                etrans; [exact (pathsinv0 (arrow_mor_comm (pr1 (Hd _ _ (idpath (S u))))))|];
+                apply cancel_postcomposition;
+                etrans; [exact (pathsinv0 (id_right _))|];
+                exact (arrow_mor00_eq (pr12 (Hd _ _ (idpath (S u)))))|];
+        etrans; [apply cancel_postcomposition, id_left|];
+        etrans; [apply assoc|];
+        etrans; [apply cancel_postcomposition;
+                exact (pr1 (three_mor_comm (#(fact_functor n) (pr1 Hu))))|];
+        etrans; [apply assoc'|];
+        etrans; [apply cancel_precomposition;
+                exact (nwfs_Π_top_map_inv n (colimIn CC 0))|];
+        apply id_right
+      ).
   * abstract (
       etrans; [apply id_left|];
       apply pathsinv0;
@@ -454,13 +484,17 @@ Local Lemma nwfs_tfcomp_lp_unit_compat
     {n : nwfs C}
     (CC : ColimCocone d)
     (Hd : chain_L_map d n)
-    (v : vertex nat_graph) :
-  arrow_mor00 (nwfs_tfcomp_lp CC Hd v)
+    (v : vertex nat_graph) 
+    (Hv := nwfs_tfcomp_lp CC Hd v) :
+  arrow_mor00 (pr1 Hv)
   · fact_R n (colimIn CC 0)
   = colimIn CC v.
 Proof.
-
-Admitted.
+  etrans. exact (arrow_mor_comm (pr1 Hv)).
+  etrans. apply cancel_precomposition.
+          exact (pr2 Hv).
+  exact (colimInCommutes CC _ _ (idpath (S v))).
+Qed.
 
 Local Lemma nwfs_tfcomp_lp_mul_compat 
     {C : category}
@@ -468,13 +502,134 @@ Local Lemma nwfs_tfcomp_lp_mul_compat
     {n : nwfs C}
     (CC : ColimCocone d)
     (Hd : chain_L_map d n)
-    (v : vertex nat_graph) :
-  arrow_mor00 (nwfs_tfcomp_lp CC Hd v)
+    (v : vertex nat_graph) 
+    (Hv := nwfs_tfcomp_lp CC Hd v) :
+  arrow_mor00 (pr1 Hv)
   · three_mor11 (#(fact_functor n) (nwfs_tfcomp_alg_map CC Hd))
-  = arrow_mor00 (nwfs_tfcomp_lp CC Hd v)
+  = arrow_mor00 (pr1 Hv)
   · arrow_mor11 (nwfs_Σ n (colimIn CC 0)).
 Proof.
+  induction v as [|v IHv].
+  - apply pathsinv0.
+    etrans. exact (pathsinv0 (arrow_mor_comm (nwfs_Σ n (colimIn CC 0)))).
+    etrans. apply cancel_postcomposition.
+            exact (nwfs_Σ_top_map_id n (colimIn CC 0)).
+    etrans. apply id_left.
+    apply pathsinv0.
+    etrans. exact (pr1 (three_mor_comm (#(fact_functor n) (nwfs_tfcomp_alg_map CC Hd)))).
+    apply id_left.
+  - 
+    simpl.
+    unfold arrow_mor00.
+    simpl.
 
+
+
+
+
+
+    set (Hprev := nwfs_tfcomp_lp CC Hd v).
+    etrans. apply cancel_postcomposition, assoc.
+    etrans. do 2 apply cancel_postcomposition.
+            etrans. apply cancel_precomposition.
+            etrans.
+            {
+              set (algSv := pr1 (Hd _ _ (idpath (S v))) : dmor d (idpath (S v)) --> _).
+              use (section_disp_on_eq_morphisms (pr1 n)).
+              - apply (compose algSv).
+                apply (postcompose (pr1 Hprev)).
+                exact (Φ n (dmor d (idpath (S v)))).
+              - apply pathsinv0.
+                etrans. apply assoc.
+                etrans. apply cancel_postcomposition.
+                        exact (arrow_mor00_eq (pr12 (Hd _ _ (idpath (S v))))).
+                apply id_left.
+              - apply pathsinv0.
+                etrans. apply assoc.
+                etrans. apply cancel_postcomposition.
+                        exact (arrow_mor11_eq (pr12 (Hd _ _ (idpath (S v))))).
+                apply id_left.
+            }
+            etrans. apply maponpaths.
+                    apply (section_disp_comp (pr1 n)).
+            apply cancel_precomposition.
+            unfold postcompose.
+            rewrite (section_disp_comp (pr1 n)).
+            reflexivity.
+            etrans. apply assoc.
+            apply cancel_postcomposition.
+            exact (pathsinv0 (arrow_mor11_eq (pr22 (Hd _ _ (idpath (S v)))))).
+    (* simpl. *)
+    etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+            set (Πnat := nat_trans_ax (nwfs_Π n) _ _ (nwfs_tfcomp_alg_map CC Hd)).
+            set (Πnat00 := arrow_mor00_eq Πnat).        
+            exact (pathsinv0 Πnat00).
+    etrans. apply assoc.
+            etrans. do 2 apply cancel_postcomposition.
+            apply assoc.
+    etrans. apply assoc4.
+    transparent assert (Σmor : (fact_R n (colimIn CC 0) --> fact_R n (fact_L n (colimIn CC 0)))).
+    {
+      use mors_to_arrow_mor.
+      * exact (arrow_mor11 (nwfs_Σ n (colimIn CC 0))).
+      * exact (arrow_mor11 (nwfs_tfcomp_alg_map CC Hd)).
+      * etrans. exact (nwfs_Σ_bottom_map_inv n (colimIn CC 0)).
+        apply pathsinv0.
+        (* set (test := #(fact_functor n) (nwfs_tfcomp_alg_map CC Hd)).
+        set (t := three_mor_comm test).
+        cbn in t.
+        etrans. exact (pr2 t). *)
+        set (t := IHv).
+        cbn in IHv.
+        admit.
+    }
+
+    etrans. apply cancel_postcomposition, cancel_precomposition.
+            etrans. use (pr1_section_disp_on_morphisms_comp (pr1 n)).
+            etrans. use section_disp_on_eq_morphisms.
+            {
+              exact (pr1 Hprev · Σmor).
+            }
+            exact IHv.
+            reflexivity.
+            apply maponpaths.
+            apply (section_disp_comp (pr1 n)).
+    etrans. apply cancel_postcomposition.
+            apply assoc.
+    etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+            assert (X : three_mor11 (#(fact_functor n) Σmor) · (arrow_mor00 (nwfs_Π n (fact_L n (colimIn CC 0))))
+                    = arrow_mor00 (nwfs_Π n (colimIn CC 0)) · arrow_mor11 (nwfs_Σ n (colimIn CC 0))).
+            {
+              admit.
+            }
+            exact X.
+    etrans. apply assoc.
+    apply cancel_postcomposition.
+    apply pathsinv0.
+    etrans. apply assoc.
+    apply cancel_postcomposition.
+    apply cancel_postcomposition.
+    etrans. exact (pathsinv0 (id_right _)).
+    apply pathsinv0.
+    etrans. apply assoc'.
+    
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+            exact (arrow_mor11_eq (pr22 (Hd _ _ (idpath (S v))))).
+    etrans. apply assoc'.
+    apply cancel_precomposition.
+    etrans. use (pr1_section_disp_on_morphisms_comp (pr1 n)).
+    etrans. 
+    {
+      use (section_disp_on_eq_morphisms (pr1 n) (γ' := identity _)).
+      * exact (arrow_mor00_eq (pr12 (Hd _ _ (idpath (S v))))).
+      * exact (arrow_mor11_eq (pr12 (Hd _ _ (idpath (S v))))).
+    }
+    etrans. apply maponpaths.
+            exact (section_disp_id (pr1 n) _).
+    reflexivity.
 Admitted.
 
 Lemma nwfs_closed_transfinite_composition 
