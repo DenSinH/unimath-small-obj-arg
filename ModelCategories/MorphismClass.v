@@ -96,7 +96,7 @@ Proof.
 Qed.
 
 Definition morphism_class_retract_closure {C : category} (S : morphism_class C) :=
-    λ x y (f : x --> y), ∃ x y (f' : x --> y), (S _ _ f') × (retract f' f).
+    λ x y (f : x --> y), ∃ x' y' (f' : x' --> y'), (S _ _ f') × (retract f' f).
 
 Notation "S ^cl" := (morphism_class_retract_closure S) (at level 70) : morcls.
 
@@ -134,6 +134,26 @@ Proof.
   - intros x y f Hf.
     apply in_morcls_retc_if_in_morcls.
     exact Hf.
+Qed.
+
+Lemma morphism_class_retract_closed_if_eq_cl {C : category} (S : morphism_class C) :
+    S^cl = S -> morphism_class_retract_closed S.
+Proof.
+  intro H.
+  intros x y f x' y' f' Hf'.
+  rewrite <- H.
+  apply hinhpr.
+  exists _, _, f'.
+  exact Hf'.
+Qed.
+
+Lemma morphism_class_retract_closed_iff_eq_cl
+    {C : category} (S : morphism_class C) :
+  morphism_class_retract_closed S <-> S^cl = S.
+Proof.
+  split.
+  - exact (morphism_class_retract_closed_impl_eq_cl S).
+  - exact (morphism_class_retract_closed_if_eq_cl S).
 Qed.
 
 Lemma morcls_eq_impl_morcls_cl_eq {C : category} {S T : morphism_class C} 

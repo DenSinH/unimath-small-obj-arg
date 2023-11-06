@@ -730,9 +730,17 @@ Proof.
   intro S.
   exists (pr1 S).
   (* right hand square *)
-  set (rhs := PushoutSqrCommutes (morcls_lp_coprod_diagram_pushout CC J f)).
-  set (rhs_mor := mors_to_arrow_mor (morcls_lp_coprod CC J f) (λ1 CC J f) _ _ (pathsinv0 rhs)).
-  use (λ inx, inx · rhs_mor).
+  transparent assert (rhs_mor : (morcls_lp_coprod CC J f --> λ1 CC J f)).
+  {
+    use mors_to_arrow_mor. 
+    - exact (arrow_mor00 (morcls_lp_coprod_diagram CC J f)).
+    - exact (PushoutIn1 (morcls_lp_coprod_diagram_pushout CC J f)).
+    - abstract (
+        set (rhs := PushoutSqrCommutes (morcls_lp_coprod_diagram_pushout CC J f));
+        exact (pathsinv0 rhs)
+      ).
+  }
+  apply (postcompose rhs_mor).
 
   (* left hand square *)
   (* todo: generalize this *)
