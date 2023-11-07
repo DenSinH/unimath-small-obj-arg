@@ -693,8 +693,10 @@ Local Definition TinfM := free_monoid_coeq_sequence_converges_gives_adjoint_mon_
 Definition Tinf_pd_Tinf_map
     (n : nat)
     (p := free_monoid_coeq_sequence_on I_{V} n) :=
-  ∑ (τn : pair_diagram_lob p ⊗_{V} Tinf --> Tinf) (τn1 : pair_diagram_rob p ⊗_{V} Tinf --> Tinf),
-    (pair_diagram_arr p ⊗^{V}_{r} Tinf) · τn1 = α_{V} _ _ _ · (T ⊗^{V}_{l} τn) · (Mon_alg_map _ (pr2 TinfM)).
+  ∑ (τn : pair_diagram_lob p ⊗_{V} Tinf --> Tinf) 
+    (τn1 : pair_diagram_rob p ⊗_{V} Tinf --> Tinf),
+      (pair_diagram_arr p ⊗^{V}_{r} Tinf) · τn1 
+      = α_{V} _ _ _ · (T ⊗^{V}_{l} τn) · (Mon_alg_map _ (pr2 TinfM)).
 
 
 Lemma free_monoid_coeq_sequence_on_Tinf_pd_Tinf_map_coeqout_rel

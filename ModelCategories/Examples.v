@@ -71,3 +71,42 @@ Qed.
 
 Definition hset_functorial_factorization : functorial_factorization HSET :=
     (_,, hset_functorial_factorization_axioms).
+
+Definition hset_lnwfs_over : lnwfs_over hset_functorial_factorization.
+Proof.
+  use tpair.
+  - use tpair.
+    * intro f.
+      use tpair.
+      + split.
+        -- exact (identity _).
+        -- apply (BinCoproductArrow).
+           ** exact (inl).
+           ** exact (λ y, inr (inr y)).
+      + abstract (
+          apply funextsec;
+          intro; 
+          reflexivity
+        ).
+    * abstract (
+        intros f g γ;
+        use arrow_mor_eq; [reflexivity|];
+        apply funextsec;
+        intro x;
+        destruct x; reflexivity
+      ).
+  - repeat split; intro f.
+    * use arrow_mor_eq; [reflexivity|].
+      apply funextsec.
+      intro x.
+      destruct x; reflexivity.
+    * use arrow_mor_eq; [reflexivity|].
+      apply funextsec.
+      intro x.
+      destruct x; reflexivity.
+    * admit.
+      (* use arrow_mor_eq; [reflexivity|].
+      apply funextsec.
+      intro x.
+      destruct x; reflexivity. *)
+Admitted.
