@@ -246,10 +246,12 @@ Proof.
   apply homset_property.
 Qed.
 
-Definition fact_L {C : category} (F : functorial_factorization C) : arrow C ⟶ arrow C :=
-    F ∙ face_map_2.
-Definition fact_R {C : category} (F : functorial_factorization C) : arrow C ⟶ arrow C :=
-    F ∙ face_map_0.
+Definition fact_L {C : category} (F : functorial_factorization C) :
+    arrow C ⟶ arrow C :=
+  F ∙ face_map_2.
+Definition fact_R {C : category} (F : functorial_factorization C) : 
+    arrow C ⟶ arrow C :=
+  F ∙ face_map_0.
 
 (* At least now it knows they are compatible *)
 Lemma LR_compatibility {C : category} (F : functorial_factorization C) :
@@ -458,9 +460,10 @@ Proof.
     exact bottom_line.
 Qed.
 
-Lemma L_map_section {C : category} {n : nwfs C} {a b : C} {f : a --> b} (hf : nwfs_L_maps n f) :
-    ∑ s, f · s = arrow_mor (fact_L n f) × 
-         s · arrow_mor (fact_R n f) = identity _.
+Lemma L_map_section {C : category} {n : nwfs C} {a b : C} {f : a --> b} 
+    (hf : nwfs_L_maps n f) :
+  ∑ s, f · s = arrow_mor (fact_L n f) × 
+      s · arrow_mor (fact_R n f) = identity _.
 Proof.
   exists (pr211 hf).
   apply L_map_section_comm.
@@ -511,9 +514,10 @@ Proof.
     exact top_line.
 Qed.
 
-Lemma R_map_retraction {C : category} {n : nwfs C} {c d : C} {g : c --> d} (hg : nwfs_R_maps n g) :
-    ∑ p, p · g = arrow_mor (fact_R n g) × 
-         arrow_mor (fact_L n g) · p = identity _.
+Lemma R_map_section {C : category} {n : nwfs C} {c d : C} {g : c --> d} 
+    (hg : nwfs_R_maps n g) :
+  ∑ p, p · g = arrow_mor (fact_R n g) × 
+      arrow_mor (fact_L n g) · p = identity _.
 Proof.
   exists (pr111 hg).
   apply R_map_retraction_comm.
