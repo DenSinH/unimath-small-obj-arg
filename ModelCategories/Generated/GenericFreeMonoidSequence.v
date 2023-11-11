@@ -1523,6 +1523,10 @@ Definition rt_chain_iso_v (A : C) (v : vertex nat_graph) :=
     (dob (rightwhisker_chain_with A (free_monoid_coeq_sequence_diagram_on I_{V})) v)
     (dob (free_monoid_coeq_sequence_diagram_on A) v).
 
+Definition z_iso_from_rt_chain_iso_v {A : C} {v : vertex nat_graph}
+    (Cisv : rt_chain_iso_v A v) : z_iso _ _ := Cisv.
+Coercion z_iso_from_rt_chain_iso_v : rt_chain_iso_v >-> z_iso.
+
 Definition rt_chain_iso_pair_total_rel {A : C} {v : vertex nat_graph}
     (iv : rt_chain_iso_v A v) (iSv : rt_chain_iso_v A (S v)) :=
   (z_iso_mor iv) · (dmor (free_monoid_coeq_sequence_diagram_on A) (idpath (S v)))
@@ -1590,6 +1594,18 @@ Definition rt_chain_iso_pair
     (v : vertex nat_graph) :=
   ∑ (iv : rt_chain_iso_v A v) (iSv : rt_chain_iso_v A (S v)),
       rt_chain_iso_pair_rel iv iSv.
+Definition rtisp_liso 
+    {A : C} {v : vertex nat_graph}
+    (Cisv : rt_chain_iso_pair A v) :=
+  pr1 Cisv.
+Definition rtisp_riso 
+    {A : C} {v : vertex nat_graph}
+    (Cisv : rt_chain_iso_pair A v) :=
+  pr12 Cisv.
+Definition rtisp_rel 
+    {A : C} {v : vertex nat_graph}
+    (Cisv : rt_chain_iso_pair A v) :=
+  pr22 Cisv.
 
 Definition make_rt_chain_iso_pair 
     {A : C} {v : vertex nat_graph} 
@@ -1600,18 +1616,18 @@ Definition make_rt_chain_iso_pair
 
 Lemma rt_chain_iso_pair_ind_iscoeqout 
     (A : C) (v : vertex nat_graph)
-    (IHv : rt_chain_iso_pair A v) :
+    (Cisp : rt_chain_iso_pair A v) :
     next_pair_diagram_coeq_arr0 (free_monoid_coeq_sequence_on I_{ V} v) ⊗^{ V}_{r} A
     · (α^{ V }_{_, _, _}
-       · (T ⊗^{ V}_{l} z_iso_mor (pr12 IHv)
+       · (T ⊗^{ V}_{l} z_iso_mor (rtisp_riso Cisp)
           · CoequalizerArrow C (next_pair_diagram_coeq (free_monoid_coeq_sequence_on A v)))) =
     next_pair_diagram_coeq_arr1 (free_monoid_coeq_sequence_on I_{ V} v) ⊗^{ V}_{r} A
     · (α^{ V }_{_, _, _}
-       · (T ⊗^{ V}_{l} z_iso_mor (pr12 IHv)
+       · (T ⊗^{ V}_{l} z_iso_mor (rtisp_riso Cisp)
           · CoequalizerArrow C
               (next_pair_diagram_coeq (free_monoid_coeq_sequence_on A v)))).
 Proof.
-  set (totrel := rt_chain_iso_pair_rel_impl_total_rel (pr22 IHv)).
+  set (totrel := rt_chain_iso_pair_rel_impl_total_rel (rtisp_rel Cisp)).
   
   apply pathsinv0.
   etrans. apply assoc.
@@ -1689,33 +1705,169 @@ Proof.
           apply (monoidal_leftunitorinvnat V).
   etrans. apply assoc.
   apply cancel_postcomposition.
-  exact (pr22 IHv).
+  exact (rtisp_rel Cisp).
 Qed.
 
 
 Lemma rt_chain_iso_pair_ind_inv_iscoeqout 
   (A : C) (v : vertex nat_graph)
-  (IHv : rt_chain_iso_pair A v) :
+  (Cisp : rt_chain_iso_pair A v) :
     next_pair_diagram_coeq_arr0 (free_monoid_coeq_sequence_on A v)
-    · (T ⊗^{ V}_{l} z_iso_inv (pr12 IHv)
+    · (T ⊗^{ V}_{l} z_iso_inv (rtisp_riso Cisp)
       · (αinv^{ V }_{_, _, _}
         · CoequalizerArrow C (next_pair_diagram_coeq (free_monoid_coeq_sequence_on I_{ V} v)) ⊗^{V}_{r} A
         )
       )
     = next_pair_diagram_coeq_arr1 (free_monoid_coeq_sequence_on A v)
-    · (T ⊗^{ V}_{l} z_iso_inv (pr12 IHv)
+    · (T ⊗^{ V}_{l} z_iso_inv (rtisp_riso Cisp)
       · (αinv^{ V }_{_, _, _}
         · CoequalizerArrow C (next_pair_diagram_coeq (free_monoid_coeq_sequence_on I_{ V} v)) ⊗^{V}_{r} A
         )
       ).
 Proof.
-  
-Admitted.
+  set (totrel := rt_chain_iso_pair_rel_impl_total_rel (rtisp_rel Cisp)).
+
+  (* inverse of total relation *)
+  assert (totrel' : 
+      pair_diagram_horizontal_arrow (free_monoid_coeq_sequence_on A v) 
+      · inv_from_z_iso (rtisp_riso Cisp)
+      = inv_from_z_iso (rtisp_liso Cisp)
+      · (pair_diagram_horizontal_arrow (free_monoid_coeq_sequence_on I_{ V} v)) ⊗^{V}_{r} A
+  ).
+  {
+    apply (post_comp_with_z_iso_is_inj (rtisp_riso Cisp)).
+    etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+            exact (pr222 (rtisp_riso Cisp)).
+    etrans. apply id_right.
+    apply (pre_comp_with_z_iso_is_inj (rtisp_liso Cisp)).
+    apply pathsinv0.
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+            etrans. apply assoc.
+            apply cancel_postcomposition.
+            exact (pr122 (rtisp_liso Cisp)).
+    etrans. apply assoc'.
+    etrans. apply id_left.
+    apply pathsinv0.
+    etrans. exact totrel.
+    etrans. apply cancel_postcomposition.
+            etrans. apply cancel_precomposition.
+                    apply (bifunctor_leftid V).
+            apply id_right.
+    reflexivity.
+  }
+
+  apply pathsinv0.
+  etrans. apply assoc.
+  etrans. apply cancel_postcomposition.
+  {
+    etrans. exact (pathsinv0 (bifunctor_leftcomp V _ _ _ _ _ _)).
+    etrans. apply maponpaths.
+            exact totrel'.
+    apply (bifunctor_leftcomp V).
+  }
+
+  etrans. apply assoc.
+  etrans. apply assoc4.
+  etrans. apply cancel_postcomposition, cancel_precomposition.
+          apply (monoidal_associatorinvnatleftright V).
+  etrans. apply cancel_postcomposition, assoc.
+  etrans. apply assoc'.
+  etrans. apply cancel_precomposition.
+  {
+    etrans. exact (pathsinv0 (bifunctor_rightcomp V _ _ _ _ _ _)).
+    etrans. apply maponpaths.
+            exact (pathsinv0 (CoequalizerArrowEq _ _)).
+    apply (bifunctor_rightcomp V).
+  }
+  etrans. apply assoc.
+  apply pathsinv0.
+  etrans. apply assoc.
+  etrans. apply assoc.
+  apply cancel_postcomposition.
+
+  assert (rel' : 
+      T ⊗^{V}_{l} inv_from_z_iso (rtisp_liso Cisp)
+      · αinv^{V}_{_, _, _}
+      · free_monoid_coeq_sequence_on I_{V} v ⊗^{V}_{r} A
+      = free_monoid_coeq_sequence_on A v
+      · inv_from_z_iso (rtisp_riso Cisp)
+  ).
+  {
+    set (rel := rtisp_rel Cisp).
+
+    apply (pre_comp_with_z_iso_is_inj (is_z_iso_leftwhiskering_z_iso V T _ (pr2 (rtisp_liso Cisp)))).
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+    {
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              etrans. exact (pathsinv0 (bifunctor_leftcomp V _ _ _ _ _ _)).
+              etrans. apply maponpaths.
+                      exact (pr122 (rtisp_liso Cisp)).
+              apply (bifunctor_leftid V).
+      apply id_left.
+    }
+
+    apply pathsinv0.
+    apply (post_comp_with_z_iso_is_inj (rtisp_riso Cisp)).
+    etrans. apply cancel_postcomposition, assoc.
+    etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+            exact (pr222 (rtisp_riso Cisp)).
+    etrans. apply id_right.
+    
+    apply (pre_comp_with_z_iso_is_inj (monoidal_associatorisolaw V _ _ _)).
+    etrans. apply assoc.
+    apply pathsinv0.
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+    {
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply (monoidal_associatorisolaw V).
+      apply id_left.
+    }
+    exact rel.
+  }
+
+  apply pathsinv0.
+  etrans. apply cancel_precomposition.
+          etrans. apply (bifunctor_rightcomp V).
+          apply cancel_precomposition.
+          apply (bifunctor_rightcomp V).
+  etrans. apply assoc.
+  etrans. apply cancel_postcomposition.
+          exact rel'.
+  etrans. apply assoc'.
+  apply pathsinv0.
+  etrans. apply assoc'.
+  etrans. apply assoc'.
+  apply cancel_precomposition.
+  etrans. apply assoc.
+  etrans. apply assoc4.
+  etrans. apply cancel_postcomposition, cancel_precomposition.
+          apply (whiskerscommutes V (bifunctor_equalwhiskers V)).
+  etrans. apply cancel_postcomposition.
+          etrans. apply assoc.
+          apply cancel_postcomposition.
+          apply (monoidal_leftunitorinvnat V).
+  etrans. apply assoc'.
+  etrans. apply cancel_precomposition.
+          apply (monoidal_associatorinvnatright V).
+  etrans. apply assoc.
+  etrans. apply assoc4.
+  etrans. apply cancel_postcomposition, cancel_precomposition.
+          apply (monoidal_triangle_identity'_inv V).
+  etrans. apply assoc'.
+  reflexivity.
+Qed.
 
 Lemma rt_chain_iso_pairs (A : C) (v : vertex nat_graph) :
     rt_chain_iso_pair A v.
 Proof.
-  induction v.
+  induction v as [|v Cisv].
   - use make_rt_chain_iso_pair.
     * exact (_,, _,, monoidal_leftunitorisolaw V A).
     * exact (_,, is_z_iso_rightwhiskering_z_iso V A _ (_,, monoidal_rightunitorisolaw V T)).
@@ -1730,66 +1882,70 @@ Proof.
   - set (coeq := next_pair_diagram_coeq (free_monoid_coeq_sequence_on I_{V} v)).
     set (rt_coequalizer := rt_coeq_coequalizer (rt_coeq A) coeq).
     use make_rt_chain_iso_pair.
-    * exact (pr12 IHv).
+    * exact (rtisp_riso Cisv).
     * use make_z_iso.
       + use (CoequalizerOut _ rt_coequalizer).
         -- apply (compose (α^{V}_{_, _, _})).
-           apply (compose (T ⊗^{V}_{l} (z_iso_mor (pr12 IHv)))).
+           apply (compose (T ⊗^{V}_{l} (z_iso_mor (rtisp_riso Cisv)))).
            exact (CoequalizerArrow _ (next_pair_diagram_coeq (free_monoid_coeq_sequence_on A v))).
-        -- exact (rt_chain_iso_pair_ind_iscoeqout A v IHv).
+        -- exact (rt_chain_iso_pair_ind_iscoeqout A v Cisv).
       + use CoequalizerOut.
-        -- apply (compose (T ⊗^{V}_{l} (z_iso_inv (pr12 IHv)))).
+        -- apply (compose (T ⊗^{V}_{l} (z_iso_inv (rtisp_riso Cisv)))).
            apply (compose (αinv^{V}_{_, _, _})).
            exact ((CoequalizerArrow _ (next_pair_diagram_coeq (free_monoid_coeq_sequence_on I_{V} v))) ⊗^{V}_{r} A).
-        -- exact (rt_chain_iso_pair_ind_inv_iscoeqout A v IHv).
+        -- exact (rt_chain_iso_pair_ind_inv_iscoeqout A v Cisv).
       + split.
-        -- apply pathsinv0.
-           use (CoequalizerEndo_is_identity _ rt_coequalizer).
-           etrans. apply assoc.
-           etrans. apply cancel_postcomposition.
-                   apply (CoequalizerArrowComm _ rt_coequalizer).
-           etrans. apply cancel_postcomposition, assoc.
-           etrans. apply assoc'.
-           etrans. apply cancel_precomposition.
-                   apply (CoequalizerArrowComm).
-           etrans. apply assoc.
-           etrans. apply assoc.
-           etrans. apply cancel_postcomposition.
-           {
-            etrans. apply assoc4.
-            etrans. apply cancel_postcomposition, cancel_precomposition.
-                    etrans. exact (pathsinv0 (bifunctor_leftcomp V _ _ _ _ _ _)).
-                    etrans. apply maponpaths.
-                            exact (pr122 (pr12 IHv)).
-                    apply (bifunctor_leftid V).
-            etrans. apply cancel_postcomposition, id_right.
-            apply (monoidal_associatorisolaw V).
-           }
-           apply id_left.
-        -- apply pathsinv0.
-           use (CoequalizerEndo_is_identity).
-           etrans. apply assoc.
-           etrans. apply cancel_postcomposition.
-                   apply (CoequalizerArrowComm).
-           etrans. apply cancel_postcomposition, assoc.
-           etrans. apply assoc'.
-           etrans. apply cancel_precomposition.
-                   apply (CoequalizerArrowComm _ rt_coequalizer).
-           etrans. apply assoc.
-           etrans. apply assoc.
-           etrans. apply cancel_postcomposition.
-           {
-            etrans. apply assoc4.
-            etrans. apply cancel_postcomposition, cancel_precomposition.
-                    apply (monoidal_associatorisolaw V). 
-            etrans. apply cancel_postcomposition, id_right.
+        -- abstract (
+              apply pathsinv0;
+              use (CoequalizerEndo_is_identity _ rt_coequalizer);
+              etrans; [apply assoc|];
+              etrans; [apply cancel_postcomposition;
+                      apply (CoequalizerArrowComm _ rt_coequalizer)|];
+              etrans; [apply cancel_postcomposition, assoc|];
+              etrans; [apply assoc'|];
+              etrans; [apply cancel_precomposition;
+                      apply (CoequalizerArrowComm)|];
+              etrans; [apply assoc|];
+              etrans; [apply assoc|];
+              etrans; [apply cancel_postcomposition|];
+              [
+              etrans; [apply assoc4|];
+              etrans; [apply cancel_postcomposition, cancel_precomposition;
+                      etrans; [exact (pathsinv0 (bifunctor_leftcomp V _ _ _ _ _ _))|];
+                      etrans; [apply maponpaths;
+                                exact (pr122 (pr12 Cisv))|];
+                      apply (bifunctor_leftid V)|];
+              etrans; [apply cancel_postcomposition, id_right|];
+              apply (monoidal_associatorisolaw V)
+              |];
+              apply id_left
+           ).
+        -- abstract (
+              apply pathsinv0;
+              use (CoequalizerEndo_is_identity);
+              etrans; [apply assoc|];
+              etrans; [apply cancel_postcomposition;
+                      apply (CoequalizerArrowComm)|];
+              etrans; [apply cancel_postcomposition, assoc|];
+              etrans; [apply assoc'|];
+              etrans; [apply cancel_precomposition;
+                      apply (CoequalizerArrowComm _ rt_coequalizer)|];
+              etrans; [apply assoc|];
+              etrans; [apply assoc|];
+              etrans; [apply cancel_postcomposition|];
+              [
+                etrans; [apply assoc4|];
+                etrans; [apply cancel_postcomposition, cancel_precomposition;
+                        apply (monoidal_associatorisolaw V)|];
+                etrans; [apply cancel_postcomposition, id_right|];
 
-            etrans. exact (pathsinv0 (bifunctor_leftcomp V _ _ _ _ _ _)).
-                    etrans. apply maponpaths.
-                            exact (pr222 (pr12 IHv)).
-                    apply (bifunctor_leftid V).
-           }
-           apply id_left.
+                etrans; [exact (pathsinv0 (bifunctor_leftcomp V _ _ _ _ _ _))|];
+                etrans; [apply maponpaths;
+                        exact (pr222 (rtisp_riso Cisv))|];
+                apply (bifunctor_leftid V)
+              |];
+              apply id_left
+           ).
     * abstract (
         etrans; [apply (CoequalizerArrowComm _ rt_coequalizer)|];
         apply assoc
@@ -1799,7 +1955,7 @@ Defined.
 Lemma rt_chain_isos (A : C) (v : vertex nat_graph) :
     rt_chain_iso_v A v.
 Proof.
-  exact (pr1 (rt_chain_iso_pairs A v)).
+  exact (rtisp_liso (rt_chain_iso_pairs A v)).
 Defined.
 
 Lemma rt_chain_isos_commute (A : C) (v : vertex nat_graph) :
@@ -1811,7 +1967,7 @@ Proof.
   apply pathsinv0.
   
   apply (rt_chain_iso_pair_rel_impl_total_rel).
-  exact (pr22 (rt_chain_iso_pairs A v)).
+  exact (rtisp_rel (rt_chain_iso_pairs A v)).
 Qed.
 
 (* no longer need exact definition of chain iso pairs *)
