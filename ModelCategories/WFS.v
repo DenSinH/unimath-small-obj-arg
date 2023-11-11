@@ -155,11 +155,7 @@ Qed.
 In MCAT, the statement is in reference of a single morphism, not a whole class
 *)
 Lemma retract_argument {L' : morphism_class C} (w : wfs C)
-    (
-      H : ∀ {x y} (f : x --> y), 
-            ∃ z (g : x --> z) (h : z --> y), 
-              (L' _ _) g × (wfs_R w _ _) h × h ∘ g = f
-    ) :
+    (H : wfs_fact_ax L' (wfs_R w)) :
   ∏ {x y} (f : x --> y), 
     (wfs_L w _ _) f 
     -> ∃ {x' y'} (f' : x' --> y') (r : retract f' f), (L' _ _) f'.
