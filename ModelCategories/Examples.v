@@ -12,7 +12,6 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 Require Import CategoryTheory.ModelCategories.MorphismClass.
 Require Import CategoryTheory.ModelCategories.NWFS.
 Require Import CategoryTheory.ModelCategories.Generated.LiftingWithClass.
-Require Import CategoryTheory.ModelCategories.Generated.OneStepMonad.
 Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
 
@@ -73,38 +72,41 @@ Qed.
 Definition hset_functorial_factorization : functorial_factorization HSET :=
     (_,, hset_functorial_factorization_axioms).
 
-
-Definition emptyset : hSet := make_hSet empty isasetempty.
-
-Definition hset_01_J : morphism_class HSET.
+Definition hset_lnwfs_over : lnwfs_over hset_functorial_factorization.
 Proof.
-  intros x y f.
-  use make_hProp.
-  - exact (∥x = emptyset∥ × ∥y = unitset∥).
-  - apply isapropdirprod; apply propproperty.
-Defined.
-
-Lemma CoproductsHSET_morcls_lp (J : morphism_class HSET) : 
-  ∏ g : arrow SET, Coproducts (morcls_lp hset_01_J g) SET.
-Proof.
-  intro g.
-  use CoproductsHSET.
-  apply isaset_total2.
-  - simpl.
-    apply isaset_total2.
-    * apply isaset_total2.
-      + apply isaset_dirprod; admit.
-      + intro.
-        apply isaset_set_fun_space.
-    * intro.
-      apply isasetaprop.
-      apply isapropdirprod; apply isapropishinh.
-  - intro.
-    apply homset_property.
+  use tpair.
+  - use tpair.
+    * intro f.
+      use tpair.
+      + split.
+        -- exact (identity _).
+        -- apply (BinCoproductArrow).
+           ** exact (inl).
+           ** exact (λ y, inr (inr y)).
+      + abstract (
+          apply funextsec;
+          intro; 
+          reflexivity
+        ).
+    * abstract (
+        intros f g γ;
+        use arrow_mor_eq; [reflexivity|];
+        apply funextsec;
+        intro x;
+        destruct x; reflexivity
+      ).
+  - repeat split; intro f.
+    * use arrow_mor_eq; [reflexivity|].
+      apply funextsec.
+      intro x.
+      destruct x; reflexivity.
+    * use arrow_mor_eq; [reflexivity|].
+      apply funextsec.
+      intro x.
+      destruct x; reflexivity.
+    * admit.
+      (* use arrow_mor_eq; [reflexivity|].
+      apply funextsec.
+      intro x.
+      destruct x; reflexivity. *)
 Admitted.
-
-Definition hset_01_J_one_step_comonad :=
-    one_step_comonad hset_01_J (CoproductsHSET_morcls_lp hset_01_J).
-
-Check hset_01_J_one_step_comonad.
-

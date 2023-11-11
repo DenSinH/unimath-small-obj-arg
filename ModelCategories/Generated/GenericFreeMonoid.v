@@ -32,8 +32,9 @@ Definition pointed : UU :=
 Coercion pointed_obj (T : pointed) : C := pr1 T.
 Definition pointed_pt (T : pointed) : I_{V} --> T := pr2 T.
 
-Definition Mon_alg_data (T : pointed) (X : C) : UU :=
-    ∑ (x : T ⊗_{V} X --> X), (luinv_{V} _) · ((pointed_pt T) ⊗^{V}_{r} X) · x  = identity _.
+Definition Mon_alg_data (T : pointed) (A : C) : UU :=
+    ∑ (a : T ⊗_{V} A --> A), 
+      (luinv_{V} _) · ((pointed_pt T) ⊗^{V}_{r} A) · a  = identity _.
 
 Coercion Mon_alg_map {T : pointed} {X : C} (XX : Mon_alg_data T X) := pr1 XX.
 Definition Mon_alg_map_comm {T : pointed} {X : C} (XX : Mon_alg_data T X) := pr2 XX.

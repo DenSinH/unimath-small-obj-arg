@@ -9,17 +9,20 @@ Local Open Scope cat.
 Local Open Scope morcls.
 Local Open Scope logic.
 
-Definition weq_comp_ax {M : category} (W : morphism_class M) :=
-    ∀ x y z (f : x --> y) (g : y --> z), (W _ _) f ⇒ (W _ _) g ⇒ (W _ _) (f · g).
-Definition weq_cancel_left_ax {M : category} (W : morphism_class M) :=
-    ∀ (x y z : M) (f : x --> y) (g : y --> z), (W _ _) f ⇒ (W _ _) (f · g) ⇒ (W _ _) g.
-Definition weq_cancel_right_ax {M : category} (W : morphism_class M) :=
-    ∀ (x y z : M) (f : x --> y) (g : y --> z), (W _ _) g ⇒ (W _ _) (f · g) ⇒ (W _ _) f.
+Definition weq_comp_ax {M : category} (W : morphism_class M) : UU :=
+    ∀ x y z (f : x --> y) (g : y --> z), 
+      (W _ _) f ⇒ (W _ _) g ⇒ (W _ _) (f · g).
+Definition weq_cancel_left_ax {M : category} (W : morphism_class M) : UU :=
+    ∀ (x y z : M) (f : x --> y) (g : y --> z), 
+      (W _ _) f ⇒ (W _ _) (f · g) ⇒ (W _ _) g.
+Definition weq_cancel_right_ax {M : category} (W : morphism_class M) : UU :=
+    ∀ (x y z : M) (f : x --> y) (g : y --> z), 
+      (W _ _) g ⇒ (W _ _) (f · g) ⇒ (W _ _) f.
 
-Definition is_weak_equivalences {M : category} (W : morphism_class M) :=
+Definition is_weak_equivalences {M : category} (W : morphism_class M) : UU :=
     weq_comp_ax W × weq_cancel_left_ax W × weq_cancel_right_ax W.
 
-Definition weak_equivalences (M : category) :=
+Definition weak_equivalences (M : category) : UU :=
     ∑ (W : morphism_class M), is_weak_equivalences W.
 
 Definition weq_class {M : category} (W : weak_equivalences M) := pr1 W.

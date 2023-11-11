@@ -95,13 +95,16 @@ Proof.
   now rewrite e.
 Qed.
 
-Definition morphism_class_retract_closure {C : category} (S : morphism_class C) :=
-    λ x y (f : x --> y), ∃ x' y' (f' : x' --> y'), (S _ _ f') × (retract f' f).
+Definition morphism_class_retract_closure 
+    {C : category} (S : morphism_class C) : morphism_class C :=
+  λ x y (f : x --> y), ∃ x' y' (f' : x' --> y'), (S _ _ f') × (retract f' f).
 
 Notation "S ^cl" := (morphism_class_retract_closure S) (at level 70) : morcls.
 
-Definition morphism_class_retract_closed {C : category} (S : morphism_class C) :=
-    ∏ x y (f : x --> y) x' y' (f' : x' --> y'), (S _ _ f') × (retract f' f) -> (S _ _ f).
+Definition morphism_class_retract_closed 
+    {C : category} (S : morphism_class C) : UU :=
+  ∏ x y (f : x --> y) x' y' (f' : x' --> y'), 
+    (S _ _ f') × (retract f' f) -> (S _ _ f).
 
 Lemma isaprop_morphism_class_retract_closed {C : category} (S : morphism_class C) :
   isaprop (morphism_class_retract_closed S).
