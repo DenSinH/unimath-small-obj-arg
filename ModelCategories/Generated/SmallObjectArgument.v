@@ -77,12 +77,14 @@ Import MonoidalNotations.
 
 Lemma osc_preserves_diagram_on 
     (HJ : class_presentable J) :
-  T_preserves_diagram_on  _
-    (LNWFS_pointed one_step_comonad_as_LNWFS) 
-    (ChainsLNWFS CC)
-    (CoequalizersLNWFS CC)
-    (monoidal_unit LNWFS_tot_monoidal).
+  ∏ B, T_preserves_diagram_on 
+        LNWFS_tot_monoidal
+        (LNWFS_pointed one_step_comonad_as_LNWFS) 
+        (ChainsLNWFS CC)
+        (CoequalizersLNWFS CC)
+        B.
 Proof.
+  intro B.
   intros CC' cl' cc'.
 
   set (L1 := LNWFS_pointed one_step_comonad_as_LNWFS).
@@ -90,7 +92,7 @@ Proof.
     LNWFS_tot_monoidal 
     L1 
     (CoequalizersLNWFS CC)
-    (monoidal_unit LNWFS_tot_monoidal)
+    B
   )).
   set (CL := ChainsLNWFS CC d).
   set (dbase := mapdiagram (pr1_category _) d).
