@@ -6,6 +6,7 @@ Require Import UniMath.CategoryTheory.Monics.
 Require Import UniMath.CategoryTheory.Epis.
 Require Import UniMath.CategoryTheory.limits.bincoproducts.
 Require Import UniMath.CategoryTheory.limits.coproducts.
+Require Import UniMath.CategoryTheory.Monics.
 Require Import UniMath.CategoryTheory.Monads.Monads.
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
@@ -468,5 +469,120 @@ Proof.
   - exact cop_lnwfs_over.
   - exact cop_rnwfs_over.
 Defined.
+
+Definition cop_nwfs : nwfs C :=
+    (_,, cop_nwfs_over).
+
+Lemma cop_nwfs_r_map_is_split_epi
+    (g : arrow C) : 
+  nwfs_R_maps cop_nwfs g
+  -> ∑ (g' : arrow_cod g --> arrow_dom g),
+       g' · g = identity _.
+Proof.
+  intro Rg.
+  destruct Rg as [αg αgax].
+  use tpair.
+  - exact (BinCoproductIn2 _ · (arrow_mor00 αg)).
+  - etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+            exact (arrow_mor_comm αg).
+    etrans. apply assoc.
+    etrans. apply cancel_postcomposition.
+            apply (BinCoproductIn2Commutes).
+    exact (arrow_mor11_eq (pr1 αgax)).
+Qed.
+
+Lemma cop_nwfs_split_epi_is_r_map
+    (g : arrow C) : 
+  (∑ (g' : arrow_cod g --> arrow_dom g),
+    g' · g = identity _)
+  -> nwfs_R_maps cop_nwfs g.
+Proof.
+  intro Hg.
+  destruct Hg as [g' rel].
+  use tpair.
+  - use mors_to_arrow_mor.
+    * use BinCoproductArrow.
+      + exact (identity _).
+      + exact g'.
+    * exact (identity _).
+    * abstract (
+        use BinCoproductArrowsEq; [
+          etrans; [apply assoc|];
+          etrans; [apply cancel_postcomposition;
+                    apply BinCoproductIn1Commutes|];
+          etrans; [apply id_left|];
+          apply pathsinv0;
+          etrans; [apply assoc|];
+          etrans; [apply cancel_postcomposition;
+                    apply BinCoproductIn1Commutes|];
+          apply id_right
+        | etrans; [apply assoc|];
+          etrans; [apply cancel_postcomposition;
+                    apply BinCoproductIn2Commutes|];
+          etrans; [exact (rel)|];
+          apply pathsinv0;
+          etrans; [apply assoc|];
+          etrans; [apply id_right|];
+          etrans; [apply BinCoproductIn2Commutes|];
+          reflexivity
+        ]
+      ).
+  - split; use arrow_mor_eq.
+    * etrans. apply BinCoproductIn1Commutes.
+      reflexivity.
+    * apply id_left.
+    * use BinCoproductArrowsEq.
+      + etrans. apply assoc.
+        etrans. apply cancel_postcomposition.
+                apply BinCoproductIn1Commutes.
+        apply pathsinv0.
+        etrans. apply assoc.
+        etrans. apply cancel_postcomposition.
+                apply BinCoproductIn1Commutes.
+        etrans. apply assoc'.
+        etrans. apply cancel_precomposition.
+                apply BinCoproductIn1Commutes.
+        etrans. apply id_right.
+        use BinCoproductArrowsEq.
+        --  etrans. apply BinCoproductIn1Commutes.
+            apply pathsinv0.
+            etrans. apply assoc.
+            etrans. apply cancel_postcomposition.
+                    apply BinCoproductIn1Commutes.
+            etrans. apply BinCoproductIn1Commutes.
+            reflexivity.
+        --  etrans. apply BinCoproductIn2Commutes.
+            apply pathsinv0.
+            etrans. apply assoc.
+            etrans. apply cancel_postcomposition.
+                    apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop g)).
+            etrans. apply BinCoproductIn2Commutes.
+            reflexivity.
+      + etrans. apply assoc.
+        etrans. apply cancel_postcomposition.
+                apply BinCoproductIn2Commutes.
+        etrans. apply BinCoproductIn2Commutes.
+        apply pathsinv0.
+        etrans. apply assoc.
+        etrans. apply cancel_postcomposition.
+                apply BinCoproductIn2Commutes.
+        etrans. apply assoc'.
+        etrans. apply id_left.
+        etrans. apply BinCoproductIn2Commutes.
+        reflexivity.
+    * reflexivity.
+Qed.
+
+Lemma cop_nwfs_r_map_iff_split_epi
+    (g : arrow C) : 
+  nwfs_R_maps cop_nwfs g
+  <-> ∑ (g' : arrow_cod g --> arrow_dom g),
+       g' · g = identity _.
+Proof.
+  split.
+  - apply cop_nwfs_r_map_is_split_epi.
+  - apply cop_nwfs_split_epi_is_r_map.
+Qed.
 
 Transparent cop_ff_cop.
