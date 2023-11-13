@@ -33,7 +33,7 @@ Context {C : category}.
 Definition is_retract {x y x' y' : C} (f : x --> y) (f' : x' --> y')
     (ix : x' --> x) (rx : x --> x') (iy : y' --> y) (ry : y --> y') : UU :=
   (ix · rx = identity x') × (iy · ry = identity y') 
-  × (ix · f = f' · iy) × (f' ∘ rx = ry ∘ f).
+  × (ix · f = f' · iy) × (rx · f' = f · ry).
 
 Definition make_is_retract {x y x' y' : C} {f : x --> y} {f' : x' --> y'}
     {ix : x' --> x} {rx : x --> x'} {iy : y' --> y} {ry : y --> y'}
