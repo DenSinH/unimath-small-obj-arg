@@ -237,6 +237,11 @@ Definition LNWFS_lcomp_comul {F' F : Ff C} (L' : lnwfs_over F') (L : lnwfs_over 
     (fact_L (F' ⊗ F)) ⟹ ((fact_L (F' ⊗ F)) ∙ (fact_L (F' ⊗ F))) :=
   (_,, LNWFS_lcomp_comul_axioms L' L).
 
+Opaque left_reduced_lp.
+Opaque left_reduced_lp_lift.
+Opaque LNWFS_lcomp_comul_L_lp.
+Opaque LNWFS_lcomp_comul_L'_lp.
+
 (* This is perhaps the most interesting proof, proving that
    the comultiplication is associative on the middle morphisms. *)
 Lemma LNWFS_lcomp_comul_mul_law11 {F' F : Ff C} 

@@ -6,11 +6,13 @@ Require Import UniMath.CategoryTheory.Monics.
 Require Import UniMath.CategoryTheory.Epis.
 Require Import UniMath.CategoryTheory.limits.bincoproducts.
 Require Import UniMath.CategoryTheory.limits.coproducts.
+Require Import UniMath.CategoryTheory.Monads.Monads.
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 
 Require Import CategoryTheory.ModelCategories.MorphismClass.
 Require Import CategoryTheory.ModelCategories.NWFS.
+Require Import CategoryTheory.ModelCategories.Generated.Helpers.
 Require Import CategoryTheory.ModelCategories.Generated.LiftingWithClass.
 Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
@@ -18,95 +20,453 @@ Require Import CategoryTheory.DisplayedCats.Examples.Three.
 
 Local Open Scope cat.
 
-Definition hset_functorial_factorization_data : section_disp_data (three_disp HSET).
+Context {C : category}.
+Context (CC : BinCoproducts C).
+
+Definition cop_ff_cop (f : arrow C) : BinCoproduct _ _ :=
+    CC (arrow_dom f) (arrow_cod f).
+Opaque cop_ff_cop.
+
+Definition cop_functorial_factorization_data : section_disp_data (three_disp C).
 Proof.
   use tpair.
   - intro f.
-    simpl.
-    set (cop := BinCoproductsHSET (arrow_dom f) (arrow_cod f)).
-    exists (BinCoproductObject cop).
-    exists (BinCoproductIn1 cop).
-    exists (BinCoproductArrow cop f (identity _)).
-    exact (BinCoproductIn1Commutes _ _ _ cop _ _ _).
+    exists (BinCoproductObject (cop_ff_cop f)).
+    exists (BinCoproductIn1 (cop_ff_cop f)).
+    exists (BinCoproductArrow (cop_ff_cop f) f (identity _)).
+    abstract (
+      exact (BinCoproductIn1Commutes _ _ _ (cop_ff_cop f) _ _ _)
+    ).
   - intros f g γ.
-    simpl.
     use tpair.
     * (* arrow dom f ∐ cod f --> dom g ∐ cod g
          simply given by γ: f --> g *)
-      intro F.
-      destruct F as [p|p].
-      + left.  exact (arrow_mor00 γ p).
-      + right. exact (arrow_mor11 γ p).
-    * repeat split.
-      cbn.
-      apply funextsec.
-      intro p.
-      destruct p; cbn; [|reflexivity].
-      change ((f · arrow_mor11 γ) p = (arrow_mor00 γ · g) p).
-
-      (* can't just use maponpaths or rewrite for some reason,
-         have to use this separate lemma *)
-      assert (∏ (a b : hSet) (h h' : a -> b) (q : a), h = h' -> h q = h' q) as H.
-      {
-        intros ? ? ? ? ? H.
-        now rewrite H.
-      }
-      apply H.
-      exact (pathsinv0 (arrow_mor_comm γ)).
+      use BinCoproductOfArrows.
+      + exact (arrow_mor00 γ).
+      + exact (arrow_mor11 γ).
+    * abstract (
+        split; [apply BinCoproductIn1Commutes|];
+        use BinCoproductArrowsEq; [
+          etrans; [apply assoc|];
+          etrans; [apply cancel_postcomposition;
+                  apply BinCoproductIn1Commutes|];
+          apply pathsinv0;
+          etrans; [apply assoc|];
+          etrans; [apply cancel_postcomposition;
+                  apply BinCoproductIn1Commutes|];
+          etrans; [apply assoc'|];
+          etrans; [apply cancel_precomposition;
+                  apply BinCoproductIn1Commutes|];
+          exact (arrow_mor_comm γ)
+        | 
+          etrans; [apply assoc|];
+          etrans; [apply cancel_postcomposition;
+                  apply BinCoproductIn2Commutes|];
+          etrans; [apply id_left|];
+          apply pathsinv0;
+          etrans; [apply assoc|];
+          etrans; [apply cancel_postcomposition;
+                  apply BinCoproductIn2Commutes|];
+          etrans; [apply assoc'|];
+          etrans; [apply cancel_precomposition;
+                  apply BinCoproductIn2Commutes|];
+          apply id_right
+        ]
+      ).
 Defined.
 
-Definition hset_functorial_factorization_axioms : 
-    section_disp_axioms hset_functorial_factorization_data.
+Definition cop_functorial_factorization_axioms : 
+    section_disp_axioms cop_functorial_factorization_data.
 Proof.
-  split; intros.
-  - apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
-    apply funextsec.
-    intro p.
-    destruct p; reflexivity.
-  - apply subtypePath; [intro; apply isapropdirprod; apply homset_property|].
-    apply funextsec.
-    intro p.
-    destruct p; reflexivity.
+  split; intros; apply pathsinv0;
+    (apply subtypePath; [intro; apply isapropdirprod; apply homset_property|]).
+  - use BinCoproduct_endo_is_identity.
+    * etrans. apply BinCoproductIn1Commutes.
+      apply id_left.
+    * etrans. apply BinCoproductIn2Commutes.
+      apply id_left.
+  - use BinCoproductArrowUnique.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn1Commutes.
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              apply BinCoproductIn1Commutes.
+      apply assoc.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn2Commutes.
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              apply BinCoproductIn2Commutes.
+      apply assoc.
 Qed.
 
-Definition hset_functorial_factorization : functorial_factorization HSET :=
-    (_,, hset_functorial_factorization_axioms).
+Definition cop_functorial_factorization : functorial_factorization C :=
+    (_,, cop_functorial_factorization_axioms).
 
-Definition hset_lnwfs_over : lnwfs_over hset_functorial_factorization.
+Definition cop_ff_comul_data : 
+    nat_trans_data 
+        (fact_L cop_functorial_factorization)
+        (functor_composite (fact_L cop_functorial_factorization) (fact_L cop_functorial_factorization)).
 Proof.
-  use tpair.
-  - use tpair.
-    * intro f.
-      use tpair.
-      + split.
-        -- exact (identity _).
-        -- apply (BinCoproductArrow).
-           ** exact (inl).
-           ** exact (λ y, inr (inr y)).
-      + abstract (
-          apply funextsec;
-          intro; 
-          reflexivity
-        ).
-    * abstract (
-        intros f g γ;
-        use arrow_mor_eq; [reflexivity|];
-        apply funextsec;
-        intro x;
-        destruct x; reflexivity
-      ).
-  - repeat split; intro f.
-    * use arrow_mor_eq; [reflexivity|].
-      apply funextsec.
-      intro x.
-      destruct x; reflexivity.
-    * use arrow_mor_eq; [reflexivity|].
-      apply funextsec.
-      intro x.
-      destruct x; reflexivity.
-    * admit.
-      (* use arrow_mor_eq; [reflexivity|].
-      apply funextsec.
-      intro x.
-      destruct x; reflexivity. *)
-Admitted.
+  intro f.
+  use mors_to_arrow_mor.
+  - exact (identity _).
+  - use BinCoproductArrow.
+    * use BinCoproductIn1.
+    * use (compose (BinCoproductIn2 (cop_ff_cop f))).
+      use BinCoproductIn2.
+  - abstract (
+      etrans; [apply id_left|];
+      apply pathsinv0;
+      apply BinCoproductIn1Commutes
+    ).
+Defined.
+
+Lemma cop_ff_comul_ax : 
+    is_nat_trans _ _ cop_ff_comul_data.
+Proof.
+  intros f g γ.
+  use arrow_mor_eq.
+  - etrans. apply id_right.
+    apply pathsinv0.
+    apply id_left.
+  - use BinCoproductArrowsEq.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn1Commutes.
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              apply BinCoproductIn1Commutes.
+      apply pathsinv0.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn1Commutes.
+      etrans. apply BinCoproductIn1Commutes.
+      reflexivity.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn2Commutes.
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              apply BinCoproductIn2Commutes.
+      apply pathsinv0.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn2Commutes.
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              apply BinCoproductIn2Commutes.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn2Commutes.
+      apply assoc'.
+Qed.
+
+Definition cop_ff_comul : 
+    nat_trans _ _ :=
+  (_,, cop_ff_comul_ax).
+
+Lemma cop_ff_comul_monad_laws :
+    Monad_laws (L_monad_data cop_functorial_factorization cop_ff_comul).
+Proof.
+  repeat split; intro f; use arrow_mor_eq.
+  - apply id_left.
+  - use BinCoproductArrowsEq.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn1Commutes.
+      etrans. apply BinCoproductIn1Commutes.
+      apply pathsinv0.
+      apply id_right.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn2Commutes.
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              apply BinCoproductIn2Commutes.
+      reflexivity.
+  - apply id_left.
+  - use BinCoproductArrowsEq.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn1Commutes.
+      etrans. apply BinCoproductIn1Commutes.
+      etrans. apply id_left.
+      apply pathsinv0.
+      apply id_right.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn2Commutes.
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              apply BinCoproductIn2Commutes.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn2Commutes.
+      etrans. apply id_left.
+      apply pathsinv0.
+      apply id_right.
+  - reflexivity.
+  - use BinCoproductArrowsEq.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn1Commutes.
+      etrans. apply BinCoproductIn1Commutes.
+      etrans. apply id_left.
+      apply pathsinv0.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+            apply BinCoproductIn1Commutes.
+      etrans. apply BinCoproductIn1Commutes.
+      reflexivity.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn2Commutes.
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              apply BinCoproductIn2Commutes.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn2Commutes.
+      apply pathsinv0.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn2Commutes.
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              apply BinCoproductIn2Commutes.
+      apply assoc.
+Qed.
+
+Definition cop_lnwfs_over : lnwfs_over cop_functorial_factorization.
+Proof.
+  exists cop_ff_comul.
+  exact cop_ff_comul_monad_laws.
+Defined.
+
+Definition cop_ff_mul_data : 
+    nat_trans_data 
+        (functor_composite (fact_R cop_functorial_factorization) (fact_R cop_functorial_factorization))
+        (fact_R cop_functorial_factorization).
+Proof.
+  intro f.
+  use mors_to_arrow_mor.
+  - use BinCoproductArrow.
+    * use BinCoproductArrow.
+      + use BinCoproductIn1.
+      + use BinCoproductIn2.
+    * use BinCoproductIn2.
+  - exact (identity _).
+  - abstract (
+      use BinCoproductArrowsEq; [
+        etrans; [apply assoc|];
+        etrans; [apply cancel_postcomposition;
+                apply BinCoproductIn1Commutes|];
+        apply pathsinv0;
+        etrans; [apply assoc|];
+        etrans; [apply id_right|];
+        etrans; [apply BinCoproductIn1Commutes|];
+        use BinCoproductArrowsEq; [
+            etrans; [apply BinCoproductIn1Commutes|];
+            apply pathsinv0;
+            etrans; [apply assoc|];
+            etrans; [apply cancel_postcomposition;
+                      apply BinCoproductIn1Commutes|];
+            etrans; [apply BinCoproductIn1Commutes|];
+            reflexivity
+        |   
+            etrans; [apply BinCoproductIn2Commutes|];
+            apply pathsinv0;
+            etrans; [apply assoc|];
+            etrans; [apply cancel_postcomposition;
+                      apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop f))|];
+            apply BinCoproductIn2Commutes
+        ]
+      |
+        etrans; [apply assoc|];
+        etrans; [apply cancel_postcomposition;
+                apply BinCoproductIn2Commutes|];
+        etrans; [apply BinCoproductIn2Commutes|];
+        apply pathsinv0;
+        etrans; [apply assoc|];
+        etrans; [apply cancel_postcomposition;
+                apply BinCoproductIn2Commutes|];
+        apply id_left
+      ]
+    ).
+Defined.
+
+Lemma cop_ff_mul_ax : 
+    is_nat_trans _ _ cop_ff_mul_data.
+Proof.
+  intros f g γ.
+  use arrow_mor_eq.
+  - use BinCoproductArrowsEq.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn1Commutes.
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              apply BinCoproductIn1Commutes.
+      apply pathsinv0.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn1Commutes.
+      use BinCoproductArrowsEq.
+        + etrans. apply assoc.
+          etrans. apply cancel_postcomposition.
+                  apply BinCoproductIn1Commutes.
+          etrans. apply BinCoproductIn1Commutes.
+          apply pathsinv0.
+          etrans. apply assoc.
+          etrans. apply cancel_postcomposition.
+                  apply BinCoproductIn1Commutes.
+          etrans. apply assoc'.
+          etrans. apply cancel_precomposition.
+                  apply BinCoproductIn1Commutes.
+          reflexivity.
+        + etrans. apply assoc.
+          etrans. apply cancel_postcomposition.
+                  apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop f)).
+          etrans. apply BinCoproductIn2Commutes.
+          apply pathsinv0.
+          etrans. apply assoc.
+          etrans. apply cancel_postcomposition.
+                  apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop f)).
+          etrans. apply assoc'.
+          etrans. apply cancel_precomposition.
+                  apply BinCoproductIn2Commutes.
+          reflexivity.
+      * etrans. apply assoc.
+        etrans. apply cancel_postcomposition.
+                apply BinCoproductIn2Commutes.
+        etrans. apply assoc'.
+        etrans. apply cancel_precomposition.
+                apply BinCoproductIn2Commutes.
+        apply pathsinv0.
+        etrans. apply assoc.
+        etrans. apply cancel_postcomposition.
+                apply BinCoproductIn2Commutes.
+        etrans. apply BinCoproductIn2Commutes.
+        reflexivity.
+  - etrans. apply id_right.
+    apply pathsinv0.
+    apply id_left.
+Qed.
+
+Definition cop_ff_mul : 
+    nat_trans _ _ :=
+  (_,, cop_ff_mul_ax).
+
+Lemma cop_ff_mul_monad_laws :
+    Monad_laws (R_monad_data cop_functorial_factorization cop_ff_mul).
+Proof.
+  repeat split; intro f; use arrow_mor_eq.
+  - use BinCoproductArrowsEq.
+    * etrans. apply cancel_precomposition.
+              apply BinCoproductIn1Commutes.
+      etrans. apply BinCoproductIn1Commutes.
+      apply pathsinv0.
+      apply id_right.
+    * etrans. apply cancel_precomposition.
+              apply BinCoproductIn1Commutes.
+      etrans. apply BinCoproductIn2Commutes.
+      apply pathsinv0.
+      apply id_right.
+  - apply id_left.
+  - use BinCoproductArrowsEq.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn1Commutes.
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              apply BinCoproductIn1Commutes.
+      etrans. apply BinCoproductIn1Commutes.
+      apply pathsinv0.
+      apply id_right.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn2Commutes.
+      etrans. apply assoc'.
+      etrans. apply id_left.
+      etrans. apply BinCoproductIn2Commutes.
+      apply pathsinv0.
+      apply id_right.
+  - apply id_left.
+  - use BinCoproductArrowsEq.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn1Commutes.
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              apply BinCoproductIn1Commutes.
+      apply pathsinv0.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn1Commutes.
+      use BinCoproductArrowsEq.
+      + etrans. apply assoc.
+        etrans. apply cancel_postcomposition.
+                apply BinCoproductIn1Commutes.
+        etrans. apply BinCoproductIn1Commutes.
+        apply pathsinv0.
+        etrans. apply assoc.
+        etrans. apply cancel_postcomposition.
+                apply BinCoproductIn1Commutes.
+        use BinCoproductArrowsEq.
+        -- etrans. apply assoc.
+           etrans. apply cancel_postcomposition.
+                   apply BinCoproductIn1Commutes.
+           etrans. apply BinCoproductIn1Commutes.
+           apply pathsinv0.
+           etrans. apply BinCoproductIn1Commutes.
+           reflexivity.
+        -- etrans. apply assoc.
+           etrans. apply cancel_postcomposition.
+                   apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop f)).
+           etrans. apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop f)).
+           apply pathsinv0.
+           etrans. apply BinCoproductIn2Commutes.
+           reflexivity.
+      + etrans. apply assoc.
+        etrans. apply cancel_postcomposition. 
+                apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop (R_monad_data cop_functorial_factorization cop_ff_mul f))).
+        etrans. apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop (R_monad_data cop_functorial_factorization cop_ff_mul f))).
+        apply pathsinv0.
+        etrans. apply assoc.
+        etrans. apply cancel_postcomposition. 
+                apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop (R_monad_data cop_functorial_factorization cop_ff_mul f))).
+        etrans. apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop f)).
+        reflexivity.
+    * etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn2Commutes.
+      etrans. apply assoc'.
+      etrans. apply cancel_precomposition.
+              apply BinCoproductIn2Commutes.
+      etrans. apply id_left.
+      apply pathsinv0.
+      etrans. apply assoc.
+      etrans. apply cancel_postcomposition.
+              apply BinCoproductIn2Commutes.
+      etrans. apply BinCoproductIn2Commutes.
+      reflexivity.
+  - reflexivity.
+Qed.
+
+Definition cop_rnwfs_over : rnwfs_over cop_functorial_factorization.
+Proof.
+  exists cop_ff_mul.
+  exact cop_ff_mul_monad_laws.
+Defined.
+
+Definition cop_nwfs_over : nwfs_over cop_functorial_factorization.
+Proof.
+  split.
+  - exact cop_lnwfs_over.
+  - exact cop_rnwfs_over.
+Defined.
+
+Transparent cop_ff_cop.
