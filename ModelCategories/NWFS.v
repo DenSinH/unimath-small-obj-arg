@@ -605,8 +605,8 @@ Section NWFS_cat.
 Definition fact_mor {C : category} (F F' : functorial_factorization C) :=
     section_nat_trans_disp F F'.
 
-Definition fact_mor_nt {C : category} {F F' : functorial_factorization C} (α : fact_mor F F') :=
-    section_nat_trans α.
+Definition fact_mor_nt {C : category} {F F' : functorial_factorization C} (τ : fact_mor F F') :=
+    section_nat_trans τ.
 Coercion fact_mor_nt : fact_mor >-> nat_trans.
 
 Lemma isaset_fact_mor {C : category} (F F' : functorial_factorization C) : isaset (fact_mor F F').
@@ -616,8 +616,8 @@ Qed.
 
 (* verify that indeed, whiskering with d1 yields id_{C^2} ⟹ id_{C^2} *)
 Lemma fact_mor_whisker_d1_is_id {C : category} {F F' : functorial_factorization C}
-    (α : fact_mor F F') :
-    post_whisker α face_map_1 = nat_trans_id (functor_identity _).
+    (τ : fact_mor F F') :
+    post_whisker τ face_map_1 = nat_trans_id (functor_identity _).
 Proof.
   apply nat_trans_eq.
   - apply homset_property.
@@ -639,8 +639,8 @@ Definition Ff_precategory_id {C : category} (F : functorial_factorization C) : f
 Definition Ff_precategory_comp {C : category} (F F' F'' : functorial_factorization C) :
     (fact_mor F F') -> (fact_mor F' F'') -> (fact_mor F F'').
 Proof.
-  intros α α'.
-  exact (section_nat_trans_comp α α').
+  intros τ τ'.
+  exact (section_nat_trans_comp τ τ').
 Defined.
 
 Definition Ff_precategory_data (C : category) : precategory_data.
@@ -671,44 +671,44 @@ Definition Ff (C : category) : category := (Ff_precategory C,, has_homsets_Ff C)
 
 Definition lnwfs_mor {C : category} {F F' : functorial_factorization C}
     (n : lnwfs_over F) (n' : lnwfs_over F')
-    (α : fact_mor F F') : (lnwfs_L_monad n') ⟹ (lnwfs_L_monad n) :=
-  post_whisker (op_nt α) (functor_opp face_map_2).
+    (τ : fact_mor F F') : (lnwfs_L_monad n') ⟹ (lnwfs_L_monad n) :=
+  post_whisker (op_nt τ) (functor_opp face_map_2).
 Definition rnwfs_mor {C : category} {F F' : functorial_factorization C}
     (n : rnwfs_over F) (n' : rnwfs_over F')
-    (α : fact_mor F F') : (rnwfs_R_monad n) ⟹ (rnwfs_R_monad n') :=
-  post_whisker α face_map_0.
+    (τ : fact_mor F F') : (rnwfs_R_monad n) ⟹ (rnwfs_R_monad n') :=
+  post_whisker τ face_map_0.
 
 Definition lnwfs_mor_axioms {C : category} {F F' : functorial_factorization C}
     (n : lnwfs_over F) (n' : lnwfs_over F')
-    (α : fact_mor F F') :=
-  Monad_Mor_laws (lnwfs_mor n n' α).
+    (τ : fact_mor F F') :=
+  Monad_Mor_laws (lnwfs_mor n n' τ).
 
 Lemma isaprop_lnwfs_mor_axioms {C : category} {F F' : functorial_factorization C}
     (n : lnwfs_over F) (n' : lnwfs_over F')
-    (α : fact_mor F F') : 
-  isaprop (lnwfs_mor_axioms n n' α).
+    (τ : fact_mor F F') : 
+  isaprop (lnwfs_mor_axioms n n' τ).
 Proof.
   apply isaprop_Monad_Mor_laws, homset_property.
 Qed.
 
 Definition rnwfs_mor_axioms {C : category} {F F' : functorial_factorization C}
     (n : rnwfs_over F) (n' : rnwfs_over F')
-    (α : fact_mor F F') :=
-  Monad_Mor_laws (rnwfs_mor n n' α).
+    (τ : fact_mor F F') :=
+  Monad_Mor_laws (rnwfs_mor n n' τ).
 
 Lemma isaprop_rnwfs_mor_axioms {C : category} {F F' : functorial_factorization C}
     (n : rnwfs_over F) (n' : rnwfs_over F')
-    (α : fact_mor F F') : 
-  isaprop (rnwfs_mor_axioms n n' α).
+    (τ : fact_mor F F') : 
+  isaprop (rnwfs_mor_axioms n n' τ).
 Proof.
   apply isaprop_Monad_Mor_laws, homset_property.
 Qed.
   
-Definition nwfs_mor_axioms {C : category} (n n' : nwfs C) (α : fact_mor n n') :=
-    lnwfs_mor_axioms n n' α × rnwfs_mor_axioms n n' α.
+Definition nwfs_mor_axioms {C : category} (n n' : nwfs C) (τ : fact_mor n n') :=
+    lnwfs_mor_axioms n n' τ × rnwfs_mor_axioms n n' τ.
 
-Lemma isaprop_nwfs_mor_axioms {C : category} (n n' : nwfs C) (α : fact_mor n n') :
-  isaprop (nwfs_mor_axioms n n' α).
+Lemma isaprop_nwfs_mor_axioms {C : category} (n n' : nwfs C) (τ : fact_mor n n') :
+  isaprop (nwfs_mor_axioms n n' τ).
 Proof.
   apply isapropdirprod.
   - apply isaprop_lnwfs_mor_axioms.
@@ -719,19 +719,19 @@ Definition lnwfs_L_monad_mor {C : category}
     {F F' : functorial_factorization C}
     {n : lnwfs_over F}
     {n' : lnwfs_over F'}
-    (α : fact_mor F F')
-    (ax : lnwfs_mor_axioms n n' α) : 
+    (τ : fact_mor F F')
+    (ax : lnwfs_mor_axioms n n' τ) : 
       Monad_Mor (lnwfs_L_monad n') (lnwfs_L_monad n) :=
-  (lnwfs_mor n n' α,, ax).
+  (lnwfs_mor n n' τ,, ax).
   
 Definition rnwfs_R_monad_mor {C : category}
     {F F' : functorial_factorization C}
     {n : rnwfs_over F}
     {n' : rnwfs_over F'}
-    (α : fact_mor F F')
-    (ax : rnwfs_mor_axioms n n' α) :
+    (τ : fact_mor F F')
+    (ax : rnwfs_mor_axioms n n' τ) :
       Monad_Mor (rnwfs_R_monad n) (rnwfs_R_monad n') :=
-  (rnwfs_mor n n' α,, ax).
+  (rnwfs_mor n n' τ,, ax).
 
 Context (C : category).
 
@@ -776,17 +776,17 @@ Lemma lnwfs_mor_comp {F F' F'' : Ff C}
     {n : lnwfs_over F}
     {n' : lnwfs_over F'}
     {n'' : lnwfs_over F''}
-    {α : F --> F'}
-    {α' : F' --> F''}
-    (ax : lnwfs_mor_axioms n n' α)
-    (ax' : lnwfs_mor_axioms n' n'' α') :
-  lnwfs_mor_axioms n n'' (α · α').
+    {τ : F --> F'}
+    {τ' : F' --> F''}
+    (ax : lnwfs_mor_axioms n n' τ)
+    (ax' : lnwfs_mor_axioms n' n'' τ') :
+  lnwfs_mor_axioms n n'' (τ · τ').
 Proof.
   (* Like for identity, we just show that the composition of the morphisms
      corresponds with the composition of the corresponding L and R monad
      morphisms. *)
-  assert (lnwfs_mor n n'' (α · α') =
-          nat_trans_comp _ _ _ (lnwfs_L_monad_mor α' ax') (lnwfs_L_monad_mor α ax)) as H.
+  assert (lnwfs_mor n n'' (τ · τ') =
+          nat_trans_comp _ _ _ (lnwfs_L_monad_mor τ' ax') (lnwfs_L_monad_mor τ ax)) as H.
   {
     use nat_trans_eq.
     - (* for some reason this definition is completely unfolded *)
@@ -807,21 +807,21 @@ Proof.
   }
   unfold lnwfs_mor_axioms.
   rewrite H.
-  exact (Monad_composition_laws (lnwfs_L_monad_mor α' ax') (lnwfs_L_monad_mor α ax)).
+  exact (Monad_composition_laws (lnwfs_L_monad_mor τ' ax') (lnwfs_L_monad_mor τ ax)).
 Qed.
 
 Lemma rnwfs_mor_comp {F F' F'' : Ff C}
     {n : rnwfs_over F}
     {n' : rnwfs_over F'}
     {n'' : rnwfs_over F''}
-    {α : F --> F'}
-    {α' : F' --> F''}
-    (ax : rnwfs_mor_axioms n n' α)
-    (ax' : rnwfs_mor_axioms n' n'' α') :
-  rnwfs_mor_axioms n n'' (α · α').
+    {τ : F --> F'}
+    {τ' : F' --> F''}
+    (ax : rnwfs_mor_axioms n n' τ)
+    (ax' : rnwfs_mor_axioms n' n'' τ') :
+  rnwfs_mor_axioms n n'' (τ · τ').
 Proof.
-  assert (rnwfs_mor n n'' (α · α') =
-          nat_trans_comp _ _ _ (rnwfs_R_monad_mor α ax) (rnwfs_R_monad_mor α' ax')) as H.
+  assert (rnwfs_mor n n'' (τ · τ') =
+          nat_trans_comp _ _ _ (rnwfs_R_monad_mor τ ax) (rnwfs_R_monad_mor τ' ax')) as H.
   {
     simpl.
     use nat_trans_eq.
@@ -841,7 +841,7 @@ Proof.
   }
   unfold rnwfs_mor_axioms.
   rewrite H.
-  exact (Monad_composition_laws (rnwfs_R_monad_mor α ax) (rnwfs_R_monad_mor α' ax')).
+  exact (Monad_composition_laws (rnwfs_R_monad_mor τ ax) (rnwfs_R_monad_mor τ' ax')).
 Qed.
 
 Definition LNWFS : disp_cat (Ff C).
@@ -853,7 +853,7 @@ Proof.
     apply isaprop_lnwfs_mor_axioms.
   - intros.
     apply fact_id_is_lnwfs_mor.
-  - intros F F' F'' n n' n'' α α' ax ax'.
+  - intros F F' F'' n n' n'' τ τ' ax ax'.
     apply (lnwfs_mor_comp ax ax').
 Defined.
 
@@ -866,7 +866,7 @@ Proof.
     apply isaprop_rnwfs_mor_axioms.
   - intros.
     apply fact_id_is_rnwfs_mor.
-  - intros F F' F'' n n' n'' α α' ax ax'.
+  - intros F F' F'' n n' n'' τ τ' ax ax'.
     apply (rnwfs_mor_comp ax ax').
 Defined.
 
