@@ -2026,7 +2026,7 @@ Proof.
 Defined.
 
 Lemma Tinf_mul_alg_map_commutes :
-    (Mon_alg_map _ (pr2 TinfM))  ⊗^{ V}_{r} Tinf · Tinf_monoid_mul
+    (Mon_alg_map _ (pr2 TinfM)) ⊗^{ V}_{r} Tinf · Tinf_monoid_mul
     = α^{V}_{_, _, _} 
     · T ⊗^{ V}_{l} Tinf_monoid_mul · (Mon_alg_map _ (pr2 TinfM)).
 Proof.

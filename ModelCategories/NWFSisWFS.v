@@ -715,3 +715,73 @@ Proof.
       apply pathsinv0.
       exact (three_comp (fact_functor n (colimIn CC 0))).
 Qed.
+
+Lemma test 
+    {C : category}
+    {n : nwfs C}
+    {f g: arrow C}
+    (Af : nwfs_L_maps n f)
+    (r : retract f g) :
+  nwfs_L_maps n g.
+Proof.
+  destruct Af as [Af [Afunit Afmul]].
+  destruct r as [ix [rx [iy [ry [hx [hy [hi hr]]]]]]].
+
+  assert (Af00id : arrow_mor00 Af = identity _).
+  {
+    etrans. exact (pathsinv0 (id_right _)).
+    exact (arrow_mor00_eq Afunit).
+  }
+
+  set (r := mors_to_arrow_mor f g rx ry hr).
+  set (i := mors_to_arrow_mor g f ix iy hi).
+
+  transparent assert (mor : (g --> fact_L n g)).
+  {
+    use mors_to_arrow_mor.
+    * exact (identity _).
+    * apply (compose iy).
+      apply (compose (arrow_mor11 Af)).
+      exact (arrow_mor11 (#(fact_L n) r)).
+    * etrans. apply id_left.
+      apply pathsinv0.
+      admit.
+  }
+
+  exists mor.
+  split.
+  * use arrow_mor_eq; [apply id_left|].
+    cbn.
+    set (test := arrow_mor_comm mor).
+    cbn in test.
+    admit.
+  * use arrow_mor_eq; [apply cancel_precomposition; exact (nwfs_Σ_top_map_id n _)|].
+    etrans. apply cancel_postcomposition, assoc.
+    etrans. apply assoc'.
+    etrans. apply cancel_precomposition.
+            exact (arrow_mor11_eq (nat_trans_ax (nwfs_Σ n) _ _ r)).
+    etrans. apply assoc.
+    etrans. apply assoc4.
+    etrans. apply cancel_postcomposition, cancel_precomposition.
+            exact (arrow_mor11_eq Afmul).
+    etrans. apply assoc'.
+    apply pathsinv0.
+    etrans. apply assoc'.
+    apply cancel_precomposition.
+    etrans. apply assoc'.
+    apply pathsinv0.
+    etrans. apply assoc'.
+    apply cancel_precomposition.
+    etrans. apply (pr1_section_disp_on_morphisms_comp (pr1 n)).
+    apply pathsinv0.
+    etrans. apply (pr1_section_disp_on_morphisms_comp (pr1 n)).
+    use (section_disp_on_eq_morphisms (pr1 n)).
+    + etrans. apply id_right.
+      apply pathsinv0.
+      etrans. apply cancel_postcomposition.
+              exact Af00id.
+      apply id_left.
+    + cbn.
+      etrans. apply assoc.
+      admit.
+Admitted.
