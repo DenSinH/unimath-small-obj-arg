@@ -443,7 +443,7 @@ Lemma wfs_closed_pushouts {C : category} (w : wfs C)
   ((wfs_L w _ _) p) -> ((wfs_L w _ _) (PushoutIn1 Po)).
 Proof.
   (* didn't expect Coq would be this powerful... *)
-  apply (wfs_closed_pullbacks (opp_wfs w)).
+  apply (wfs_closed_pullbacks (opp_wfs _)).
 Qed.
 
 (* https://ncatlab.org/nlab/show/weak+factorization+system#ClosuredPropertiesOfWeakFactorizationSystem *)
