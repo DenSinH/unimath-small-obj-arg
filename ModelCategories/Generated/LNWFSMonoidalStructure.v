@@ -443,13 +443,12 @@ Proof.
   - etrans. apply id_left.
     (* cbn. *)
     apply pathsinv0.
-    etrans. apply id_left.
+    etrans. apply id_right.
     etrans. apply id_right.
     exact (pathsinv0 (lnwfs_Σ_top_map_id L a)).
   - etrans. apply id_left.
     apply pathsinv0.
-    etrans. apply cancel_precomposition.
-            apply id_right.
+    etrans. apply id_right.
     etrans. apply cancel_postcomposition.
             apply id_left.
     (* cbn.
@@ -480,15 +479,13 @@ Proof.
   - etrans. apply id_left.
     (* cbn. *)
     apply pathsinv0.
-    etrans. apply cancel_precomposition.
-            apply id_right.
+    etrans. apply id_right.
     etrans. apply id_right.
     exact (lnwfs_Σ_top_map_id L a).
   - etrans. apply id_left.
     etrans. apply id_left.
     apply pathsinv0.
-    etrans. apply cancel_precomposition.
-            apply id_right.
+    etrans. apply id_right.
     (* cbn.
     unfold three_mor11.
     cbn. *)
@@ -510,14 +507,12 @@ Proof.
   - etrans. apply id_left.
     apply pathsinv0.
     (* cbn. *)
-    etrans. apply cancel_precomposition.
-            apply id_left.
+    etrans. apply id_right.
     etrans. apply id_right.
     exact (pathsinv0 (lnwfs_Σ_top_map_id L a)).
   - etrans. apply id_left.
     apply pathsinv0.
-    etrans. apply cancel_precomposition.
-            apply id_right.
+    etrans. apply id_right.
     etrans. apply assoc'.
     etrans. apply cancel_precomposition.
     {
@@ -547,13 +542,13 @@ Proof.
   split; (intro; use arrow_mor_eq).
   - etrans. apply id_left.
     apply pathsinv0.
-    etrans. apply cancel_precomposition.
-            apply id_right.
+    etrans. apply id_right.
     etrans. apply id_right.
     exact (lnwfs_Σ_top_map_id L a).
   - etrans. apply id_left.
-    apply cancel_precomposition.
     apply pathsinv0.
+    etrans. apply assoc'.
+    apply cancel_precomposition.
     etrans. apply id_right.
     apply pathsinv0.
     use (section_disp_on_eq_morphisms F).
@@ -575,12 +570,11 @@ Proof.
   split; (intro; use arrow_mor_eq).
   - etrans. apply id_left.
     apply pathsinv0.
-    etrans. apply id_left.
+    etrans. apply id_right.
     apply id_left.
   - etrans. apply id_left.
     apply pathsinv0.
-    etrans. apply cancel_precomposition.
-            apply id_right.
+    etrans. apply id_right.
     
     etrans. apply assoc'.
     etrans. apply cancel_precomposition.
@@ -636,12 +630,11 @@ Proof.
   split; (intro; use arrow_mor_eq).
   - etrans. apply id_left.
     apply pathsinv0.
-    etrans. apply id_left.
+    etrans. apply id_right.
     apply id_left.
   - etrans. apply id_left.
     apply pathsinv0.
-    etrans. apply cancel_precomposition.
-            apply id_right.
+    etrans. apply id_right.
     
     etrans. apply assoc'.
     etrans. apply cancel_precomposition.
@@ -700,8 +693,7 @@ Proof.
   split; (intro; use arrow_mor_eq).
   - etrans. apply id_left.
     apply pathsinv0.
-    etrans. apply cancel_precomposition.
-            apply id_right.
+    etrans. apply id_right.
     apply id_right.
   - etrans. 
     {
@@ -711,7 +703,9 @@ Proof.
       exact (pr2 (pathsdirprodweq (base_paths _ _ (pr1 τ (fact_R F a))))).
     }
     etrans. apply assoc'.
+    etrans. apply assoc'.
     apply pathsinv0.
+    etrans. apply assoc'.
     etrans. apply assoc'.
     apply cancel_precomposition.
 
@@ -723,7 +717,6 @@ Proof.
             apply (pr1_section_disp_on_morphisms_comp G).
   
     apply pathsinv0.
-    etrans. apply assoc'.
     etrans. apply cancel_precomposition.
     {
       set (τGnat := pr2 τG).
@@ -799,11 +792,11 @@ Proof.
   split; (intro; use arrow_mor_eq).
   - etrans. apply id_left.
     apply pathsinv0.
-    etrans. apply cancel_precomposition.
-            apply id_right.
+    etrans. apply id_right.
     apply id_right.
   - apply pathsinv0.
-    etrans. 
+    etrans. apply assoc'.
+    etrans.
     {
       etrans. apply cancel_precomposition.
               use (pr1_section_disp_on_morphisms_comp F).
@@ -831,6 +824,7 @@ Proof.
               exact (pr2 (pathsdirprodweq (base_paths _ _ (pr1 τ a)))).
       
       etrans. apply assoc'.
+      etrans. apply assoc'.
       apply pathsinv0.
       etrans. apply assoc'.
       apply cancel_precomposition.
@@ -840,7 +834,6 @@ Proof.
 
       set (τGnat := base_paths _ _ (pr2 τG _ _ (LNWFS_lcomp_comul_L_lp Λ' F a))).
       apply pathsinv0.
-      etrans. apply assoc'.
       etrans. apply cancel_precomposition.
               exact (pathsinv0 τGnat).
 
@@ -922,7 +915,7 @@ Proof.
   split; (intro; use arrow_mor_eq).
   - etrans. apply id_left.
     apply pathsinv0.
-    etrans. apply id_left.
+    etrans. apply id_right.
     etrans. apply id_left.
     exact (pathsinv0 (lnwfs_Σ_top_map_id L a)).
   - etrans. exact (pathsinv0 (arrow_mor_comm (pr1 L a))).
@@ -930,6 +923,7 @@ Proof.
             exact (lnwfs_Σ_top_map_id L a).
     etrans. apply id_left.
     apply pathsinv0.
+    etrans. apply assoc'.
     etrans. apply id_left.
     apply id_left.
   - apply id_left.

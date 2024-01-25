@@ -7,6 +7,8 @@ Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
 
 Require Import CategoryTheory.Monads.Monads.
 Require Import CategoryTheory.Monads.MonadAlgebras.
+Require Import CategoryTheory.Monads.Comonads.
+Require Import CategoryTheory.Monads.ComonadCoalgebras.
 
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Total.
