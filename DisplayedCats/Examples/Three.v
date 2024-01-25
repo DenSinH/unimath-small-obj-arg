@@ -27,7 +27,6 @@ Proof.
   use make_disp_cat_ob_mor.
   - exact ((λ xy, ∑ z (xz : (arrow_dom xy) --> z) (zy : z --> (arrow_cod xy)), xz · zy = arrow_mor xy)).
   - (* double commutative square *)
-    simpl.
     intros xy ab H0 H1 fff.
     destruct H0 as [z [xz [zy]]].
     destruct H1 as [c [ac [cb]]].
@@ -216,14 +215,18 @@ Proof.
   - use colimOfArrows.
     * intro v.
       exact (three_mor01 (dob d v)).
-    * intros u v e.
-      exact (pathsinv0 (pr1 (three_mor_comm (dmor d e)))).
+    * abstract (
+        intros u v e;
+        exact (pathsinv0 (pr1 (three_mor_comm (dmor d e))))
+      ).
   - use tpair.
     * use colimOfArrows.
       + intro v.
         exact (three_mor12 (dob d v)).
-      + intros u v e.
-        exact (pathsinv0 (pr2 (three_mor_comm (dmor d e)))).
+      + abstract (
+          intros u v e;
+          exact (pathsinv0 (pr2 (three_mor_comm (dmor d e))))
+        ).
     * abstract (
         use colimArrowUnique;
         intro v;
