@@ -11,8 +11,8 @@ Require Import UniMath.CategoryTheory.limits.graphs.coequalizers.
 Require Import UniMath.CategoryTheory.limits.graphs.colimits.
 Require Import UniMath.CategoryTheory.whiskering.
 
-Require Import UniMath.CategoryTheory.Monads.Monads.
-Require Import UniMath.CategoryTheory.Monads.MonadAlgebras.
+Require Import CategoryTheory.Monads.Monads.
+Require Import CategoryTheory.Monads.MonadAlgebras.
 
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Total.
@@ -37,7 +37,7 @@ Require Import CategoryTheory.ModelCategories.Generated.OneStepMonad.
 Require Import CategoryTheory.ModelCategories.Generated.GenericFreeMonoid.
 Require Import CategoryTheory.ModelCategories.Generated.GenericFreeMonoidSequence.
 Require Import CategoryTheory.ModelCategories.Generated.MonoidalHelpers.
-Require Import CategoryTheory.ModelCategories.Generated.Helpers.
+Require Import CategoryTheory.ModelCategories.Helpers.
 Require Import CategoryTheory.ModelCategories.Generated.MonoidalHelpers.
 Require Import CategoryTheory.ModelCategories.Generated.FFMonoidalStructure.
 Require Import CategoryTheory.ModelCategories.Generated.LNWFSMonoidalStructure.

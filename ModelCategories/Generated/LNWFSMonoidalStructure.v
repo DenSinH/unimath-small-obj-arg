@@ -4,7 +4,7 @@ Require Import UniMath.CategoryTheory.Core.Categories.
 Require Import UniMath.CategoryTheory.opp_precat.
 Require Import UniMath.CategoryTheory.Core.Functors.
 Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
-Require Import UniMath.CategoryTheory.Monads.Monads.
+Require Import CategoryTheory.Monads.Monads.
 
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Total.
@@ -16,7 +16,7 @@ Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
 Require Import CategoryTheory.ModelCategories.Lifting.
 Require Import CategoryTheory.ModelCategories.NWFS.
-Require Import CategoryTheory.ModelCategories.Generated.Helpers.
+Require Import CategoryTheory.ModelCategories.Helpers.
 Require Import CategoryTheory.ModelCategories.Generated.LNWFSHelpers.
 Require Import CategoryTheory.ModelCategories.Generated.FFMonoidalStructure.
 
@@ -1017,7 +1017,7 @@ Definition Ff_monoidal : monoidal (Ff C) :=
 
 End LNWFS_monoidal.
 
-Require Import UniMath.CategoryTheory.Monads.Monads.
+Require Import CategoryTheory.Monads.Monads.
 Require Import CategoryTheory.Monoidal.CategoriesOfMonoids.
 
 Section LNWFS_monoid_is_NWFS.

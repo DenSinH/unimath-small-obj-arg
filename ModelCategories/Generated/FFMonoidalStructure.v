@@ -23,7 +23,7 @@ Require Import CategoryTheory.DisplayedCats.natural_transformation.
 Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
 Require Import CategoryTheory.ModelCategories.NWFS.
-Require Import CategoryTheory.ModelCategories.Generated.Helpers.
+Require Import CategoryTheory.ModelCategories.Helpers.
 
 Local Open Scope cat.
 Local Open Scope Cat.
@@ -762,7 +762,7 @@ Definition Ff_monoidal : monoidal (Ff C) :=
 
 End Ff_monoidal.
 
-Require Import UniMath.CategoryTheory.Monads.Monads.
+Require Import CategoryTheory.Monads.Monads.
 Require Import CategoryTheory.Monoidal.CategoriesOfMonoids.
 
 Section Ff_monoid_is_RNWFS.

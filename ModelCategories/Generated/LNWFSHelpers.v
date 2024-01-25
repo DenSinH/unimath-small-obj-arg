@@ -16,8 +16,8 @@ Require Import UniMath.CategoryTheory.whiskering.
 Require Import UniMath.CategoryTheory.Chains.Chains.
 Require Import UniMath.CategoryTheory.slicecat.
 
-Require Import UniMath.CategoryTheory.Monads.Monads.
-Require Import UniMath.CategoryTheory.Monads.MonadAlgebras.
+Require Import CategoryTheory.Monads.Monads.
+Require Import CategoryTheory.Monads.MonadAlgebras.
 
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Total.
@@ -36,7 +36,7 @@ Require Import CategoryTheory.DisplayedCats.natural_transformation.
 
 Require Import CategoryTheory.ModelCategories.NWFS.
 Require Import CategoryTheory.ModelCategories.Generated.MonoidalHelpers.
-Require Import CategoryTheory.ModelCategories.Generated.Helpers.
+Require Import CategoryTheory.ModelCategories.Helpers.
 Require Import CategoryTheory.ModelCategories.Generated.MonoidalHelpers.
 Require Import CategoryTheory.ModelCategories.Generated.FFMonoidalStructure.
 

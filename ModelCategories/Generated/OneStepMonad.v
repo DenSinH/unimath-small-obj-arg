@@ -6,8 +6,8 @@ Require Import UniMath.CategoryTheory.Core.Functors.
 Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
 Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
 Require Import UniMath.CategoryTheory.whiskering.
-Require Import UniMath.CategoryTheory.Monads.Monads.
-Require Import UniMath.CategoryTheory.Monads.MonadAlgebras.
+Require Import CategoryTheory.Monads.Monads.
+Require Import CategoryTheory.Monads.MonadAlgebras.
 Require Import UniMath.CategoryTheory.catiso.
 Require Import UniMath.CategoryTheory.limits.graphs.colimits.
 Require Import UniMath.CategoryTheory.limits.coproducts.
@@ -30,7 +30,6 @@ Require Import CategoryTheory.ModelCategories.NWFS.
 Require Import CategoryTheory.ModelCategories.NWFSisWFS.
 Require Import CategoryTheory.ModelCategories.Generated.LiftingWithClass.
 
-Require Import CategoryTheory.DisplayedCats.Examples.MonadAlgebras.
 Require Import CategoryTheory.limits.coproducts.
 
 Local Open Scope cat.

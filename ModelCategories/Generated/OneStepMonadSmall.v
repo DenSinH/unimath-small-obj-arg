@@ -14,7 +14,7 @@ Require Import UniMath.CategoryTheory.Chains.Chains.
 Require Import UniMath.CategoryTheory.categories.HSET.Core.
 Require Import UniMath.CategoryTheory.categories.HSET.Colimits.
 
-Require Import UniMath.CategoryTheory.Monads.Monads.
+Require Import CategoryTheory.Monads.Monads.
 
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Total.
@@ -32,7 +32,7 @@ Require Import CategoryTheory.ModelCategories.MorphismClass.
 Require Import CategoryTheory.ModelCategories.NWFS.
 Require Import CategoryTheory.ModelCategories.Generated.LiftingWithClass.
 Require Import CategoryTheory.ModelCategories.Generated.OneStepMonad.
-Require Import CategoryTheory.ModelCategories.Generated.Helpers.
+Require Import CategoryTheory.ModelCategories.Helpers.
 Require Import CategoryTheory.limits.colimits.
 
 
