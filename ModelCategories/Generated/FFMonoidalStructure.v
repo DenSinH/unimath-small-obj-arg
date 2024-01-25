@@ -828,7 +828,7 @@ Qed.
 
 Lemma Ff_monoid_is_RNWFS_monad_laws 
     {F : Ff C} (R : monoid (Ff_monoidal) F) :
-  Monad_laws (R_monad_data F (Ff_monoid_is_RNWFS_mul R)).
+  disp_Monad_laws (R_monad_data F (Ff_monoid_is_RNWFS_mul R)).
 Proof.
   set (μ := monoid_data_multiplication _ R).
   

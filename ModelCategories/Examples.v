@@ -8,6 +8,7 @@ Require Import UniMath.CategoryTheory.SplitMonicsAndEpis.
 Require Import UniMath.CategoryTheory.limits.bincoproducts.
 Require Import UniMath.CategoryTheory.limits.coproducts.
 Require Import CategoryTheory.Monads.Monads.
+Require Import CategoryTheory.Monads.Comonads.
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
 
@@ -170,7 +171,7 @@ Definition cop_ff_comul :
   (_,, cop_ff_comul_ax).
 
 Lemma cop_ff_comul_monad_laws :
-    Monad_laws (L_monad_data cop_functorial_factorization cop_ff_comul).
+    disp_Comonad_laws (L_monad_data cop_functorial_factorization cop_ff_comul).
 Proof.
   repeat split; intro f; use arrow_mor_eq.
   - apply id_left.
@@ -362,7 +363,7 @@ Definition cop_ff_mul :
   (_,, cop_ff_mul_ax).
 
 Lemma cop_ff_mul_monad_laws :
-    Monad_laws (R_monad_data cop_functorial_factorization cop_ff_mul).
+    disp_Monad_laws (R_monad_data cop_functorial_factorization cop_ff_mul).
 Proof.
   repeat split; intro f; use arrow_mor_eq.
   - use BinCoproductArrowsEq.
@@ -433,12 +434,12 @@ Proof.
            reflexivity.
       + etrans. apply assoc.
         etrans. apply cancel_postcomposition. 
-                apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop (R_monad_data cop_functorial_factorization cop_ff_mul f))).
-        etrans. apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop (R_monad_data cop_functorial_factorization cop_ff_mul f))).
+                apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop (fact_R cop_functorial_factorization f))).
+        etrans. apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop (fact_R cop_functorial_factorization f))).
         apply pathsinv0.
         etrans. apply assoc.
         etrans. apply cancel_postcomposition. 
-                apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop (R_monad_data cop_functorial_factorization cop_ff_mul f))).
+                apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop (fact_R cop_functorial_factorization f))).
         etrans. apply (BinCoproductIn2Commutes _ _ _ (cop_ff_cop f)).
         reflexivity.
     * etrans. apply assoc.
@@ -580,7 +581,5 @@ Proof.
   - apply cop_nwfs_r_map_is_split_epi.
   - apply cop_nwfs_split_epi_is_r_map.
 Qed.
-
-
 
 Transparent cop_ff_cop.

@@ -5,6 +5,7 @@ Require Import UniMath.CategoryTheory.opp_precat.
 Require Import UniMath.CategoryTheory.Core.Functors.
 Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
 Require Import CategoryTheory.Monads.Monads.
+Require Import CategoryTheory.Monads.Comonads.
 
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Total.
@@ -246,17 +247,20 @@ Opaque LNWFS_lcomp_comul_L'_lp.
    the comultiplication is associative on the middle morphisms. *)
 Lemma LNWFS_lcomp_comul_mul_law11 {F' F : Ff C} 
     (L' : lnwfs_over F') (L : lnwfs_over F) (a : arrow C) :
-    arrow_mor11
-      (# (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L))
-        (μ (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L)) a)
-      · μ (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L)) a) =
-    arrow_mor11
-      (μ (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L))
-        (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L) a)
-      · μ (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L)) a).
+    arrow_mor11 (
+      (disp_δ (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L)) a)
+      · (# (fact_L (F' ⊗ F))
+          (disp_δ (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L)) a))
+    )
+    =
+    arrow_mor11 (
+      (disp_δ (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L)) a)
+    · (disp_δ (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L))
+        (fact_L (F' ⊗ F) a))
+    ).
 Proof.
-  set (law3 := @Monad_law3 _ (L_monad _ _ (pr2 L))).
-  set (law3' := @Monad_law3 _ (L_monad _ _ (pr2 L'))).
+  set (law3 := @Comonad_law3 _ (L_monad _ _ (pr2 L))).
+  set (law3' := @Comonad_law3 _ (L_monad _ _ (pr2 L'))).
   
   (* First we want to rewrite the associativity law for F' *)
   apply pathsinv0.
@@ -339,7 +343,7 @@ Proof.
 Qed.
 
 Definition LNWFS_lcomp_comul_monad_laws {F' F : Ff C} (L' : lnwfs_over F') (L : lnwfs_over F) :
-    Monad_laws (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L)).
+    disp_Comonad_laws (L_monad_data (F' ⊗ F) (LNWFS_lcomp_comul L' L)).
 Proof.
   repeat split; intro a.
   - use arrow_mor_eq; [apply id_left|].
@@ -353,7 +357,7 @@ Proof.
     etrans. apply (pathsinv0 (pr2 (three_mor_comm F'L'_lp))).
     apply id_right.
   - use arrow_mor_eq; [apply id_left|].
-    set (law2 := @Monad_law2 _ (L_monad _ (pr1 L') (pr2 L'))).
+    set (law2 := @Comonad_law2 _ (L_monad _ (pr1 L') (pr2 L'))).
     apply pathsinv0.
     etrans. exact (pathsinv0 (pr2 (pathsdirprodweq (base_paths _ _ (law2 (fact_R F a)))))).
     (* cbn. *)
@@ -366,7 +370,7 @@ Proof.
     etrans. apply cancel_precomposition.
             apply (pr1_section_disp_on_morphisms_comp F).
     apply pathsinv0.
-    set (law2F := @Monad_law2 _ (L_monad _ _ (pr2 L))).
+    set (law2F := @Comonad_law2 _ (L_monad _ _ (pr2 L))).
     etrans. exact (pathsinv0 (pr2 (pathsdirprodweq (base_paths _ _ (law2F a))))).
     apply cancel_precomposition.
     use (section_disp_on_eq_morphisms F); [apply pathsinv0; apply id_left|].
@@ -414,7 +418,7 @@ Definition LNWFS_lcomp_unit_comul :
   (_,, LNWFS_lcomp_unit_comul_axioms).
 
 Definition LNWFS_lcomp_unit_comul_monad_laws :
-  Monad_laws (L_monad_data (@Ff_lcomp_unit C) (LNWFS_lcomp_unit_comul)).
+  disp_Comonad_laws (L_monad_data (@Ff_lcomp_unit C) (LNWFS_lcomp_unit_comul)).
 Proof.
   repeat split; 
     (intro f; 

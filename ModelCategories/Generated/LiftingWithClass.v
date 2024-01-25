@@ -138,7 +138,7 @@ Definition morcls_lp_map {J : morphism_class C} {f : arrow C} (lp : morcls_lp J 
 
 Context (n : nwfs C).
 Definition morcls_L_map_structure (J : morphism_class C) : UU := 
-  disp_functor (functor_identity _) (op_disp_cat (morcls_disp J)) (nwfs_L_maps n).
+  disp_functor (functor_identity _) (morcls_disp J) (nwfs_L_maps n).
 
 Context {J : morphism_class C}.
 

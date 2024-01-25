@@ -2,8 +2,10 @@ Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.CategoryTheory.Core.Prelude.
 Require Import UniMath.CategoryTheory.Core.Categories.
 Require Import UniMath.CategoryTheory.opp_precat.
-Require Import CategoryTheory.Monads.Monads.
-Require Import CategoryTheory.Monads.MonadAlgebras.
+Require Import         CategoryTheory.Monads.Monads.
+Require Import         CategoryTheory.Monads.MonadAlgebras.
+Require Import         CategoryTheory.Monads.Comonads.
+Require Import         CategoryTheory.Monads.ComonadCoalgebras.
 
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Constructions.
