@@ -26,7 +26,7 @@ Require Import CategoryTheory.Monoidal.CategoriesOfMonoids.
 
 Require Import CategoryTheory.ModelCategories.Generated.GenericFreeMonoid.
 Require Import CategoryTheory.ModelCategories.Generated.MonoidalHelpers.
-Require Import CategoryTheory.ModelCategories.Generated.Helpers.
+Require Import CategoryTheory.ModelCategories.Helpers.
 
 Local Open Scope Cat.
 Local Open Scope cat.

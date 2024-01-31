@@ -17,6 +17,10 @@ Monoidal/Displayed/Monoidal.v
 Monoidal/Displayed/MonoidalSections.v
 Monoidal/Displayed/TotalMonoidal.v
 Monoidal/Displayed/WhiskeredDisplayedBifunctors.v
+Monads/Monads.v
+Monads/Comonads.v
+Monads/MonadAlgebras.v
+Monads/ComonadCoalgebras.v
 ModelCategories/MorphismClass.v
 ModelCategories/Retract.v
 ModelCategories/Lifting.v
@@ -25,7 +29,7 @@ ModelCategories/NWFS.v
 ModelCategories/NWFSisWFS.v
 ModelCategories/WeakEquivalences.v
 ModelCategories/ModelCategory.v
-ModelCategories/Generated/Helpers.v
+ModelCategories/Helpers.v
 ModelCategories/Generated/MonoidalHelpers.v
 ModelCategories/Generated/LiftingWithClass.v
 ModelCategories/Generated/OneStepMonad.v

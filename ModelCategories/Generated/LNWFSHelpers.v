@@ -16,8 +16,10 @@ Require Import UniMath.CategoryTheory.whiskering.
 Require Import UniMath.CategoryTheory.Chains.Chains.
 Require Import UniMath.CategoryTheory.slicecat.
 
-Require Import UniMath.CategoryTheory.Monads.Monads.
-Require Import UniMath.CategoryTheory.Monads.MonadAlgebras.
+Require Import CategoryTheory.Monads.Monads.
+Require Import CategoryTheory.Monads.MonadAlgebras.
+Require Import CategoryTheory.Monads.Comonads.
+Require Import CategoryTheory.Monads.ComonadCoalgebras.
 
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Total.
@@ -36,7 +38,7 @@ Require Import CategoryTheory.DisplayedCats.natural_transformation.
 
 Require Import CategoryTheory.ModelCategories.NWFS.
 Require Import CategoryTheory.ModelCategories.Generated.MonoidalHelpers.
-Require Import CategoryTheory.ModelCategories.Generated.Helpers.
+Require Import CategoryTheory.ModelCategories.Helpers.
 Require Import CategoryTheory.ModelCategories.Generated.MonoidalHelpers.
 Require Import CategoryTheory.ModelCategories.Generated.FFMonoidalStructure.
 
@@ -53,7 +55,7 @@ Context {C : category}.
 Lemma lnwfs_Σ_top_map_id {F : Ff C} (L : lnwfs_over F) (f : arrow C) :
     arrow_mor00 (pr1 L f) = identity _.
 Proof.
-  set (law1 := Monad_law1 (T:=lnwfs_L_monad L) f).
+  set (law1 := Comonad_law1 (T:=lnwfs_L_monad L) f).
   set (top := arrow_mor00_eq law1).
   apply pathsinv0.
   etrans.
@@ -64,7 +66,7 @@ Qed.
 Lemma lnwfs_Σ_bottom_map_inv {F : Ff C} (L : lnwfs_over F) (f : arrow C) :
     arrow_mor11 (pr1 L f) · arrow_mor (fact_R F (fact_L F f)) = identity _.
 Proof.
-  set (law1 := Monad_law1 (T:=lnwfs_L_monad L) f).
+  set (law1 := Comonad_law1 (T:=lnwfs_L_monad L) f).
   set (bottom := arrow_mor11_eq law1).
   exact bottom.
 Qed.
@@ -128,8 +130,10 @@ Proof.
       etrans. exact (lnwfs_Σ_top_map_id (pr2 L) f).
       apply pathsinv0.
       etrans. apply cancel_postcomposition.
+              apply cancel_postcomposition.
               exact (lnwfs_Σ_top_map_id (pr2 L') f).
-      etrans. apply id_left.
+      etrans. apply cancel_postcomposition.
+              apply id_left.
       apply id_left.
     * set (inv := Hiso11 f).
       apply (pre_comp_with_z_iso_is_inj inv).
@@ -141,10 +145,15 @@ Proof.
       apply pathsinv0.
       etrans. apply assoc.
       etrans. apply cancel_postcomposition.
+              etrans. apply assoc.
+              apply cancel_postcomposition.
               exact (arrow_mor11_eq (pr1 Hiso f)).
+      etrans. apply assoc'.
+      etrans. apply assoc'.
       etrans. apply assoc'.
       apply cancel_precomposition.
 
+      etrans. apply assoc.
       etrans. apply assoc.
       etrans. apply assoc4.
       etrans. apply cancel_postcomposition, cancel_precomposition.

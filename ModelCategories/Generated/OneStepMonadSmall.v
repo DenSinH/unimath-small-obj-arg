@@ -14,7 +14,8 @@ Require Import UniMath.CategoryTheory.Chains.Chains.
 Require Import UniMath.CategoryTheory.categories.HSET.Core.
 Require Import UniMath.CategoryTheory.categories.HSET.Colimits.
 
-Require Import UniMath.CategoryTheory.Monads.Monads.
+Require Import CategoryTheory.Monads.Monads.
+Require Import CategoryTheory.Monads.Comonads.
 
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Total.
@@ -32,7 +33,7 @@ Require Import CategoryTheory.ModelCategories.MorphismClass.
 Require Import CategoryTheory.ModelCategories.NWFS.
 Require Import CategoryTheory.ModelCategories.Generated.LiftingWithClass.
 Require Import CategoryTheory.ModelCategories.Generated.OneStepMonad.
-Require Import CategoryTheory.ModelCategories.Generated.Helpers.
+Require Import CategoryTheory.ModelCategories.Helpers.
 Require Import CategoryTheory.limits.colimits.
 
 
@@ -696,7 +697,7 @@ Defined.
 Definition L_colim_id_mor (f : arrow C) :
     fact_L F1 f --> f.
 Proof.
-  exact (η (lnwfs_L_monad (one_step_comonad J CC)) f).
+  exact (ε (lnwfs_L_monad (one_step_comonad J CC)) f).
 Defined.
 
 (* colim (L1 fi) --> colim fi *)

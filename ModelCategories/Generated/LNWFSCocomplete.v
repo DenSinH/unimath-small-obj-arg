@@ -6,8 +6,10 @@ Require Import UniMath.CategoryTheory.Core.Functors.
 Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
 Require Import UniMath.CategoryTheory.FunctorCategory.
 
-Require Import UniMath.CategoryTheory.Monads.Monads.
-Require Import UniMath.CategoryTheory.Monads.MonadAlgebras.
+Require Import CategoryTheory.Monads.Monads.
+Require Import CategoryTheory.Monads.MonadAlgebras.
+Require Import CategoryTheory.Monads.Comonads.
+Require Import CategoryTheory.Monads.ComonadCoalgebras.
 
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
 Require Import UniMath.CategoryTheory.DisplayedCats.Total.
@@ -30,10 +32,10 @@ Require Import CategoryTheory.DisplayedCats.natural_transformation.
 Require Import CategoryTheory.DisplayedCats.Examples.Arrow.
 Require Import CategoryTheory.DisplayedCats.Examples.Three.
 Require Import CategoryTheory.ModelCategories.NWFS.
-Require Import CategoryTheory.ModelCategories.Generated.Helpers.
+Require Import CategoryTheory.ModelCategories.Helpers.
 Require Import CategoryTheory.ModelCategories.Generated.LNWFSHelpers.
 Require Import CategoryTheory.ModelCategories.Generated.FFMonoidalStructure.
-Require Import CategoryTheory.ModelCategories.Generated.LNWFSMonoidalStructure.
+(* Require Import CategoryTheory.ModelCategories.Generated.LNWFSMonoidalStructure. *)
 
 Local Open Scope cat.
 Local Open Scope Cat.
@@ -274,10 +276,9 @@ Proof.
         etrans; [apply id_right|];
         apply pathsinv0;
         etrans; [apply postcompWithColimArrow|];
-        apply maponpaths;
-        use cocone_paths;
+        use colimArrowUnique;
         intro u;
-        (* cbn. *)
+        etrans; [apply colimArrowCommutes|];
         (* naturality of coconeIn cc at u *)
         etrans; [exact (pathsinv0 (pr22 (pr1 (coconeIn cc u) a)))|];
         apply id_right
@@ -400,9 +401,9 @@ Proof.
     set (mor := dmor d e : Lu --> Lv).
     
     set (α := lnwfs_mor (pr2 Lu) (pr2 Lv) (pr1 mor)).
-    set (Mu := lnwfs_L_monad (pr2 Lu)).
-    set (Mv := lnwfs_L_monad (pr2 Lv)).
-    set (mulmor := α (Mv a) · #Mu (α a)).
+    set (Mu := fact_L (pr1 Lu)).
+    set (Mv := fact_L (pr1 Lv)).
+    set (mulmor := #Mu (α a) · α (Mv a)).
     
     use mors_to_arrow_mor.
     * exact (arrow_mor11 (α a)).
@@ -410,7 +411,8 @@ Proof.
     * abstract (
         set (morax := pr2 mor);
         set (moraxμa := pr1 morax a);
-        exact (pr2 (pathsdirprodweq (base_paths _ _ moraxμa)))
+        etrans; [exact (pr2 (pathsdirprodweq (base_paths _ _ moraxμa)))|];
+        apply assoc'
       ).
 Defined.
 
@@ -702,7 +704,7 @@ Local Lemma LNWFS_colim_comul_monad_ax_subproof
     ).
 Proof.
   set (Lv := dob d v).
-  set (law3 := @Monad_law3 _ (L_monad _ _ (pr22 Lv))).
+  set (law3 := @Comonad_law3 _ (L_monad _ _ (pr22 Lv))).
 
   etrans. apply cancel_precomposition.
   {
@@ -783,7 +785,7 @@ Proof.
 Qed.
 
 Lemma LNWFS_colim_comul_monad_ax :
-    Monad_laws (L_monad_data (colim Finf) LNWFS_colim_comul).
+    disp_Comonad_laws (L_monad_data (colim Finf) LNWFS_colim_comul).
 Proof.
   repeat split; intro f.
   - apply subtypePath; [intro; apply homset_property|].
@@ -804,7 +806,7 @@ Proof.
     etrans. apply cancel_precomposition.
             apply (colimArrowCommutes).
 
-    set (law1v := @Monad_law1 _ (L_monad _ _ (pr22 (dob d v))) f).
+    set (law1v := @Comonad_law1 _ (L_monad _ _ (pr22 (dob d v))) f).
     
     etrans. apply assoc'.
     etrans. apply cancel_precomposition.
@@ -849,7 +851,7 @@ Proof.
     apply pathsinv0.
     etrans. apply (pathsinv0 (id_left _)).
     apply cancel_postcomposition.
-    set (law2v := @Monad_law2 _ (L_monad _ _ (pr22 (dob d v))) f).
+    set (law2v := @Comonad_law2 _ (L_monad _ _ (pr22 (dob d v))) f).
     etrans. exact (pathsinv0 (pr2 (pathsdirprodweq (base_paths _ _ law2v)))).
     apply pathsinv0.
     etrans. apply assoc'.
@@ -925,8 +927,7 @@ Proof.
   - etrans. apply id_left.
     etrans. apply id_left.
     apply pathsinv0.
-    etrans. apply cancel_precomposition.
-            apply id_right.
+    etrans. apply id_right.
     etrans. apply id_right.
     apply (lnwfs_Σ_top_map_id (pr2 (dob d v))).
   - etrans. apply assoc.
@@ -937,7 +938,6 @@ Proof.
             apply colimOfArrowsIn.
     etrans. apply assoc.
     apply pathsinv0.
-    etrans. apply assoc.
     apply cancel_postcomposition.
     apply cancel_precomposition.
     apply section_disp_on_eq_morphisms; reflexivity.
@@ -977,6 +977,7 @@ Proof.
     * etrans. apply id_left.
       apply pathsinv0.
       etrans. apply assoc'.
+      etrans. apply assoc'.
       etrans. apply id_left.
       etrans. apply id_left.
       etrans. apply id_left.
@@ -993,7 +994,10 @@ Proof.
       etrans. apply cancel_postcomposition.
               apply assoc.
       etrans. do 2 apply cancel_postcomposition.
+              etrans. apply assoc.
+              apply cancel_postcomposition.
               apply colimOfArrowsIn.
+      etrans. apply assoc'.
       etrans. apply assoc4.
       etrans. apply cancel_postcomposition, cancel_precomposition.
               apply colimArrowCommutes.
@@ -1011,6 +1015,7 @@ Proof.
       
       apply pathsinv0.
       etrans. exact (pr2 (pathsdirprodweq (base_paths _ _ (pr12 (coconeIn cc v) f)))).
+      etrans. apply assoc'.
       apply pathsinv0.
       etrans. apply assoc'.
       apply cancel_precomposition.
