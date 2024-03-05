@@ -362,7 +362,7 @@ Lemma ChainsFf {C : category} (HC : Colims C) :
 Proof.
   intros d.
   use (ColimFfCocone HC d).
-  - exact is_connected_nat_graph.
+  - abstract (exact is_connected_nat_graph).
   - exact 0.
 Defined.
 
@@ -371,7 +371,7 @@ Lemma CoequalizersFf {C : category} (HC : Colims C) :
 Proof.
   intros F G f g.
   use (ColimFfCocone HC).
-  - exact is_connected_coequalizer_graph.
+  - abstract (exact is_connected_coequalizer_graph).
   - exact (● 0)%stn.
 Defined.
 
@@ -385,7 +385,6 @@ Context {g : graph} (d : diagram g (total_category (LNWFS C))).
 Context (H : is_connected g).
 Context (v0 : vertex g).
 Context (FfCC := λ d, ColimFfCocone CC d H v0).
-
 
 Local Definition lnwfs_Σ {F : Ff C} (L : lnwfs_over F) := pr1 L.
 
@@ -788,8 +787,7 @@ Lemma LNWFS_colim_comul_monad_ax :
     disp_Comonad_laws (L_monad_data (colim Finf) LNWFS_colim_comul).
 Proof.
   repeat split; intro f.
-  - apply subtypePath; [intro; apply homset_property|].
-    apply pathsdirprod; [etrans; [apply assoc'|]; etrans; [apply id_left|]; apply id_left|].
+  - apply arrow_mor_eq; [etrans; [apply assoc'|]; etrans; [apply id_left|]; apply id_left|].
     apply pathsinv0.
     apply colim_endo_is_identity.
     intro v.
@@ -816,8 +814,7 @@ Proof.
     etrans. apply cancel_postcomposition.
             exact (pr2 (pathsdirprodweq (base_paths _ _ law1v))).
     apply id_left.
-  - apply subtypePath; [intro; apply homset_property|].
-    apply pathsdirprod; [etrans; [apply assoc'|]; etrans; [apply id_left|]; apply id_left|].
+  - apply arrow_mor_eq; [etrans; [apply assoc'|]; etrans; [apply id_left|]; apply id_left|].
     apply pathsinv0.
     apply colim_endo_is_identity.
     intro v.
@@ -859,8 +856,7 @@ Proof.
     etrans. apply pr1_section_disp_on_morphisms_comp.
     apply section_disp_on_eq_morphisms; [apply id_left|].
     apply (colimArrowCommutes (CCFf_pt_ob1 CC dbase f)).
-  - apply subtypePath; [intro; apply homset_property|].
-    apply pathsdirprod; [reflexivity|].
+  - apply arrow_mor_eq; [reflexivity|].
     use colimArrowUnique'.
     intro v.
     etrans. apply assoc.
@@ -1092,7 +1088,7 @@ Lemma ChainsLNWFS {C : category} (HC : Colims C) :
 Proof.
   intros d.
   use (ColimLNWFSCocone HC).
-  - exact is_connected_nat_graph.
+  - abstract (exact is_connected_nat_graph).
   - exact 0.
 Defined.
 
@@ -1101,6 +1097,6 @@ Lemma CoequalizersLNWFS {C : category} (HC : Colims C) :
 Proof.
   intros F G f g.
   use (ColimLNWFSCocone HC).
-  - exact is_connected_coequalizer_graph.
+  - abstract (exact is_connected_coequalizer_graph).
   - exact (● 0)%stn.
 Defined.
